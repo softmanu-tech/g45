@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loading } from '@/components/ui/loading';
 import { 
   BarChart, 
   Bar, 
@@ -120,9 +121,21 @@ export default function BishopAnalyticsDashboard() {
     fetchAnalytics();
   }, [dateRange, selectedGroup]);
 
-  if (loading) return <div className="flex justify-center p-8">Loading analytics...</div>;
-  if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
-  if (!data) return <div className="p-4">No data available</div>;
+  if (loading) return <Loading message="Processing church analytics..." size="lg" />;
+  if (error) return (
+    <div className="min-h-screen bg-blue-300 flex items-center justify-center px-4">
+      <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg max-w-md text-center">
+        <strong>Error:</strong> {error}
+      </div>
+    </div>
+  );
+  if (!data) return (
+    <div className="min-h-screen bg-blue-300 flex items-center justify-center px-4">
+      <div className="bg-blue-200/90 backdrop-blur-md rounded-lg p-6 border border-blue-300 text-center">
+        <p className="text-blue-800">No analytics data available</p>
+      </div>
+    </div>
+  );
 
   // Prepare data for charts
   const groupAttendanceData = data.groupPerformance.map(group => ({

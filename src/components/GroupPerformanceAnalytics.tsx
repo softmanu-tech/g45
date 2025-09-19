@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Loading, QuickLoading } from './ui/loading';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { Loader2 } from 'lucide-react';
 import { Button } from './button';
@@ -149,11 +150,7 @@ export default function GroupPerformanceAnalytics() {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <Loading message="Analyzing group performance..." size="lg" />;
   }
 
   const selectedGroupData = getSelectedGroupData();
@@ -437,9 +434,7 @@ export default function GroupPerformanceAnalytics() {
 
             <TabsContent value="comparison" className="space-y-4">
               {loadingComparison ? (
-                <div className="flex justify-center items-center h-64">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
+                <QuickLoading message="Processing comparison data..." />
               ) : comparisonData ? (
                 <>
                   <Card>

@@ -6,6 +6,7 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
+import { QuickLoading } from "@/components/ui/loading";
 import {
   Popover,
   PopoverContent,
@@ -367,10 +368,7 @@ export function MarkAttendanceForm({
           className="w-full sm:w-auto"
         >
           {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
+            <QuickLoading message="Recording..." />
           ) : (
             "Save Attendance"
           )}

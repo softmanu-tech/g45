@@ -1,6 +1,8 @@
-import { Notification } from '@/lib/models/Notification';
+import { Notification } from '../models/Notification';
 import { User } from '@/lib/models/User';
 import { Group } from '@/lib/models/Group';
+import Event from '@/lib/models/Event';
+import { Attendance } from '@/lib/models/Attendance';
 import mongoose from 'mongoose';
 
 // Send notification to a single user
@@ -57,7 +59,9 @@ export async function sendGroupNotification({
   const notifications = [];
 
   // Send to members
-  for (const memberId of group.members) {
+  // Fix: Type assertion to tell TypeScript that members exists and is an array
+  const members = (group as any)?.members ?? [];
+  for (const memberId of members) {
     const notification = new Notification({
       recipient: memberId,
       title,
@@ -69,9 +73,9 @@ export async function sendGroupNotification({
   }
 
   // Send to leader if requested
-  if (includeLeader && group.leader) {
+  if (includeLeader && 'leader' in group && group.leader) {
     const notification = new Notification({
-      recipient: group.leader,
+      recipient: group.leader as mongoose.Types.ObjectId,
       title,
       message,
       type,
@@ -127,7 +131,6 @@ export async function sendLeadersNotification({
 
 // Send reminder for upcoming events
 export async function sendEventReminders(daysInAdvance = 1) {
-  const Event = mongoose.models.Event;
   
   // Find events happening in the next X days
   const startDate = new Date();
@@ -159,7 +162,7 @@ export async function sendEventReminders(daysInAdvance = 1) {
       type: 'reminder',
       relatedTo: {
         model: 'Event',
-        id: event._id
+        id: (event as { _id: mongoose.Types.ObjectId })._id.toString()
       }
     });
     
@@ -171,8 +174,6 @@ export async function sendEventReminders(daysInAdvance = 1) {
 
 // Send attendance marking reminders to leaders
 export async function sendAttendanceReminders() {
-  const Event = mongoose.models.Event;
-  const Attendance = mongoose.models.Attendance;
   
   // Find events from yesterday
   const yesterday = new Date();

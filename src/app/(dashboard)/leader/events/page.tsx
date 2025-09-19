@@ -1,276 +1,235 @@
 "use client"
 
-import React, { useEffect, useState, useRef, useCallback } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react" // loading spinner icon
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from "recharts"
-import jsPDF from "jspdf"
+import React, { useEffect, useState } from "react"
+import Link from "next/link"
 import { motion } from "framer-motion"
+import { Calendar, Plus, MapPin, Users, Clock } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Loading } from "@/components/ui/loading"
 
-interface EventType {
+interface Event {
   _id: string
   title: string
   date: string
-  attendanceCount: number
-  group: { name: string; _id: string }
+  location?: string
+  description?: string
+  attendance: string[]
+  createdBy: {
+    _id: string
+    name: string
+    email: string
+  }
 }
 
-interface ApiResponse {
-  events: EventType[]
-  total: number
-  page: number
-  limit: number
-}
+export default function LeaderEventsPage() {
+  const [events, setEvents] = useState<Event[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
 
-export default function BishopDashboard() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-
-  // Sync URL query with state
-  const [page, setPage] = useState(Number(searchParams.get("page") || "1"))
-  const [limit, setLimit] = useState(Number(searchParams.get("limit") || "10"))
-  const [groupFilter, setGroupFilter] = useState(searchParams.get("groupId") || "")
-  const [dateRange, setDateRange] = useState({
-    startDate: searchParams.get("startDate") || "",
-    endDate: searchParams.get("endDate") || "",
-  })
-
-  const [events, setEvents] = useState<EventType[]>([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [hasMore, setHasMore] = useState(true)
-
-  const observer = useRef<IntersectionObserver | null>(null)
-  const lastEventElementRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (loading) return
-      if (observer.current) observer.current.disconnect()
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          setPage((prev) => prev + 1)
-        }
-      })
-      if (node) observer.current.observe(node)
-    },
-    [loading, hasMore]
-  )
-
-  // Fetch events from API
   useEffect(() => {
-    async function fetchEvents() {
-      setLoading(true)
-      try {
-        const params = new URLSearchParams()
-        params.append("page", page.toString())
-        params.append("limit", limit.toString())
-        if (groupFilter) params.append("groupId", groupFilter)
-        if (dateRange.startDate) params.append("startDate", dateRange.startDate)
-        if (dateRange.endDate) params.append("endDate", dateRange.endDate)
-
-        const res = await fetch(`/api/events?${params.toString()}`)
-        const data: ApiResponse = await res.json()
-
-        if (page === 1) {
-          setEvents(data.events)
-        } else {
-          setEvents((prev) => [...prev, ...data.events])
-        }
-
-        setTotal(data.total)
-        setHasMore(data.events.length > 0 && events.length + data.events.length < data.total)
-      } catch (error) {
-        console.error("Failed to fetch events", error)
-      } finally {
-        setLoading(false)
-      }
-    }
     fetchEvents()
-  }, [page, limit, events, groupFilter, dateRange])
+  }, [])
 
-  // Sync URL params on state change
-  useEffect(() => {
-    const params = new URLSearchParams()
-    params.set("page", page.toString())
-    params.set("limit", limit.toString())
-    if (groupFilter) params.set("groupId", groupFilter)
-    if (dateRange.startDate) params.set("startDate", dateRange.startDate)
-    if (dateRange.endDate) params.set("endDate", dateRange.endDate)
-    router.replace(`?${params.toString()}`, { scroll: false })
-  }, [page, limit, groupFilter,router, dateRange])
+  const fetchEvents = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch("/api/leader/events", {
+        credentials: "include",
+      })
 
-  // Export to PDF function
-  function exportToPDF() {
-    const doc = new jsPDF()
-    doc.text("Events Attendance Report", 10, 10)
-    let y = 20
-    events.forEach((event, idx) => {
-      doc.text(
-        `${idx + 1}. ${event.title} - Date: ${new Date(event.date).toLocaleDateString()} - Attendance: ${
-          event.attendanceCount
-        } - Group: ${event.group?.name || "N/A"}`,
-        10,
-        y
-      )
-      y += 10
-    })
-    doc.save("events-attendance-report.pdf")
+      if (!response.ok) {
+        throw new Error("Failed to fetch events")
+      }
+
+      const result = await response.json()
+      if (result.success) {
+        setEvents(result.data || [])
+      } else {
+        throw new Error(result.error || "Failed to fetch events")
+      }
+    } catch (err) {
+      console.error("Error fetching events:", err)
+      setError(err instanceof Error ? err.message : "Failed to fetch events")
+    } finally {
+      setLoading(false)
+    }
   }
 
-  // Attendance data for chart
-  const chartData = events.map((e) => ({
-    name: e.title,
-    attendance: e.attendanceCount,
-  }))
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  }
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
+  const isUpcoming = (dateString: string) => {
+    return new Date(dateString) > new Date()
+  }
+
+  const isPast = (dateString: string) => {
+    return new Date(dateString) < new Date()
+  }
+
+  if (loading) {
+    return <Loading message="Loading events..." size="lg" />
+  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
-      
-     className="p-4 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Bishop Dashboard</h1>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-        <div>
-          <label className="block font-semibold">Group Filter</label>
-          <input
-            type="text"
-            value={groupFilter}
-            onChange={(e) => setGroupFilter(e.target.value)}
-            placeholder="Enter group ID"
-            className="border rounded px-2 py-1 w-full sm:w-60"
-          />
-        </div>
-
-        <div>
-          <label className="block font-semibold">Start Date</label>
-          <input
-            type="date"
-            value={dateRange.startDate}
-            onChange={(e) => setDateRange((d) => ({ ...d, startDate: e.target.value }))}
-            className="border rounded px-2 py-1"
-          />
-        </div>
-
-        <div>
-          <label className="block font-semibold">End Date</label>
-          <input
-            type="date"
-            value={dateRange.endDate}
-            onChange={(e) => setDateRange((d) => ({ ...d, endDate: e.target.value }))}
-            className="border rounded px-2 py-1"
-          />
-        </div>
-
-        <button
-          onClick={() => {
-            setPage(1) // reset page to fetch with new filters
-          }}
-          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
-        >
-          Apply Filters
-        </button>
-      </div>
-
-      {/* Page size selector */}
-      <div className="mb-4">
-        <label className="mr-2 font-semibold">Page size:</label>
-        <select
-          value={limit}
-          onChange={(e) => {
-            setLimit(Number(e.target.value))
-            setPage(1)
-          }}
-          className="border rounded px-2 py-1"
-        >
-          {[5, 10, 20, 50].map((size) => (
-            <option key={size} value={size}>
-              {size}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Export button */}
-      <button
-        onClick={exportToPDF}
-        className="mb-6 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+    <div className="min-h-screen bg-blue-300 p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="space-y-6 max-w-7xl mx-auto"
       >
-        Export to PDF
-      </button>
-
-      {/* Events list */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-300 rounded overflow-hidden">
-          <thead className="bg-purple-600 text-white">
-            <tr>
-              <th className="p-2">Title</th>
-              <th className="p-2">Date</th>
-              <th className="p-2">Attendance</th>
-              <th className="p-2">Group</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events.map((event, idx) => {
-              if (idx === events.length - 1) {
-                // last element for infinite scroll
-                return (
-                  <tr key={event._id} ref={lastEventElementRef} className="border-b border-gray-300">
-                    <td className="p-2">{event.title}</td>
-                    <td className="p-2">{new Date(event.date).toLocaleDateString()}</td>
-                    <td className="p-2 text-center">{event.attendanceCount}</td>
-                    <td className="p-2">{event.group?.name || "N/A"}</td>
-                  </tr>
-                )
-              }
-              return (
-                <tr key={event._id} className="border-b border-gray-300">
-                  <td className="p-2">{event.title}</td>
-                  <td className="p-2">{new Date(event.date).toLocaleDateString()}</td>
-                  <td className="p-2 text-center">{event.attendanceCount}</td>
-                  <td className="p-2">{event.group?.name || "N/A"}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-blue-800">My Events</h1>
+          <p className="text-blue-700 mt-1">Manage and track your group events</p>
+        </div>
+        <Link href="/leader/events/create">
+          <Button className="bg-white text-blue-600 hover:bg-blue-50 flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Create Event
+          </Button>
+        </Link>
       </div>
 
-      {/* Loading spinner */}
-      {loading && (
-        <div className="flex justify-center py-4">
-          <Loader2 className="animate-spin text-purple-600" size={32} />
-        </div>
+      {/* Error State */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <p className="text-red-700">{error}</p>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Attendance Chart */}
-      <div className="mt-10 w-full h-64 sm:h-96">
-        <h2 className="text-xl font-semibold mb-2">Attendance Statistics</h2>
-        {events.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-45} textAnchor="end" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="attendance" fill="#7c3aed" />
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <p>No data for attendance chart</p>
-        )}
-      </div>
-    </motion.div>
+      {/* Events List */}
+      {events.length === 0 ? (
+        <Card className="text-center py-12">
+          <CardContent>
+            <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Events Yet</h3>
+            <p className="text-gray-500 mb-6">
+              You haven't created any events yet. Create your first event to get started!
+            </p>
+            <Link href="/leader/events/create">
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Your First Event
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6">
+          {events.map((event) => (
+            <motion.div
+              key={event._id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className={`${
+                isUpcoming(event.date) 
+                  ? "border-green-200 bg-green-50" 
+                  : isPast(event.date)
+                  ? "border-gray-200 bg-gray-50"
+                  : "border-blue-200 bg-blue-50"
+              }`}>
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <CardTitle className="text-xl font-bold text-gray-800">
+                        {event.title}
+                      </CardTitle>
+                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {formatDate(event.date)}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {formatTime(event.date)}
+                        </div>
+                        {event.location && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            {event.location}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        isUpcoming(event.date)
+                          ? "bg-green-100 text-green-800"
+                          : isPast(event.date)
+                          ? "bg-gray-100 text-gray-800"
+                          : "bg-blue-100 text-blue-800"
+                      }`}>
+                        {isUpcoming(event.date) ? "Upcoming" : isPast(event.date) ? "Past" : "Today"}
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="pt-0">
+                  {event.description && (
+                    <p className="text-gray-700 mb-4">{event.description}</p>
+                  )}
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <Users className="h-4 w-4" />
+                      {event.attendance.length} attendee{event.attendance.length !== 1 ? "s" : ""}
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      {isUpcoming(event.date) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            // TODO: Implement edit functionality
+                            console.log("Edit event:", event._id)
+                          }}
+                        >
+                          Edit
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          // TODO: Navigate to attendance marking
+                          console.log("Mark attendance for:", event._id)
+                        }}
+                      >
+                        {isPast(event.date) ? "View Attendance" : "Mark Attendance"}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
+      </motion.div>
+    </div>
   )
 }

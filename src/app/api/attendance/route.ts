@@ -4,12 +4,15 @@ import dbConnect from '@/lib/dbConnect'
 import { Attendance } from '@/lib/models/Attendance'
 import Group, { IGroup } from '@/lib/models/Group'
 import { Types } from 'mongoose'
-import { requireSessionAndRole } from "@/lib/authMiddleware";
+import { requireSessionAndRoles } from "@/lib/authMiddleware";
 
 interface AttendanceRequest {
   date: string
   groupId: string
-  presentIds: string[]
+  presentMembers: string[]
+  absentMembers: string[]
+  recordedBy: string
+  eventId?: string
 }
 
 
@@ -17,23 +20,17 @@ interface AttendanceRequest {
 
 export async function POST(request: Request) {
   try {
-    const session = await requireSessionAndRole(request, 'leader')
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // 1. Strict Authentication
+    const { user } = await requireSessionAndRoles(request, ['leader']);
+    if (!user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    // Check if the user is a leader
-    const { session: { user } } = session
 
-    
-    
-    // Assuming leader role is required
+    const { date, groupId, presentMembers, absentMembers, recordedBy, eventId }: AttendanceRequest = await request.json()
 
-    const { date, groupId, presentIds }: AttendanceRequest = await request.json()
-
-    if (!date || !groupId || !Array.isArray(presentIds)) {
+    if (!date || !groupId || !Array.isArray(presentMembers)) {
       return NextResponse.json(
-        { error: 'Date, group ID, and present IDs array are required' },
+        { error: 'Date, group ID, and present members array are required' },
         { status: 400 }
       )
     }
@@ -73,9 +70,10 @@ export async function POST(request: Request) {
       )
     }
 
-    const presentObjectIds = presentIds.map(id => new Types.ObjectId(id))
+    const presentObjectIds = presentMembers.map(id => new Types.ObjectId(id))
+    const absentObjectIds = absentMembers.map(id => new Types.ObjectId(id))
     const groupMemberIds = new Set(group.members.map(memberId => memberId.toString()))
-    const invalidMembers = presentIds.filter(id => !groupMemberIds.has(id))
+    const invalidMembers = presentMembers.filter(id => !groupMemberIds.has(id))
 
     if (invalidMembers.length > 0) {
       return NextResponse.json(
@@ -91,8 +89,12 @@ export async function POST(request: Request) {
 
     if (existingAttendance) {
       existingAttendance.presentMembers = presentObjectIds
+      existingAttendance.absentMembers = absentObjectIds
       existingAttendance.updatedBy = new Types.ObjectId(user.id)
       existingAttendance.updatedAt = new Date()
+      if (eventId) {
+        existingAttendance.event = new Types.ObjectId(eventId)
+      }
 
       await existingAttendance.save()
 
@@ -103,7 +105,7 @@ export async function POST(request: Request) {
           date: existingAttendance.date.toISOString().split('T')[0],
           group: group.name,
           presentCount: existingAttendance.presentMembers.length,
-          absentCount: group.members.length - presentObjectIds.length,
+          absentCount: existingAttendance.absentMembers.length,
           updated: true
         }
       })
@@ -113,10 +115,11 @@ export async function POST(request: Request) {
       date: attendanceDate,
       group: group._id,
       presentMembers: presentObjectIds,
-      absentMembers: group.members.filter(memberId => !presentIds.includes(memberId.toString())),
+      absentMembers: absentObjectIds,
       recordedBy: new Types.ObjectId(user.id),
       updatedBy: new Types.ObjectId(user.id),
       notes: '',
+      ...(eventId && { event: new Types.ObjectId(eventId) })
     })
 
     await attendance.save()
@@ -129,7 +132,7 @@ export async function POST(request: Request) {
           date: attendance.date.toISOString().split('T')[0],
           group: group.name,
           presentCount: attendance.presentMembers.length,
-          absentCount: group.members.length - presentObjectIds.length,
+          absentCount: attendance.absentMembers.length,
         }
       },
       { status: 201 }

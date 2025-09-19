@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { format, subMonths } from "date-fns"
 import { CalendarIcon, Download, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { QuickLoading } from "@/components/ui/loading"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -166,9 +167,7 @@ export function AttendanceHistory({ groupId }: AttendanceHistoryProps) {
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
+          <QuickLoading message="Processing attendance records..." />
         ) : error ? (
           <div className="text-center py-8 text-red-500">{error}</div>
         ) : records.length > 0 ? (

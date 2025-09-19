@@ -48,9 +48,3 @@ export const Notification: Model<INotification> =
   mongoose.models.Notification || 
   mongoose.model<INotification>('Notification', NotificationSchema);
 
-
-## 3. Notifications System
-
-Let's implement a notifications system for upcoming events and attendance reminders:
-
-First, let's create a Notification model:

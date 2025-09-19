@@ -8,6 +8,8 @@ import {
 import Link from 'next/link';
 import { fadeIn } from '@/lib/motion';
 import { CreateMemberForm } from '@/components/CreateMemberForm';
+import { Users, Calendar, TrendingUp } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 
 interface Member {
   _id: string;
@@ -25,8 +27,6 @@ interface Event {
   date: string;
 }
 
-
-
 interface Group {
   _id: string;
   name: string;
@@ -34,7 +34,6 @@ interface Group {
     _id: string;
     name: string;
   } | null;
-
 }
 
 export interface DashboardResponse {
@@ -50,7 +49,7 @@ export interface DashboardResponse {
   }[];
 }
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 
 const ratingColors = {
   Excellent: '#4caf50',
@@ -58,19 +57,9 @@ const ratingColors = {
   Poor: '#f44336',
 };
 
-function LoadingSkeleton() {
-  return (
-    <motion.div
-      initial={{ opacity: 0.3 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 1, repeat: Infinity, repeatType: 'reverse' }}
-      className="w-full h-8 bg-blue-400 rounded my-2"
-    />
-  );
-}
 
 export default function LeaderDashboard() {
-  const [data, setData] = useState<DashboardResponse| null>(null);
+  const [data, setData] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openAddMember, setOpenAddMember] = useState(false);
@@ -82,372 +71,408 @@ export default function LeaderDashboard() {
   const [sortKey, setSortKey] = useState<'name' | 'attendanceCount' | 'lastAttendanceDate' | 'rating'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  // New filters for ev
-  const [selectedEventId, setSelectedEventId] = useState<string>('');
-  const [fromDate, setFromDate] = useState<string>(''); // YYYY-MM-DD
-  const [toDate, setToDate] = useState<string>(''); // YYYY-MM-DD
-
-  
-
-
-    const  fetchData = async () => {
+  const fetchData = async () => {
+    try {
       setLoading(true);
-      try {
-        
-        const params = new URLSearchParams();
-        //params.append('userId', userId);
-        if (selectedEventId) params.append('eventId', selectedEventId);
-        if (fromDate) params.append('fromDate', fromDate);
-        if (toDate) params.append('toDate', toDate);
-
-        console.log('Fetching with params:', params.toString());
-        //CreateMemberFormPropsconst userId = user?.id || 'defaultId'; // Use 'defaultId' if user is null
-
-
-
-        const res = await fetch(`/api/leader?${params.toString()}`,{
-          credentials: 'include', 
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || 'Failed to fetch data');
-        }
-        const json: DashboardResponse = await res.json();
-        setData(json);
-        setCurrentPage(1); // Reset page on new filter
-      } catch (err) {
-        console.error('Fetch error:', err);
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
+      const response = await fetch('/api/leader');
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
       }
-    }; 
-        
+      const result = await response.json();
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    useEffect(() => {
-      fetchData();
-    }, [selectedEventId, fromDate, toDate]);
-    
+  useEffect(() => {
+    fetchData();
+  }, []);
 
+  // Filter and sort members
   const filteredMembers = useMemo(() => {
     if (!data) return [];
-
-    let filtered = data.members;
-
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter((m) =>
-        m.name.toLowerCase().includes(term) || m.email.toLowerCase().includes(term)
-      );
-    }
-
-    if (ratingFilter) {
-      filtered = filtered.filter((m) => m.rating === ratingFilter);
-    }
-
-    return filtered;
-  }, [data, searchTerm, ratingFilter]);
-
-  const sortedMembers = useMemo(() => {
-    const sorted = [...filteredMembers];
-    sorted.sort((a, b) => {
-      let cmp = 0;
-      if (sortKey === 'name') {
-        cmp = a.name.localeCompare(b.name);
-      } else if (sortKey === 'attendanceCount') {
-        cmp = a.attendanceCount - b.attendanceCount;
-      } else if (sortKey === 'lastAttendanceDate') {
-        cmp = (new Date(a.lastAttendanceDate ?? 0).getTime() || 0) - (new Date(b.lastAttendanceDate ?? 0).getTime() || 0);
-      } else if (sortKey === 'rating') {
-        const ratingsOrder = { Excellent: 1, Average: 2, Poor: 3 };
-        cmp = ratingsOrder[a.rating] - ratingsOrder[b.rating];
+    
+    return data.members.filter(member => {
+      const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           member.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRating = !ratingFilter || member.rating === ratingFilter;
+      
+      return matchesSearch && matchesRating;
+    }).sort((a, b) => {
+      let aVal: any = a[sortKey];
+      let bVal: any = b[sortKey];
+      
+      if (sortKey === 'lastAttendanceDate') {
+        aVal = aVal ? new Date(aVal).getTime() : 0;
+        bVal = bVal ? new Date(bVal).getTime() : 0;
       }
-      return sortDirection === 'asc' ? cmp : -cmp;
+      
+      if (sortDirection === 'asc') {
+        return aVal > bVal ? 1 : -1;
+      } else {
+        return aVal < bVal ? 1 : -1;
+      }
     });
-    return sorted;
-  }, [filteredMembers, sortKey, sortDirection]);
+  }, [data, searchTerm, ratingFilter, sortKey, sortDirection]);
 
-  const paginatedMembers = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return sortedMembers.slice(start, start + PAGE_SIZE);
-  }, [sortedMembers, currentPage]);
+  // Pagination
+  const totalPages = Math.ceil(filteredMembers.length / PAGE_SIZE);
+  const paginatedMembers = filteredMembers.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
 
+  // Chart data
   const ratingDistribution = useMemo(() => {
     if (!data) return [];
+    
     const counts = { Excellent: 0, Average: 0, Poor: 0 };
-    data.members.forEach((m) => counts[m.rating]++);
-    return [
-      { name: 'Excellent', value: counts.Excellent },
-      { name: 'Average', value: counts.Average },
-      { name: 'Poor', value: counts.Poor },
-    ];
+    data.members.forEach(member => {
+      counts[member.rating]++;
+    });
+    
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [data]);
 
   const attendanceTrend = useMemo(() => {
     if (!data) return [];
-
+    
     const dateMap = new Map<string, number>();
-    data.attendanceRecords.forEach((record) => {
-      const dateStr = new Date(record.date).toISOString().slice(0, 10);
-      dateMap.set(dateStr, (dateMap.get(dateStr) ?? 0) + record.presentMembers.length);
+    data.attendanceRecords.forEach(record => {
+      const date = new Date(record.date).toLocaleDateString();
+      dateMap.set(date, record.presentMembers.length);
     });
-
-    const sortedDates = [...dateMap.keys()].sort();
-
-    return sortedDates.map((date) => ({ date, attendance: dateMap.get(date)! }));
+    
+    const sortedDates = Array.from(dateMap.keys()).sort((a, b) => 
+      new Date(a).getTime() - new Date(b).getTime()
+    );
+    
+    return sortedDates.map(date => ({
+      date,
+      attendance: dateMap.get(date)!
+    }));
   }, [data]);
 
   if (loading) {
+    return <Loading message="Loading dashboard data..." size="lg" />;
+  }
+
+  if (error) {
     return (
-      <div className="p-4 max-w-7xl mx-auto">
-        <LoadingSkeleton />
+      <div className="min-h-screen bg-blue-300 flex items-center justify-center px-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg max-w-md text-center">
+          <div className="mb-4">
+            <svg className="w-8 h-8 text-red-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <strong>Error:</strong> {error}
+          <button 
+            onClick={fetchData}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
 
-  if (error) {
-    return <div className="p-4 text-red-600">Error: {error}</div>;
-  }
-
   if (!data) {
-    return <div className="p-4">No data available.</div>;
+    return (
+      <div className="min-h-screen bg-blue-300 flex items-center justify-center px-4">
+        <div className="bg-blue-200/90 backdrop-blur-md rounded-lg p-6 border border-blue-300 text-center">
+          <p className="text-blue-800">No data available.</p>
+          <button 
+            onClick={fetchData}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Refresh
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
-      key="leader-dashboard"  
-        className="p-4 max-w-7xl mx-auto space-y-8">
-      <h1 className="text-3xl font-bold mb-4"></h1>
-      <motion.div variants={fadeIn("up", "spring", 0.2, 1)}>
-                <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-white">{data.group.name} -  Leader Dashboard</h1>
-                    <div className="space-x-2">
-                    <button className='border-2  border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-all py-1 px-3 rounded-full' onClick={()=>setOpenAddMember(true)}>Add Member</button>
-                        <Link href="/leader/events" className="btn bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-950">
-                            Create Event
-                        </Link>
-                    </div>
-                </div>
-            </motion.div>
-
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Search members by name or email"
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="border px-3 py-2 rounded flex-grow min-w-[250px]"
-        />
-
-        <select
-          value={ratingFilter ?? ''}
-          onChange={(e) => {
-            setRatingFilter(e.target.value || null);
-            setCurrentPage(1);
-          }}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="">Filter by rating</option>
-          <option value="Excellent">Excellent</option>
-          <option value="Average">Average</option>
-          <option value="Poor">Poor</option>
-        </select>
-
-        <select
-          value={sortKey}
-          onChange={(e) => setSortKey(e.target.value as typeof sortKey)}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="name">Sort by Name</option>
-          <option value="attendanceCount">Sort by Attendance</option>
-          <option value="lastAttendanceDate">Sort by Last Attendance</option>
-          <option value="rating">Sort by Rating</option>
-        </select>
-
-        <select
-          value={sortDirection}
-          onChange={(e) => setSortDirection(e.target.value as 'asc' | 'desc')}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
-        </select>
-
-        {/* New Event Filter */}
-        <select
-          value={selectedEventId}
-          onChange={(e) => {
-            setSelectedEventId(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="">All Events</option>
-          {data.events.map((ev) => (
-            <option key={ev._id} value={ev._id}>
-              {ev.name} ({new Date(ev.date).toLocaleDateString()})
-            </option>
-          ))}
-        </select>
-
-        {/* From Date */}
-        <input
-          type="date"
-          value={fromDate}
-          onChange={(e) => {
-            setFromDate(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="border px-3 py-2 rounded"
-          max={toDate || undefined}
-          placeholder="From Date"
-        />
-
-        {/* To Date */}
-        <input
-          type="date"
-          value={toDate}
-          onChange={(e) => {
-            setToDate(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="border px-3 py-2 rounded"
-          min={fromDate || undefined}
-          placeholder="To Date"
-        />
-      </div>
-
-      {/* Members Table */}
-      <motion.table
-        layout
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="w-full border-collapse border border-blue-500 text-left"
-      >
-        <thead>
-          <tr>
-            <th className="border border-black p-2 cursor-pointer" onClick={() => {
-              setSortKey('name');
-              setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-            }}>Name</th>
-            <th className="border border-gray-300 p-2">Email</th>
-            <th className="border border-gray-300 p-2">Phone</th>
-            <th className="border border-gray-300 p-2 cursor-pointer text-right" onClick={() => {
-              setSortKey('attendanceCount');
-              setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-            }}>Attendance</th>
-            <th className="border border-gray-300 p-2 cursor-pointer" onClick={() => {
-              setSortKey('lastAttendanceDate');
-              setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-            }}>Last Attendance</th>
-            <th className="border border-gray-300 p-2 cursor-pointer" onClick={() => {
-              setSortKey('rating');
-              setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-            }}>Rating</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedMembers.map((member) => (
-            <tr key={member._id}>
-              <td className="border border-gray-300 p-2">{member.name}</td>
-              <td className="border border-gray-300 p-2">{member.email}</td>
-              <td className="border border-gray-300 p-2">{member.phone}</td>
-              <td className="border border-gray-300 p-2 text-right">{member.attendanceCount}</td>
-              <td className="border border-gray-300 p-2">
-                {member.lastAttendanceDate
-                  ? new Date(member.lastAttendanceDate).toLocaleDateString()
-                  : 'Never'}
-              </td>
-              <td className="border border-gray-300 p-2">
-                <span style={{ color: ratingColors[member.rating] }} className="font-semibold">
-                  {member.rating}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </motion.table>
-
-      {/* Pagination */}
-      <div className="flex justify-center mt-4 space-x-2">
-        {Array.from({ length: Math.ceil(sortedMembers.length / PAGE_SIZE) }).map((_, i) => (
-          <button
-            key={i}
-            className={`px-3 py-1 rounded border ${
-              currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white text-blue-600'
-            }`}
-            onClick={() => setCurrentPage(i + 1)}
-          >
-            {i + 1}
-          </button>
-        ))}
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
-        <div>
-          <h2 className="text-xl font-semibold mb-3">Attendance Trend</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={attendanceTrend}>
-              <XAxis dataKey="date" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="attendance" fill="#3182ce" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div>
-          <h2 className="text-xl font-semibold mb-3">Member Rating Distribution</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={ratingDistribution}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                label
+    <div className="min-h-screen bg-blue-300">
+      {/* Header */}
+      <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div>
+              <h1 className="text-2xl font-bold text-blue-800">{data.group.name} - Leader Dashboard</h1>
+              <p className="text-sm text-blue-700 mt-1">Manage your group members and events</p>
+            </div>
+            <div className="flex space-x-3">
+              <button 
+                onClick={() => setOpenAddMember(true)}
+                className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-800 bg-white/80 backdrop-blur-sm hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                {ratingDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={ratingColors[entry.name as keyof typeof ratingColors]} />
-
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+                Add Member
+              </button>
+              <Link 
+                href="/leader/attendance" 
+                className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-800 bg-white/80 backdrop-blur-sm hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Mark Attendance
+              </Link>
+              <Link 
+                href="/leader/events" 
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-800"
+              >
+                Manage Events
+              </Link>
+              <Link 
+                href="/leader/analytics" 
+                className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-800 bg-white/80 backdrop-blur-sm hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                View Analytics
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
-      {/** openAddMembere */}
-      { openAddMember && (
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-6"
+        >
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <Users className="h-8 w-8 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-blue-700 uppercase tracking-wide">Total Members</p>
+                  <p className="text-2xl font-bold text-blue-800">{data.members.length}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <Calendar className="h-8 w-8 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-blue-700 uppercase tracking-wide">Total Events</p>
+                  <p className="text-2xl font-bold text-blue-800">{data.events.length}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <TrendingUp className="h-8 w-8 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-blue-700 uppercase tracking-wide">Attendance Records</p>
+                  <p className="text-2xl font-bold text-blue-800">{data.attendanceRecords.length}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-6">
+            <h3 className="text-lg font-medium text-blue-800 mb-4">Filter Members</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <input
+                type="text"
+                placeholder="Search members..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="border border-blue-300 rounded-md px-4 py-2 bg-white/90 text-blue-800 placeholder-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+
+              <select
+                value={ratingFilter ?? ''}
+                onChange={(e) => {
+                  setRatingFilter(e.target.value || null);
+                  setCurrentPage(1);
+                }}
+                className="border border-blue-300 rounded-md px-4 py-2 bg-white/90 text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">All Ratings</option>
+                <option value="Excellent">Excellent</option>
+                <option value="Average">Average</option>
+                <option value="Poor">Poor</option>
+              </select>
+
+              <select
+                value={sortKey}
+                onChange={(e) => setSortKey(e.target.value as typeof sortKey)}
+                className="border border-blue-300 rounded-md px-4 py-2 bg-white/90 text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="name">Sort by Name</option>
+                <option value="attendanceCount">Sort by Attendance</option>
+                <option value="lastAttendanceDate">Sort by Last Attendance</option>
+                <option value="rating">Sort by Rating</option>
+              </select>
+
+              <select
+                value={sortDirection}
+                onChange={(e) => setSortDirection(e.target.value as 'asc' | 'desc')}
+                className="border border-blue-300 rounded-md px-4 py-2 bg-white/90 text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Members Grid */}
+          <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300">
+            <div className="px-6 py-4 border-b border-blue-300">
+              <h3 className="text-lg font-medium text-blue-800">Group Members</h3>
+              <p className="text-sm text-blue-700 mt-1">Showing {paginatedMembers.length} of {filteredMembers.length} members</p>
+            </div>
+            
+            <div className="p-6">
+              {filteredMembers.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="mx-auto h-12 w-12 text-blue-400 mb-4" />
+                  <h3 className="text-lg font-medium text-blue-800 mb-2">No members found</h3>
+                  <p className="text-blue-600">Try adjusting your search filters or add new members to your group.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {paginatedMembers.map((member) => (
+                    <motion.div
+                      key={member._id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.2 }}
+                      className="bg-white/80 backdrop-blur-sm rounded-lg border border-blue-200 p-6 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-lg font-semibold text-blue-800">{member.name}</h4>
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          member.rating === 'Excellent' ? 'bg-green-100 text-green-800' :
+                          member.rating === 'Average' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {member.rating}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <p className="text-sm text-blue-700">
+                          <span className="font-medium">Email:</span> {member.email}
+                        </p>
+                        {member.phone && (
+                          <p className="text-sm text-blue-700">
+                            <span className="font-medium">Phone:</span> {member.phone}
+                          </p>
+                        )}
+                        <p className="text-sm text-blue-700">
+                          <span className="font-medium">Attendance:</span> {member.attendanceCount} events
+                        </p>
+                        <p className="text-sm text-blue-700">
+                          <span className="font-medium">Last Attended:</span> {
+                            member.lastAttendanceDate ? 
+                            new Date(member.lastAttendanceDate).toLocaleDateString() : 
+                            'Never'
+                          }
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center space-x-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border border-blue-300 rounded-md bg-white/80 text-blue-800 hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              
+              <span className="px-4 py-2 text-blue-800">
+                Page {currentPage} of {totalPages}
+              </span>
+              
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 border border-blue-300 rounded-md bg-white/80 text-blue-800 hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
+
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-6">
+              <h3 className="text-lg font-medium text-blue-800 mb-4">Attendance Trend</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={attendanceTrend}>
+                  <XAxis dataKey="date" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="attendance" fill="#3b82f6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-6">
+              <h3 className="text-lg font-medium text-blue-800 mb-4">Member Rating Distribution</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={ratingDistribution}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label
+                  >
+                    {ratingDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={ratingColors[entry.name as keyof typeof ratingColors]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+        </motion.div>
+      </div>
+
+      {/* Add Member Modal */}
+      {openAddMember && (
         <CreateMemberForm
-        groupId={data.group._id} 
-
-        onMemberCreated={() => {
-          setOpenAddMember(false);
-          fetchData();
-        }}
-          
+          groupId={data.group._id}
+          onMemberCreated={() => {
+            setOpenAddMember(false);
+            fetchData();
+          }}
         />
-
       )}
-        
-    </motion.div>
+    </div>
   );
 }

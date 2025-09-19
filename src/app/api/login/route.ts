@@ -52,7 +52,7 @@ export async function POST(req: Request) {
         name: user.name,
         role: user.role,
       },
-      redirectTo: user.role === 'bishop' ? '/bishop/dashboard' : '/leader',
+      redirectTo: user.role === 'bishop' ? '/bishop' : '/leader',
     });
   } catch (error) {
     console.error('Login error:', error);

@@ -24,11 +24,17 @@ export default function EditEventForm({ eventId }: { eventId: string }) {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!eventId) {
+      setError("Event ID is required");
+      setLoading(false);
+      return;
+    }
+    
     const fetchEvent = async () => {
       try {
         const response = await fetch(`/api/leader/events/${eventId}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch event');
+          throw new Error(`Failed to fetch event: ${response.status}`);
         }
         
         const result = await response.json();
@@ -42,7 +48,7 @@ export default function EditEventForm({ eventId }: { eventId: string }) {
             .split('T')[0];
           
           setFormData({
-            title: eventData.title,
+            title: eventData.title || '',
             date: formattedDate,
             location: eventData.location || '',
             description: eventData.description || ''
@@ -82,14 +88,13 @@ export default function EditEventForm({ eventId }: { eventId: string }) {
         body: JSON.stringify(formData)
       });
       
+      const result = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update event');
+        throw new Error(result.error || `Failed to update event: ${response.status}`);
       }
       
-      const result = await response.json();
       if (result.success) {
-        // Redirect to events page or show success message
         router.push('/leader/events');
         router.refresh();
       } else {
@@ -115,14 +120,13 @@ export default function EditEventForm({ eventId }: { eventId: string }) {
         method: 'DELETE'
       });
       
+      const result = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete event');
+        throw new Error(result.error || `Failed to delete event: ${response.status}`);
       }
       
-      const result = await response.json();
       if (result.success) {
-        // Redirect to events page
         router.push('/leader/events');
         router.refresh();
       } else {
@@ -140,7 +144,17 @@ export default function EditEventForm({ eventId }: { eventId: string }) {
   }
 
   if (error) {
-    return <div className="text-red-500 p-4">Error: {error}</div>;
+    return (
+      <div className="text-red-500 p-4">
+        <p>Error: {error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -155,4 +169,82 @@ export default function EditEventForm({ eventId }: { eventId: string }) {
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="title" className="block text-sm font-medium mb
+          <label htmlFor="title" className="block text-sm font-medium mb-1">
+            Event Title
+          </label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="date" className="block text-sm font-medium mb-1">
+            Event Date
+          </label>
+          <input
+            type="date"
+            id="date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="location" className="block text-sm font-medium mb-1">
+            Location (Optional)
+          </label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium mb-1">
+            Description (Optional)
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            rows={4}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+        
+        <div className="flex justify-between">
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={submitting}
+            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            {submitting ? 'Processing...' : 'Delete Event'}
+          </button>
+          
+          <button
+            type="submit"
+            disabled={submitting}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            {submitting ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { QuickLoading } from '@/components/ui/loading';
 import { Progress } from '@/components/ui/progress';
 import { 
   BarChart, 
@@ -115,15 +116,23 @@ export default function MemberAttendanceDetails({ memberId }: { memberId: string
   };
 
   if (loading) {
-    return <div className="flex justify-center p-8">Loading member details...</div>;
+    return <QuickLoading message="Analyzing member attendance..." />;
   }
 
   if (error) {
-    return <div className="text-red-500 p-4">Error: {error}</div>;
+    return (
+      <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg text-center">
+        <strong>Error:</strong> {error}
+      </div>
+    );
   }
 
   if (!data) {
-    return <div className="p-4">No member attendance data available.</div>;
+    return (
+      <div className="bg-blue-200/90 backdrop-blur-md rounded-lg p-6 border border-blue-300 text-center">
+        <p className="text-blue-800">No member attendance data available.</p>
+      </div>
+    );
   }
 
   // Prepare data for charts

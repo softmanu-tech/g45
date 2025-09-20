@@ -17,7 +17,26 @@ export async function POST(req: Request) {
     }
 
     await dbConnect();
-    const user = await User.findOne({ email }).select('+password');
+    
+    // First check regular users
+    let user = await User.findOne({ email }).select('+password');
+    let isVisitor = false;
+    
+    // If not found in users, check visitors
+    if (!user) {
+      const { Visitor } = await import('@/lib/models/Visitor');
+      const visitor = await Visitor.findOne({ email, canLogin: true }).select('+password');
+      if (visitor) {
+        user = {
+          _id: visitor._id,
+          email: visitor.email,
+          name: visitor.name,
+          password: visitor.password,
+          role: 'visitor'
+        };
+        isVisitor = true;
+      }
+    }
 
     if (!user || !(await bcryptjs.compare(password, user.password))) {
       return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
@@ -52,7 +71,10 @@ export async function POST(req: Request) {
         name: user.name,
         role: user.role,
       },
-      redirectTo: user.role === 'bishop' ? '/bishop' : '/leader',
+      redirectTo: user.role === 'bishop' ? '/bishop' : 
+                  user.role === 'leader' ? '/leader' : 
+                  user.role === 'protocol' ? '/protocol' :
+                  user.role === 'visitor' ? '/visitor' : '/member',
     });
   } catch (error) {
     console.error('Login error:', error);

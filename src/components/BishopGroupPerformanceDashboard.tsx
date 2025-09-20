@@ -301,17 +301,17 @@ export default function BishopGroupPerformanceDashboard() {
           
           <div className="mt-6">
             <h3 className="text-lg font-semibold mb-4">Group Performance Summary</h3>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-96 overflow-y-auto">
               <table className="min-w-full bg-white border">
-                <thead className="bg-gray-50">
+                <thead className="bg-blue-100/50 sticky top-0 z-10">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Group</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leader</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Members</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Events</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attendance</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trend</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider bg-blue-100/50 backdrop-blur-sm">Group</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider bg-blue-100/50 backdrop-blur-sm">Leader</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider bg-blue-100/50 backdrop-blur-sm">Members</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider bg-blue-100/50 backdrop-blur-sm">Events</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider bg-blue-100/50 backdrop-blur-sm">Attendance</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider bg-blue-100/50 backdrop-blur-sm">Trend</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider bg-blue-100/50 backdrop-blur-sm">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -394,9 +394,9 @@ export default function BishopGroupPerformanceDashboard() {
                   <table className="min-w-full bg-white">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attendance</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Event</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Date</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Attendance</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -430,11 +430,11 @@ export default function BishopGroupPerformanceDashboard() {
                 <table className="min-w-full bg-white">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attendance Rate</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Events Attended</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Events</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Member</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Attendance Rate</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Events Attended</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Total Events</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Users, ArrowLeft, UserCheck } from 'lucide-react';
 import Link from 'next/link';
+import { useAlerts } from '@/components/ui/alert-system';
 
 interface Group {
     _id: string;
@@ -15,6 +16,7 @@ interface Group {
 }
 
 export default function GroupManagement() {
+    const alerts = useAlerts();
     const [groups, setGroups] = useState([]);
     const [groupName, setGroupName] = useState('');
 
@@ -36,7 +38,7 @@ export default function GroupManagement() {
                 setGroupName('');
                 await fetchGroups();
                 
-                // Show success feedback  
+                // Show beautiful success alert
                 const groupNameToShow = groupName;
                 
                 // Trigger refresh on main dashboard (if it's open in another tab)
@@ -44,22 +46,49 @@ export default function GroupManagement() {
                     window.opener.postMessage('refresh-dashboard', '*');
                 }
                 
-                // Show success message
-                const successDiv = document.createElement('div');
-                successDiv.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
-                successDiv.innerHTML = `✅ Group "${groupNameToShow}" created successfully!`;
-                document.body.appendChild(successDiv);
-                
-                setTimeout(() => {
-                    document.body.removeChild(successDiv);
-                }, 3000);
+                alerts.success(
+                    "Group Created Successfully!",
+                    `"${groupNameToShow}" has been added to your church groups.`,
+                    [
+                        {
+                            label: "Assign Leader",
+                            action: () => window.location.href = "/bishop/leaders",
+                            variant: "primary"
+                        },
+                        {
+                            label: "View Dashboard",
+                            action: () => window.location.href = "/bishop",
+                            variant: "secondary"
+                        }
+                    ]
+                );
             } else {
                 const error = await res.json();
-                alert(`Error: ${error.message || 'Failed to create group'}`);
+                alerts.error(
+                    "Failed to Create Group",
+                    error.message || 'An error occurred while creating the group.',
+                    [
+                        {
+                            label: "Try Again",
+                            action: () => createGroup(),
+                            variant: "primary"
+                        }
+                    ]
+                );
             }
         } catch (err) {
             console.error('Error creating group:', err);
-            alert('Failed to create group. Please try again.');
+            alerts.error(
+                "Network Error",
+                "Failed to create group. Please check your connection and try again.",
+                [
+                    {
+                        label: "Retry",
+                        action: () => createGroup(),
+                        variant: "primary"
+                    }
+                ]
+            );
         }
     };
 
@@ -152,9 +181,9 @@ export default function GroupManagement() {
                         </div>
                     ) : (
                         <div className="text-center py-12">
-                            <Users className="mx-auto h-12 w-12 text-gray-400" />
+                            <Users className="mx-auto h-12 w-12 text-blue-500" />
                             <h3 className="mt-2 text-sm font-medium text-gray-900">No groups yet</h3>
-                            <p className="mt-1 text-sm text-gray-500">Create your first group to get started.</p>
+                            <p className="mt-1 text-sm text-blue-600">Create your first group to get started.</p>
                         </div>
                     )}
                 </div>

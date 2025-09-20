@@ -122,10 +122,9 @@ AttendanceSchema.virtual('absentCount').get(function(this: IAttendance) {
     return this.absentMembers.length;
 });
 
-// Create and export the model - FIX the type error here
+// Create and export the model
 const AttendanceModel = (models.Attendance ||
     mongoose.model<IAttendance, AttendanceModel>('Attendance', AttendanceSchema)) as AttendanceModel;
 
-export const Attendance = AttendanceModel;
-// src/lib/models/Attendance.ts
-// Keep your existing code but add this at the end:
+export default AttendanceModel;
+export { AttendanceModel as Attendance };

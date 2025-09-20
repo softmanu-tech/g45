@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Rowdies, Cinzel } from "next/font/google";
 import "./globals.css";
 import Providers from "@/app/providers";
-
+import { AlertProvider } from "@/components/ui/alert-system";
 
 import { initBishop } from '@/lib/initBishop'
 import React from "react";
@@ -36,7 +36,9 @@ export default async function RootLayout({children,}: Readonly<{ children: React
             className={`${rowdies.variable} ${cinzel.variable} antialiased`}
         >
         <Providers>
-            {children}
+            <AlertProvider>
+                {children}
+            </AlertProvider>
         </Providers>
         </body>
         </html>

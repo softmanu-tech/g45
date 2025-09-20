@@ -205,7 +205,7 @@ export function MembersTable({ members, groupId, onMemberAdded }: MembersTablePr
 
         {/* Search Input */}
         <div className="relative w-full sm:w-64">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-blue-600" />
           <Input
             placeholder="Search members..."
             className="pl-8"

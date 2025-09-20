@@ -27,19 +27,41 @@ export async function GET(request: Request) {
     const skip = (page - 1) * limit
 
     const events = await Event.find(filter)
+        .populate('group', 'name')
+        .populate('createdBy', 'name email')
         .sort({ date: -1 })
         .skip(skip)
         .limit(limit)
         .lean()
 
         const total = await Event.countDocuments(filter)
-        // For each event, fetch attendance count
-        // Attendance is stored in event.attendance as array of member IDs or similar
-
+        
+        // For each event, fetch attendance data
         const eventsWithAttendance = await Promise.all(events.map(async (event) => {
-            // Example: attendance count = event.attendance.length
-            const attendanceCount = event.attendance ? event.attendance.length : 0
-            return { ...event, attendanceCount }
+            try {
+                // Get attendance records for this event
+                const Attendance = (await import('@/lib/models/Attendance')).default
+                const attendanceRecord = await Attendance.findOne({ event: event._id })
+            
+                const attendanceCount = attendanceRecord?.presentMembers?.length || 0
+                const totalMembers = (attendanceRecord?.presentMembers?.length || 0) + (attendanceRecord?.absentMembers?.length || 0)
+                const attendanceRate = totalMembers > 0 ? Math.round((attendanceCount / totalMembers) * 100) : 0
+                
+                return { 
+                    ...event, 
+                    attendanceCount,
+                    totalMembers,
+                    attendanceRate
+                }
+            } catch (error) {
+                console.error('Error fetching attendance for event:', event._id, error)
+                return {
+                    ...event,
+                    attendanceCount: 0,
+                    totalMembers: 0,
+                    attendanceRate: 0
+                }
+            }
         }))
 
     return NextResponse.json({

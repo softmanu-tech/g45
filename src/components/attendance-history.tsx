@@ -123,7 +123,7 @@ export function AttendanceHistory({ groupId }: AttendanceHistoryProps) {
               <PopoverTrigger asChild>
                 <Button
                   variant={"outline"}
-                  className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}
+                  className={cn("w-full justify-start text-left font-normal", !startDate && "text-blue-600")}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
@@ -147,7 +147,7 @@ export function AttendanceHistory({ groupId }: AttendanceHistoryProps) {
               <PopoverTrigger asChild>
                 <Button
                   variant={"outline"}
-                  className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}
+                  className={cn("w-full justify-start text-left font-normal", !endDate && "text-blue-600")}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
@@ -176,15 +176,15 @@ export function AttendanceHistory({ groupId }: AttendanceHistoryProps) {
               <div className="text-lg font-medium">Summary</div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
                 <div>
-                  <div className="text-sm text-muted-foreground">Records</div>
+                  <div className="text-sm text-blue-600">Records</div>
                   <div className="text-2xl font-bold">{records.length}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">Average Attendance</div>
+                  <div className="text-sm text-blue-600">Average Attendance</div>
                   <div className="text-2xl font-bold">{averageAttendanceRate}%</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">Date Range</div>
+                  <div className="text-sm text-blue-600">Date Range</div>
                   <div className="text-sm font-medium">
                     {format(startDate, "MMM d, yyyy")} - {format(endDate, "MMM d, yyyy")}
                   </div>
@@ -218,7 +218,7 @@ export function AttendanceHistory({ groupId }: AttendanceHistoryProps) {
             </div>
           </>
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-blue-600">
             No attendance records found for the selected date range
           </div>
         )}

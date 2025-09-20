@@ -32,7 +32,9 @@ export async function POST(req: Request) {
 export async function GET() {
     try {
         await dbConnect();
-        const leaders = await User.find({ role: 'leader' }).populate('group');
+        const leaders = await User.find({ role: 'leader' })
+            .populate('group', 'name')
+            .select('-password'); // Exclude password for security
         return NextResponse.json({ success: true, leaders });
     } catch (error) {
         return NextResponse.json({ success: false, error }, { status: 500 });

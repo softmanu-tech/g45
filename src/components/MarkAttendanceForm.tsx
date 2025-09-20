@@ -1,387 +1,427 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useCallback } from "react";
-import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Checkbox } from "@/components/ui/checkbox";
-import { QuickLoading } from "@/components/ui/loading";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useLocalStorage } from "@/hooks/use-local-storage";
-
-interface MarkAttendanceFormProps {
-  groupId: string;
-  members: Member[];
-  onAttendanceMarked: () => void;
-  currentUserId: string;
-}
+import React, { useState, useEffect } from "react"
+import { motion } from "framer-motion"
+import { Calendar, Users, CheckCircle, XCircle, Clock, ArrowLeft } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Loading, QuickLoading } from "@/components/ui/loading"
+import { useAlerts } from "@/components/ui/alert-system"
+import { format } from "date-fns"
+import Link from "next/link"
 
 interface Member {
-  _id: string;
-  name: string;
-  email?: string;
+  _id: string
+  name: string
+  email: string
+  phone?: string
 }
 
 interface Event {
-  _id: string;
-  title: string;
-  date: string;
-  description?: string;
-  groupId: string;
+  _id: string
+  title: string
+  date: string
+  location?: string
 }
 
-export function MarkAttendanceForm({
-  groupId,
-  members,
-  onAttendanceMarked,
-  currentUserId,
-}: MarkAttendanceFormProps) {
-  const [draftAttendance, setDraftAttendance] = useLocalStorage<{
-    date?: string;
-    presentMembers: Record<string, boolean>;
-    selectedEventId?: string;
-  }>(`attendance-draft-${groupId}`, {
-    presentMembers: members.reduce(
-      (acc, member) => ({
-        ...acc,
-        [member._id]: true,
-      }),
-      {}
-    ),
-  });
+interface AttendanceRecord {
+  _id: string
+  date: string
+  event?: Event
+  presentMembers: string[]
+  absentMembers: string[]
+  group: {
+    _id: string
+    name: string
+  }
+}
 
-  const [date, setDate] = useState<Date | undefined>(
-    draftAttendance.date ? new Date(draftAttendance.date) : new Date()
-  );
-  const [presentMembers, setPresentMembers] = useState<Record<string, boolean>>(
-    draftAttendance.presentMembers
-  );
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<string>(
-    draftAttendance.selectedEventId || ""
-  );
-  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+export default function MarkAttendanceForm() {
+  const alerts = useAlerts()
+  const [members, setMembers] = useState<Member[]>([])
+  const [events, setEvents] = useState<Event[]>([])
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  
+  // Form state
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [selectedEvent, setSelectedEvent] = useState<string>("")
+  const [presentMembers, setPresentMembers] = useState<Set<string>>(new Set())
+  const [submitting, setSubmitting] = useState(false)
 
-  useEffect(() => {
-    setDraftAttendance({
-      date: date?.toISOString(),
-      presentMembers,
-      selectedEventId,
-    });
-  }, [date, presentMembers, selectedEventId, setDraftAttendance]);
-
-  const fetchEvents = useCallback(async () => {
-    if (!groupId) return;
-
+  const fetchData = async () => {
     try {
-      setIsLoadingEvents(true);
-      const response = await fetch(`/api/events?groupId=${groupId}`);
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || "Failed to fetch events");
+      setLoading(true)
+      setError("")
+      
+      // Fetch leader data including members
+      const leaderResponse = await fetch("/api/leader", {
+        credentials: "include"
+      })
+      if (!leaderResponse.ok) throw new Error("Failed to fetch leader data")
+      const leaderData = await leaderResponse.json()
+      
+      setMembers(leaderData.members || [])
+      
+      // Fetch events
+      const eventsResponse = await fetch("/api/leader/events", {
+        credentials: "include"
+      })
+      if (!eventsResponse.ok) throw new Error("Failed to fetch events")
+      const eventsData = await eventsResponse.json()
+      
+      setEvents(eventsData.data || [])
+      
+      // Fetch attendance records
+      const attendanceResponse = await fetch("/api/leader/mark-attendance", {
+        credentials: "include"
+      })
+      if (attendanceResponse.ok) {
+        const attendanceData = await attendanceResponse.json()
+        setAttendanceRecords(attendanceData.data || [])
       }
-
-      const data = await response.json();
-      const now = new Date();
-      const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
-
-      setEvents(
-        data.events
-          .filter((event: Event) => {
-            const eventDate = new Date(event.date);
-            return eventDate >= thirtyDaysAgo;
-          })
-          .sort((a: Event, b: Event) =>
-            new Date(b.date).getTime() - new Date(a.date).getTime()
-          )
-      );
-    } catch (error) {
-      console.error("Error fetching events:", error);
-      toast.error("Failed to load events. Please try again.");
+      
+    } catch (err) {
+      console.error("Error fetching data:", err)
+      setError(err instanceof Error ? err.message : "Failed to fetch data")
     } finally {
-      setIsLoadingEvents(false);
+      setLoading(false)
     }
-  }, [groupId]);
+  }
 
   useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    fetchData()
+  }, [])
 
-  const handleCheckboxChange = useCallback((memberId: string) => {
-    setPresentMembers((prev) => ({
-      ...prev,
-      [memberId]: !prev[memberId],
-    }));
-  }, []);
+  const handleMemberToggle = (memberId: string) => {
+    const newPresentMembers = new Set(presentMembers)
+    if (newPresentMembers.has(memberId)) {
+      newPresentMembers.delete(memberId)
+    } else {
+      newPresentMembers.add(memberId)
+    }
+    setPresentMembers(newPresentMembers)
+  }
 
-  const handleSelectAll = useCallback((select: boolean) => {
-    const newPresentMembers = members.reduce(
-      (acc, member) => ({
-        ...acc,
-        [member._id]: select,
-      }),
-      {}
-    );
-    setPresentMembers(newPresentMembers);
-  }, [members]);
+  const handleSelectAll = () => {
+    const allMemberIds = new Set(members.map(m => m._id))
+    setPresentMembers(allMemberIds)
+  }
+
+  const handleSelectNone = () => {
+    setPresentMembers(new Set())
+  }
 
   const handleSubmit = async () => {
-    if (!date) {
-      toast.error("Please select a date");
-      return;
-    }
-
-    if (date > new Date()) {
-      toast.error("Attendance date cannot be in the future");
-      return;
-    }
-
-    const presentCount = Object.values(presentMembers).filter(Boolean).length;
-    if (presentCount === 0) {
-      toast.error("Please mark at least one member as present");
-      return;
+    if (presentMembers.size === 0) {
+      alerts.warning(
+        "No Members Selected",
+        "Please mark at least one member as present before recording attendance.",
+        [
+          {
+            label: "OK",
+            action: () => {},
+            variant: "primary"
+          }
+        ]
+      )
+      return
     }
 
     try {
-      setIsSubmitting(true);
-
-      const presentIds = Object.entries(presentMembers)
-        .filter(([, isPresent]) => isPresent)
-        .map(([id]) => id);
-
+      setSubmitting(true)
+      
+      const presentIds = Array.from(presentMembers)
       const absentIds = members
-        .filter((member) => !presentIds.includes(member._id))
-        .map((member) => member._id);
+        .filter(m => !presentMembers.has(m._id))
+        .map(m => m._id)
 
       const payload = {
-        date: date.toISOString(),
-        groupId,
-        presentMembers: presentIds,
-        absentMembers: absentIds,
-        recordedBy: currentUserId,
-        ...(selectedEventId && { eventId: selectedEventId }),
-      };
-
-      const response = await fetch("/api/attendance", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || "Failed to mark attendance");
+        date: selectedDate.toISOString(),
+        presentMemberIds: presentIds,
+        absentMemberIds: absentIds,
+        ...(selectedEvent && { eventId: selectedEvent })
       }
 
-      setPresentMembers(
-        members.reduce(
-          (acc, member) => ({
-            ...acc,
-            [member._id]: true,
-          }),
-          {}
-        )
-      );
-      setSelectedEventId("");
-      setDraftAttendance({ presentMembers: {} });
+      const response = await fetch("/api/leader/mark-attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload)
+      })
 
-      toast.success("Attendance recorded successfully");
-      onAttendanceMarked();
-    } catch (error) {
-      console.error("Error marking attendance:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to mark attendance"
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to record attendance")
+      }
 
-  const handleReset = () => {
-    setPresentMembers(
-      members.reduce(
-        (acc, member) => ({
-          ...acc,
-          [member._id]: true,
-        }),
-        {}
+      alerts.success(
+        "Attendance Recorded Successfully!",
+        `Recorded attendance for ${presentIds.length} members on ${selectedDate.toLocaleDateString()}`,
+        [
+          {
+            label: "View Analytics",
+            action: () => window.location.href = "/leader/analytics",
+            variant: "primary"
+          },
+          {
+            label: "Mark Another",
+            action: () => {
+              setPresentMembers(new Set())
+              setSelectedEvent("")
+            },
+            variant: "secondary"
+          }
+        ]
       )
-    );
-    setDate(new Date());
-    setSelectedEventId("");
-  };
+      setPresentMembers(new Set())
+      setSelectedEvent("")
+      await fetchData() // Refresh data
+      
+    } catch (err) {
+      console.error("Error recording attendance:", err)
+      alerts.error(
+        "Failed to Record Attendance",
+        err instanceof Error ? err.message : "An error occurred while recording attendance.",
+        [
+          {
+            label: "Try Again",
+            action: () => handleSubmit(),
+            variant: "primary"
+          }
+        ]
+      )
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
-  const presentCount = Object.values(presentMembers).filter(Boolean).length;
-  const attendancePercentage =
-    members.length > 0 ? Math.round((presentCount / members.length) * 100) : 0;
+  if (loading) {
+    return <Loading message="Loading attendance system..." size="lg" />
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-blue-300 flex items-center justify-center px-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg max-w-md text-center">
+          <strong>Error:</strong> {error}
+          <button 
+            onClick={fetchData}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Date Picker */}
-      <div className="space-y-2">
-        <Label>Date *</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-full sm:w-[240px] justify-start text-left font-normal",
-                !date && "text-muted-foreground",
-                isSubmitting && "opacity-50"
-              )}
-              disabled={isSubmitting}
+    <div className="min-h-screen bg-blue-300">
+      {/* Header */}
+      <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3 sm:gap-4">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800 truncate">Mark Attendance</h1>
+              <p className="text-xs sm:text-sm text-blue-700 mt-1">Record member attendance for your group</p>
+            </div>
+            <Link 
+              href="/leader" 
+              className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-blue-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-blue-800 bg-white/80 backdrop-blur-sm hover:bg-white/90 w-full sm:w-auto"
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, "PPP") : <span>Pick a date</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-              disabled={(date) => date > new Date() || isSubmitting}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      {/* Event Selector */}
-      <div className="space-y-2">
-        <Label>Associated Event (Optional)</Label>
-        <Select
-          value={selectedEventId}
-          onValueChange={setSelectedEventId}
-          disabled={isSubmitting || isLoadingEvents}
-        >
-          <SelectTrigger className="w-full sm:w-[240px]">
-            <SelectValue placeholder="Select an event" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="">No specific event</SelectItem>
-              {events.map((event) => (
-                <SelectItem key={event._id} value={event._id}>
-                  {event.title} ({format(new Date(event.date), "MMM d")})
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        {isLoadingEvents && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Loading events...
-          </div>
-        )}
-      </div>
-
-      {/* Members List */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <Label>Mark Present Members *</Label>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSelectAll(true)}
-              disabled={isSubmitting || members.length === 0}
-            >
-              Select All
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSelectAll(false)}
-              disabled={isSubmitting || members.length === 0}
-            >
-              Deselect All
-            </Button>
+              <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+              Back to Dashboard
+            </Link>
           </div>
         </div>
+      </div>
 
-        {members.length > 0 ? (
-          <div className="space-y-3 max-h-60 overflow-y-auto p-2 border rounded-md">
-            {members.map((member) => (
-              <div key={member._id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`member-${member._id}`}
-                  checked={!!presentMembers[member._id]}
-                  onCheckedChange={() => handleCheckboxChange(member._id)}
-                  disabled={isSubmitting}
-                />
-                <label
-                  htmlFor={`member-${member._id}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {member.name}
-                  {member.email && (
-                    <span className="block text-xs text-muted-foreground">
-                      {member.email}
-                    </span>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+          
+          {/* Attendance Form */}
+          <div className="lg:col-span-2">
+            <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-blue-800 flex items-center gap-2 text-base sm:text-lg">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+                  Mark Attendance
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+                
+                {/* Date and Event Selection */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-blue-800 mb-2">
+                      <Calendar className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      value={format(selectedDate, "yyyy-MM-dd")}
+                      onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                      max={format(new Date(), "yyyy-MM-dd")}
+                      className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 bg-white/90 text-blue-800 text-sm"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-blue-800 mb-2">
+                      Event (Optional)
+                    </label>
+                    <select
+                      value={selectedEvent}
+                      onChange={(e) => setSelectedEvent(e.target.value)}
+                      className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 bg-white/90 text-blue-800 text-sm"
+                    >
+                      <option value="">General Attendance</option>
+                      {events.map((event) => (
+                        <option key={event._id} value={event._id}>
+                          {event.title} - {format(new Date(event.date), "MMM dd")}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSelectAll}
+                    className="border-blue-300 text-blue-800 bg-white/80 hover:bg-white/90 text-xs sm:text-sm"
+                  >
+                    Select All
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSelectNone}
+                    className="border-blue-300 text-blue-800 bg-white/80 hover:bg-white/90 text-xs sm:text-sm"
+                  >
+                    Select None
+                  </Button>
+                </div>
+
+                {/* Members List */}
+                <div className="space-y-3">
+                  <h3 className="text-base sm:text-lg font-medium text-blue-800">
+                    Members ({presentMembers.size} of {members.length} present)
+                  </h3>
+                  
+                  {members.length === 0 ? (
+                    <div className="text-center py-6 sm:py-8">
+                      <Users className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-blue-400 mb-4" />
+                      <p className="text-blue-600 text-sm">No members in your group yet.</p>
+                      <Link href="/leader" className="text-blue-800 underline text-sm">
+                        Add members to your group
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-2 sm:gap-3 max-h-80 overflow-y-auto">
+                      {members.map((member) => (
+                        <motion.div
+                          key={member._id}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className={`p-3 sm:p-4 rounded-lg border cursor-pointer transition-all ${
+                            presentMembers.has(member._id)
+                              ? "bg-blue-100 border-blue-300 shadow-sm"
+                              : "bg-white/80 border-blue-200 hover:bg-white/90"
+                          }`}
+                          onClick={() => handleMemberToggle(member._id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-medium text-blue-800 text-sm sm:text-base truncate">{member.name}</h4>
+                              <p className="text-xs sm:text-sm text-blue-600 truncate">{member.email}</p>
+                            </div>
+                            <div className="flex items-center ml-3">
+                              {presentMembers.has(member._id) ? (
+                                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                              ) : (
+                                <XCircle className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
                   )}
-                </label>
-              </div>
-            ))}
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex justify-center sm:justify-end pt-4 border-t border-blue-300">
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={submitting || presentMembers.size === 0}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 md:px-8 py-2 text-sm sm:text-base w-full sm:w-auto"
+                  >
+                    {submitting ? (
+                      <QuickLoading message="Recording..." />
+                    ) : (
+                      `Record Attendance (${presentMembers.size} present)`
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">No members in this group</p>
-        )}
 
-        <div className="mt-2 text-sm">
-          <p>
-            <span className="font-medium">Attendance Summary:</span> {presentCount}{" "}
-            present, {members.length - presentCount} absent ({attendancePercentage}
-            %)
-          </p>
+          {/* Attendance History */}
+          <div>
+            <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-blue-800 flex items-center gap-2 text-base sm:text-lg">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+                  Recent Records
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6">
+                {attendanceRecords.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Clock className="mx-auto h-8 w-8 text-blue-400 mb-2" />
+                    <p className="text-blue-600 text-sm">No attendance records yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 sm:space-y-3 max-h-80 overflow-y-auto">
+                    {attendanceRecords.slice(0, 10).map((record) => (
+                      <div
+                        key={record._id}
+                        className="p-3 bg-white/80 rounded-lg border border-blue-200"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-blue-800 text-sm sm:text-base">
+                              {format(new Date(record.date), "MMM dd, yyyy")}
+                            </p>
+                            {record.event && (
+                              <p className="text-xs sm:text-sm text-blue-600 truncate">{record.event.title}</p>
+                            )}
+                          </div>
+                          <div className="flex justify-between sm:block sm:text-right">
+                            <p className="text-xs sm:text-sm font-medium text-blue-600">
+                              {record.presentMembers.length} present
+                            </p>
+                            <p className="text-xs sm:text-sm text-blue-500">
+                              {record.absentMembers.length} absent
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
-
-      {/* Submit and Reset Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Button
-          onClick={handleSubmit}
-          disabled={
-            isSubmitting || !date || presentCount === 0 || date > new Date()
-          }
-          className="w-full sm:w-auto"
-        >
-          {isSubmitting ? (
-            <QuickLoading message="Recording..." />
-          ) : (
-            "Save Attendance"
-          )}
-        </Button>
-        <Button
-          variant="outline"
-          onClick={handleReset}
-          disabled={isSubmitting}
-          className="w-full sm:w-auto"
-        >
-          Reset Form
-        </Button>
       </div>
     </div>
-  );
+  )
 }

@@ -6,9 +6,14 @@ export interface IUser extends Document {
     name: string;
     email: string;
     password: string;
-    role: 'bishop' | 'leader' | 'member'; // Added 'member'
+    role: 'bishop' | 'leader' | 'member' | 'protocol';
     group?: mongoose.Types.ObjectId;
+    protocolTeam?: mongoose.Types.ObjectId;
     phone?: string;
+    residence?: string;
+    department?: string;
+    profilePicture?: string;
+    lastPasswordReset?: Date;
 }
 
 const UserSchema: Schema<IUser> = new Schema(
@@ -16,8 +21,14 @@ const UserSchema: Schema<IUser> = new Schema(
         name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
         password: { type: String, required: true },
-        role: { type: String, enum: ['bishop', 'leader', 'member'], required: true }, // Added 'member'
+        role: { type: String, enum: ['bishop', 'leader', 'member', 'protocol'], required: true },
         group: { type: Schema.Types.ObjectId, ref: 'Group' },
+        protocolTeam: { type: Schema.Types.ObjectId, ref: 'ProtocolTeam' },
+        phone: { type: String },
+        residence: { type: String },
+        department: { type: String },
+        profilePicture: { type: String },
+        lastPasswordReset: { type: Date },
     },
     { timestamps: true }
 );

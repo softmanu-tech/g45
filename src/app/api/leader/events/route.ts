@@ -94,9 +94,36 @@ export async function GET(request: Request) {
       .sort({ date: -1 })
       .populate('createdBy', 'name email');
 
+    // Add attendance data to each event
+    const eventsWithAttendance = await Promise.all(events.map(async (event) => {
+      try {
+        const Attendance = (await import('@/lib/models/Attendance')).default
+        const attendanceRecord = await Attendance.findOne({ event: event._id })
+        
+        const attendanceCount = attendanceRecord?.presentMembers?.length || 0
+        const totalMembers = (attendanceRecord?.presentMembers?.length || 0) + (attendanceRecord?.absentMembers?.length || 0)
+        const attendanceRate = totalMembers > 0 ? Math.round((attendanceCount / totalMembers) * 100) : 0
+        
+        return {
+          ...event.toObject(),
+          attendanceCount,
+          totalMembers,
+          attendanceRate
+        }
+      } catch (error) {
+        console.error('Error fetching attendance for event:', event._id, error)
+        return {
+          ...event.toObject(),
+          attendanceCount: 0,
+          totalMembers: 0,
+          attendanceRate: 0
+        }
+      }
+    }));
+
     return NextResponse.json({
       success: true,
-      data: events
+      data: eventsWithAttendance
     });
   } catch (error: unknown) {
     let errorMsg = 'Unknown error';

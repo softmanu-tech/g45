@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react"
 import { X, Save, User, Mail, Users } from "lucide-react"
 import { QuickLoading } from "@/components/ui/loading"
+import { useAlerts } from "@/components/ui/alert-system"
 
 interface Group {
   _id: string
@@ -34,6 +35,7 @@ export function EditLeaderModal({
   onClose, 
   onLeaderUpdated 
 }: EditLeaderModalProps) {
+  const alerts = useAlerts()
   const [name, setName] = useState(leader.name)
   const [email, setEmail] = useState(leader.email)
   const [groupId, setGroupId] = useState(leader.group?._id || "")
@@ -78,17 +80,18 @@ export function EditLeaderModal({
         throw new Error(errorData.error || "Failed to update leader")
       }
 
-      // Show success notification
-      const successDiv = document.createElement('div')
-      successDiv.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-md shadow-lg z-50'
-      successDiv.innerHTML = `✅ Leader "${name}" updated successfully!`
-      document.body.appendChild(successDiv)
-      
-      setTimeout(() => {
-        if (document.body.contains(successDiv)) {
-          document.body.removeChild(successDiv)
-        }
-      }, 3000)
+      // Show beautiful success alert
+      alerts.success(
+        "Leader Updated Successfully!",
+        `${name}'s information has been updated and saved to the system.`,
+        [
+          {
+            label: "View Leaders",
+            action: () => window.location.reload(),
+            variant: "primary"
+          }
+        ]
+      )
 
       onLeaderUpdated()
       onClose()
@@ -175,7 +178,7 @@ export function EditLeaderModal({
                 placeholder="Leave blank to keep current password"
                 disabled={loading}
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-blue-600 mt-1">
                 Only enter a new password if you want to change it
               </p>
             </div>

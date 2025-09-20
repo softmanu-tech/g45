@@ -256,39 +256,44 @@ export default function AttendanceAnalyticsPage() {
               <TabsContent value="members" className="p-6">
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium text-blue-800">Member Performance</h3>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full">
-                      <thead className="bg-blue-100">
+                  <div className="mobile-table-container">
+                    <table className="mobile-table">
+                      <thead className="mobile-table-header">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Member</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Attendance</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Rate</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-blue-800 uppercase tracking-wider">Last Attended</th>
+                          <th>Member</th>
+                          <th>Attendance</th>
+                          <th className="hide-mobile">Rate</th>
+                          <th className="hide-tablet">Last Attended</th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white/80 divide-y divide-blue-200">
+                      <tbody className="mobile-table-body">
                         {analytics.memberPerformance.map((member) => (
-                          <tr key={member.memberId} className="hover:bg-white/90">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-800">
-                              {member.memberName}
+                          <tr key={member.memberId}>
+                            <td>
+                              <div className="min-w-0">
+                                <div className="font-medium truncate">{member.memberName}</div>
+                                <div className="text-xs opacity-75 show-mobile-only">{member.attendanceRate.toFixed(1)}% rate</div>
+                              </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-700">
-                              {member.attendanceCount} events
+                            <td>
+                              <div className="flex items-center">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                                <span className="font-medium">{member.attendanceCount}</span>
+                                <span className="text-xs opacity-75 ml-1 hide-mobile">events</span>
+                              </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-700">
-                              <div className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                                member.attendanceRate >= 80 ? 'bg-green-100 text-green-800' :
-                                member.attendanceRate >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                              }`}>
+                            <td className="hide-mobile">
+                              <div className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                 {member.attendanceRate.toFixed(1)}%
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-700">
-                              {member.lastAttended ? 
-                                new Date(member.lastAttended).toLocaleDateString() : 
-                                'Never'
-                              }
+                            <td className="hide-tablet">
+                              <div className="truncate">
+                                {member.lastAttended ? 
+                                  new Date(member.lastAttended).toLocaleDateString() : 
+                                  'Never'
+                                }
+                              </div>
                             </td>
                           </tr>
                         ))}

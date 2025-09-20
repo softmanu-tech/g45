@@ -361,7 +361,7 @@ export default function BishopAnalyticsDashboard() {
                         <span className={`px-2 py-1 rounded text-xs ${
                           group.stats.trend === 'improving' ? 'bg-green-100 text-green-800' :
                           group.stats.trend === 'declining' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
+                          'bg-blue-100 text-blue-800'
                         }`}>
                           {group.stats.trend.charAt(0).toUpperCase() + group.stats.trend.slice(1)}
                         </span>

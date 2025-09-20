@@ -1,7 +1,7 @@
 // src/app/api/leader/mark-attendance/route.ts
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
-import { Attendance } from '@/lib/models/Attendance';
+import Attendance from '@/lib/models/Attendance';
 import Event from '@/lib/models/Event';
 import { User } from '@/lib/models/User';
 import { requireSessionAndRoles } from '@/lib/authMiddleware';
@@ -125,7 +125,7 @@ export async function GET(request: Request) {
       .populate('absentMembers', 'name email')
       .populate('recordedBy', 'name email');
 
-    return NextResponse.json({ success: true, attendanceRecords });
+    return NextResponse.json({ success: true, data: attendanceRecords });
   } catch (error) {
     return NextResponse.json({ success: false, error }, { status: 500 });
   }

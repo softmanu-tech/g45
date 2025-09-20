@@ -6,6 +6,7 @@ import { Calendar, MapPin, FileText, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { QuickLoading } from "@/components/ui/loading"
+import { useAlerts } from "@/components/ui/alert-system"
 
 interface Event {
   _id: string
@@ -23,6 +24,7 @@ interface CreateEventFormProps {
 }
 
 export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
+  const alerts = useAlerts()
   const [title, setTitle] = useState("")
   const [date, setDate] = useState("")
   const [time, setTime] = useState("")
@@ -86,6 +88,19 @@ export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
         setTime("")
         setLocation("")
         setDescription("")
+        
+        // Show success alert
+        alerts.success(
+          "Event Created Successfully!",
+          `"${title}" has been scheduled for ${new Date(eventData.date).toLocaleDateString()}`,
+          [
+            {
+              label: "View Events",
+              action: () => window.location.href = "/leader/events",
+              variant: "primary"
+            }
+          ]
+        )
         
         // Call the success callback
         onEventCreated(result.data)

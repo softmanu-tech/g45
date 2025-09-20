@@ -312,15 +312,15 @@ export default function LeaderAnalyticsDashboard() {
           
           <div className="mt-6">
             <h3 className="text-lg font-semibold mb-4">Member Details</h3>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-96 overflow-y-auto">
               <table className="min-w-full bg-white border">
-                <thead className="bg-gray-50">
+                <thead className="bg-blue-100/50 sticky top-0 z-10">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attendance</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trend</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider bg-blue-100/50 backdrop-blur-sm">Member</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider bg-blue-100/50 backdrop-blur-sm">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider bg-blue-100/50 backdrop-blur-sm">Attendance</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider bg-blue-100/50 backdrop-blur-sm">Trend</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider bg-blue-100/50 backdrop-blur-sm">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">

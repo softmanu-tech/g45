@@ -127,7 +127,7 @@ export default function GroupPerformanceAnalytics() {
       case 'declining':
         return 'text-red-500';
       default:
-        return 'text-gray-500';
+        return 'text-blue-600';
     }
   };
 
@@ -246,7 +246,7 @@ export default function GroupPerformanceAnalytics() {
                         <div className="text-lg font-medium">
                           {selectedGroupData.group.leader ? selectedGroupData.group.leader.name : 'No leader assigned'}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-blue-600">
                           {selectedGroupData.group.leader ? selectedGroupData.group.leader.email : ''}
                         </div>
                       </div>
@@ -262,13 +262,13 @@ export default function GroupPerformanceAnalytics() {
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                                 Event
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                                 Date
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                                 Attendance Rate
                               </th>
                             </tr>
@@ -280,7 +280,7 @@ export default function GroupPerformanceAnalytics() {
                                   <div className="text-sm font-medium text-gray-900">{event.title}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-500">
+                                  <div className="text-sm text-blue-600">
                                     {format(new Date(event.date), 'PPP')}
                                   </div>
                                 </td>
@@ -353,16 +353,16 @@ export default function GroupPerformanceAnalytics() {
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                                 Name
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                                 Email
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                                 Attendance Rate
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                                 Events Attended
                               </th>
                             </tr>
@@ -374,7 +374,7 @@ export default function GroupPerformanceAnalytics() {
                                   <div className="text-sm font-medium text-gray-900">{member.member.name}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-500">{member.member.email}</div>
+                                  <div className="text-sm text-blue-600">{member.member.email}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="text-sm text-gray-900">{member.attendanceRate}%</div>
@@ -444,19 +444,19 @@ export default function GroupPerformanceAnalytics() {
                     <CardContent>
                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <div className="bg-gray-100 p-4 rounded-lg">
-                          <div className="text-sm font-medium text-gray-500">Total Groups</div>
+                          <div className="text-sm font-medium text-blue-600">Total Groups</div>
                           <div className="text-2xl font-bold">{comparisonData.churchStats.totalGroups}</div>
                         </div>
                         <div className="bg-gray-100 p-4 rounded-lg">
-                          <div className="text-sm font-medium text-gray-500">Total Members</div>
+                          <div className="text-sm font-medium text-blue-600">Total Members</div>
                           <div className="text-2xl font-bold">{comparisonData.churchStats.totalMembers}</div>
                         </div>
                         <div className="bg-gray-100 p-4 rounded-lg">
-                          <div className="text-sm font-medium text-gray-500">Total Events</div>
+                          <div className="text-sm font-medium text-blue-600">Total Events</div>
                           <div className="text-2xl font-bold">{comparisonData.churchStats.totalEvents}</div>
                         </div>
                         <div className="bg-gray-100 p-4 rounded-lg">
-                          <div className="text-sm font-medium text-gray-500">Average Attendance</div>
+                          <div className="text-sm font-medium text-blue-600">Average Attendance</div>
                           <div className="text-2xl font-bold">
                             {Math.round(comparisonData.churchStats.averageGroupAttendanceRate)}%
                           </div>

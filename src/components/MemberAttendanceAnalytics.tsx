@@ -165,7 +165,7 @@ export default function MemberAttendanceAnalytics() {
       case 'declined':
         return 'text-red-500';
       default:
-        return 'text-gray-500';
+        return 'text-blue-600';
     }
   };
 
@@ -204,7 +204,7 @@ export default function MemberAttendanceAnalytics() {
         <h2 className="text-3xl font-bold tracking-tight">Member Attendance Analytics</h2>
         <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
           <div className="border rounded-md p-2">
-            <p className="text-sm text-gray-500 mb-1">Start Date</p>
+            <p className="text-sm text-blue-600 mb-1">Start Date</p>
             <div className="flex items-center">
               <Button 
                 variant="outline" 
@@ -224,7 +224,7 @@ export default function MemberAttendanceAnalytics() {
             </div>
           </div>
           <div className="border rounded-md p-2">
-            <p className="text-sm text-gray-500 mb-1">End Date</p>
+            <p className="text-sm text-blue-600 mb-1">End Date</p>
             <div className="flex items-center">
               <Calendar
                 mode="single"
@@ -301,19 +301,19 @@ export default function MemberAttendanceAnalytics() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                         Name
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                         Email
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                         Attendance
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                         Trend
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -326,7 +326,7 @@ export default function MemberAttendanceAnalytics() {
                             <div className="text-sm font-medium text-gray-900">{item.member.name}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">{item.member.email}</div>
+                            <div className="text-sm text-blue-600">{item.member.email}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-900">
@@ -351,7 +351,7 @@ export default function MemberAttendanceAnalytics() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                        <td colSpan={5} className="px-6 py-4 text-center text-sm text-blue-600">
                           No attendance data available for the selected period
                         </td>
                       </tr>
@@ -385,7 +385,7 @@ export default function MemberAttendanceAnalytics() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex justify-center items-center h-full text-gray-500">
+                <div className="flex justify-center items-center h-full text-blue-600">
                   No data available for the selected period
                 </div>
               )}
@@ -412,19 +412,19 @@ export default function MemberAttendanceAnalytics() {
                   <CardContent>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                       <div className="bg-gray-100 p-4 rounded-lg">
-                        <div className="text-sm font-medium text-gray-500">Attendance Rate</div>
+                        <div className="text-sm font-medium text-blue-600">Attendance Rate</div>
                         <div className="text-2xl font-bold">{memberDetails.summary?.attendanceRate || 0}%</div>
                       </div>
                       <div className="bg-gray-100 p-4 rounded-lg">
-                        <div className="text-sm font-medium text-gray-500">Events Attended</div>
+                        <div className="text-sm font-medium text-blue-600">Events Attended</div>
                         <div className="text-2xl font-bold">{memberDetails.summary?.attendedEvents || 0}/{memberDetails.summary?.totalEvents || 0}</div>
                       </div>
                       <div className="bg-gray-100 p-4 rounded-lg">
-                        <div className="text-sm font-medium text-gray-500">Current Streak</div>
+                        <div className="text-sm font-medium text-blue-600">Current Streak</div>
                         <div className="text-2xl font-bold">{memberDetails.streaks?.current || 0}</div>
                       </div>
                       <div className="bg-gray-100 p-4 rounded-lg">
-                        <div className="text-sm font-medium text-gray-500">Longest Streak</div>
+                        <div className="text-sm font-medium text-blue-600">Longest Streak</div>
                         <div className="text-2xl font-bold">{memberDetails.streaks?.longest || 0}</div>
                       </div>
                     </div>
@@ -450,7 +450,7 @@ export default function MemberAttendanceAnalytics() {
                           </BarChart>
                         </ResponsiveContainer>
                       ) : (
-                        <div className="flex justify-center items-center h-full text-gray-500">
+                        <div className="flex justify-center items-center h-full text-blue-600">
                           No day of week data available
                         </div>
                       )}
@@ -475,7 +475,7 @@ export default function MemberAttendanceAnalytics() {
                           </LineChart>
                         </ResponsiveContainer>
                       ) : (
-                        <div className="flex justify-center items-center h-full text-gray-500">
+                        <div className="flex justify-center items-center h-full text-blue-600">
                           No monthly trend data available
                         </div>
                       )}
@@ -492,16 +492,16 @@ export default function MemberAttendanceAnalytics() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                               Date
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                               Event
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                               Status
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">
                               Notes
                             </th>
                           </tr>
@@ -532,13 +532,13 @@ export default function MemberAttendanceAnalytics() {
                                   </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-500">{record.notes || '-'}</div>
+                                  <div className="text-sm text-blue-600">{record.notes || '-'}</div>
                                 </td>
                               </tr>
                             ))
                           ) : (
                             <tr>
-                              <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                              <td colSpan={4} className="px-6 py-4 text-center text-sm text-blue-600">
                                 No attendance history available
                               </td>
                             </tr>
@@ -550,7 +550,7 @@ export default function MemberAttendanceAnalytics() {
                 </Card>
               </>
             ) : (
-              <div className="flex justify-center items-center h-64 text-gray-500">
+              <div className="flex justify-center items-center h-64 text-blue-600">
                 No member details available. Please select a member from the table view.
               </div>
             )}

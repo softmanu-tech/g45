@@ -22,6 +22,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,14 +42,20 @@ export default function LoginPage() {
         throw new Error(data?.message || 'Login failed');
       }
 
+      // Show success state
+      setLoginSuccess(true);
+      
+      // Add a small delay to show success state
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      
       const redirectTo = data?.redirectTo || '/';
       router.push(redirectTo);
     } catch (err) {
       console.error('Login error:', err);
       setError('Something went wrong. Please try again.');
-    } finally {
       setIsLoading(false);
     }
+    // Note: Don't set loading to false on success - let the page redirect
   };
 
   return (
@@ -85,7 +92,25 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="text-center">
+          <CardContent className="text-center relative">
+            {/* Loading Overlay */}
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center"
+              >
+                <div className="text-center">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"
+                  />
+                  <p className="text-blue-600 font-medium">Authenticating...</p>
+                </div>
+              </motion.div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <motion.div
@@ -127,11 +152,42 @@ export default function LoginPage() {
 
               <CardFooter className="text-center">
                 <Button
-                  className="w-full bg-blue-500 text-white hover:bg-blue-600"
+                  className={`w-full transition-all duration-500 transform ${
+                    loginSuccess
+                      ? 'bg-green-500 hover:bg-green-600 scale-105 shadow-lg'
+                      : isLoading 
+                      ? 'bg-blue-600 hover:bg-blue-700 scale-102 shadow-md' 
+                      : 'bg-blue-500 hover:bg-blue-600'
+                  } text-white font-semibold py-3 rounded-lg`}
                   type="submit"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Signing in...' : 'Sign In'}
+                  <div className="flex items-center justify-center gap-2">
+                    {loginSuccess ? (
+                      <>
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ duration: 0.3 }}
+                          className="w-5 h-5 text-white"
+                        >
+                          ✓
+                        </motion.div>
+                        <span>Success! Redirecting...</span>
+                      </>
+                    ) : isLoading ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                        />
+                        <span>Signing in...</span>
+                      </>
+                    ) : (
+                      <span>Sign In</span>
+                    )}
+                  </div>
                 </Button>
               </CardFooter>
             </form>

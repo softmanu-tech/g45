@@ -1,8 +1,9 @@
 "use client"
 
 import React, { useState } from "react"
-import { X, User, Mail, Phone } from "lucide-react"
+import { X, User, Mail, Phone, MapPin, Building, Lock } from "lucide-react"
 import { QuickLoading } from "@/components/ui/loading"
+import { useAlerts } from "@/components/ui/alert-system"
 
 interface CreateMemberFormProps {
   groupId: string; 
@@ -10,9 +11,13 @@ interface CreateMemberFormProps {
 }
 
 export function CreateMemberForm({ groupId, onMemberCreated }: CreateMemberFormProps) {
+  const alerts = useAlerts()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
+  const [residence, setResidence] = useState("")
+  const [department, setDepartment] = useState("")
+  const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -21,16 +26,34 @@ export function CreateMemberForm({ groupId, onMemberCreated }: CreateMemberFormP
     setError("")
     setLoading(true)
 
+    // Validate required fields
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setError("Name, email, and password are required")
+      setLoading(false)
+      return
+    }
+
+    if (password.trim().length < 6) {
+      setError("Password must be at least 6 characters long")
+      setLoading(false)
+      return
+    }
+
     try {
       const res = await fetch("/api/leader/members", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           name: name.trim(),
           email: email.trim(),
           phone: phone.trim(),
+          residence: residence.trim(),
+          department: department.trim(),
+          password: password.trim(),
+          groupId,
         }),
       })
 
@@ -44,8 +67,26 @@ export function CreateMemberForm({ groupId, onMemberCreated }: CreateMemberFormP
       setName("")
       setEmail("")
       setPhone("")
+      setResidence("")
+      setDepartment("")
+      setPassword("")
 
-      alert(`Member "${name}" created successfully! Generated password: ${data.data.password}`)
+      alerts.success(
+        "Member Created Successfully!",
+        `${name} has been added to your group with login credentials. Password: ${password}`,
+        [
+          {
+            label: "Copy Password",
+            action: () => navigator.clipboard.writeText(password),
+            variant: "primary"
+          },
+          {
+            label: "Copy Email",
+            action: () => navigator.clipboard.writeText(email),
+            variant: "secondary"
+          }
+        ]
+      )
       onMemberCreated()
     } catch (error) {
       console.error("Error creating member:", error)
@@ -138,8 +179,57 @@ export function CreateMemberForm({ groupId, onMemberCreated }: CreateMemberFormP
             />
           </div>
 
-          <div className="bg-blue-100 border border-blue-300 text-blue-700 px-4 py-3 rounded text-sm">
-            <strong>Note:</strong> A secure password will be automatically generated for this member.
+          {/* Residence Field */}
+          <div>
+            <label className="block text-sm font-medium text-blue-800 mb-1">
+              <MapPin className="h-4 w-4 inline mr-1" />
+              Residence (Optional)
+            </label>
+            <input
+              type="text"
+              value={residence}
+              onChange={(e) => setResidence(e.target.value)}
+              className="w-full px-3 py-2 border border-blue-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-800 focus:border-blue-800 text-blue-800 placeholder-blue-600 bg-white/90"
+              placeholder="Enter residence/address"
+              disabled={loading}
+            />
+          </div>
+
+          {/* Department Field */}
+          <div>
+            <label className="block text-sm font-medium text-blue-800 mb-1">
+              <Building className="h-4 w-4 inline mr-1" />
+              Department (Optional)
+            </label>
+            <input
+              type="text"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              className="w-full px-3 py-2 border border-blue-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-800 focus:border-blue-800 text-blue-800 placeholder-blue-600 bg-white/90"
+              placeholder="e.g., Youth, Choir, Ushering"
+              disabled={loading}
+            />
+          </div>
+
+          {/* Password Field */}
+          <div>
+            <label className="block text-sm font-medium text-blue-800 mb-1">
+              <Lock className="h-4 w-4 inline mr-1" />
+              Login Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border border-blue-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-800 focus:border-blue-800 text-blue-800 placeholder-blue-600 bg-white/90"
+              placeholder="Create password for member login"
+              required
+              disabled={loading}
+              minLength={6}
+            />
+            <p className="text-xs text-blue-600 mt-1">
+              This password will allow the member to log in and view their dashboard
+            </p>
           </div>
 
           {/* Action Buttons */}

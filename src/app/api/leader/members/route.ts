@@ -13,7 +13,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { name, email, phone } = await request.json();
+        const { name, email, phone, residence, department, password } = await request.json();
         await dbConnect();
 
         // Get the leader's group
@@ -24,15 +24,23 @@ export async function POST(request: Request) {
             }, { status: 400 });
         }
 
-        // Generate a random password for the member
-        const password = Math.random().toString(36).slice(-8);
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Validate required password
+        if (!password || password.trim().length < 6) {
+            return NextResponse.json({ 
+                error: 'Password must be at least 6 characters long' 
+            }, { status: 400 });
+        }
+
+        // Hash the provided password
+        const hashedPassword = await bcrypt.hash(password.trim(), 10);
 
         // Create the member with the leader's group
         const member = new User({
             name,
             email,
-            phone,
+            phone: phone || undefined,
+            residence: residence || undefined,
+            department: department || undefined,
             password: hashedPassword,
             role: 'member',
             group: leader.group
@@ -53,9 +61,11 @@ export async function POST(request: Request) {
                     _id: member._id,
                     name: member.name,
                     email: member.email,
+                    phone: member.phone,
+                    residence: member.residence,
+                    department: member.department,
                     group: leader.group
-                },
-                password // Only returned for demo, in production don't return this
+                }
             }
         });
     } catch (error: unknown) {
@@ -93,7 +103,7 @@ export async function GET(request: Request) {
         const members = await User.find({ 
             group: leader.group,
             role: 'member'
-        }).select('name email phone');
+        }).select('name email phone residence department');
 
         return NextResponse.json({ success: true, members });
     } catch (error) {

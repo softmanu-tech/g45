@@ -4,6 +4,7 @@ import { Users, ArrowLeft, Edit } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { EditLeaderModal } from "@/components/EditLeaderModal"
+import { useAlerts } from "@/components/ui/alert-system"
 
 interface Group {
     _id: string
@@ -22,6 +23,7 @@ interface Leader {
 }
 
 export default function LeaderManagement() {
+    const alerts = useAlerts()
     const searchParams = useSearchParams()
     const targetGroupId = searchParams.get('groupId')
     
@@ -50,7 +52,17 @@ export default function LeaderManagement() {
 
     const createLeader = async () => {
         if (!form.name || !form.email || !form.password || !form.groupId) {
-            return alert("Please fill all fields")
+            return alerts.warning(
+                "Missing Information",
+                "Please fill in all required fields before creating a leader.",
+                [
+                    {
+                        label: "OK",
+                        action: () => {},
+                        variant: "primary"
+                    }
+                ]
+            )
         }
 
         setIsLoading(true)
@@ -62,15 +74,53 @@ export default function LeaderManagement() {
             })
 
             if (res.ok) {
-                setForm({ name: "", email: "", password: "", groupId: "" })
+                const leaderName = form.name;
+                setForm({ name: "", email: "", password: "", groupId: targetGroupId || "" })
                 await fetchLeaders()
+                
+                alerts.success(
+                    "Leader Created Successfully!",
+                    `${leaderName} has been added as a leader and assigned to the selected group.`,
+                    [
+                        {
+                            label: "View Leaders",
+                            action: () => window.location.reload(),
+                            variant: "primary"
+                        },
+                        {
+                            label: "Create Another",
+                            action: () => {},
+                            variant: "secondary"
+                        }
+                    ]
+                )
             } else {
                 const error = await res.json()
-                alert(`Error: ${error.message || "Failed to create leader"}`)
+                alerts.error(
+                    "Failed to Create Leader",
+                    error.message || "An error occurred while creating the leader.",
+                    [
+                        {
+                            label: "Try Again",
+                            action: () => createLeader(),
+                            variant: "primary"
+                        }
+                    ]
+                )
             }
         } catch (err) {
             console.error("Error creating leader:", err)
-            alert("An error occurred while creating the leader")
+            alerts.error(
+                "Network Error",
+                "Failed to create leader. Please check your connection and try again.",
+                [
+                    {
+                        label: "Retry",
+                        action: () => createLeader(),
+                        variant: "primary"
+                    }
+                ]
+            )
         } finally {
             setIsLoading(false)
         }
@@ -208,9 +258,9 @@ export default function LeaderManagement() {
                         </div>
                     ) : (
                         <div className="text-center py-12">
-                            <Users className="mx-auto h-12 w-12 text-gray-400" />
+                            <Users className="mx-auto h-12 w-12 text-blue-500" />
                             <h3 className="mt-2 text-sm font-medium text-gray-900">No leaders yet</h3>
-                            <p className="mt-1 text-sm text-gray-500">Create your first leader to get started.</p>
+                            <p className="mt-1 text-sm text-blue-600">Create your first leader to get started.</p>
                         </div>
                     )}
                 </div>

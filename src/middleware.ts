@@ -19,6 +19,8 @@ export async function middleware(request: NextRequest) {
     // 3. Create redirect URLs
     const leaderDashboardUrl = new URL('/dashboard/leader', request.url);
     const bishopDashboardUrl = new URL('/dashboard/bishop', request.url);
+    const protocolDashboardUrl = new URL('/dashboard/protocol', request.url);
+    const visitorDashboardUrl = new URL('/dashboard/visitor', request.url);
 
     // 4. Role-based route protection
     if (pathname.startsWith('/bishop') || pathname.startsWith('/api/bishop')) {
@@ -35,10 +37,30 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
+    if (pathname.startsWith('/protocol') || pathname.startsWith('/api/protocol')) {
+      if (payload.role !== 'protocol') {
+        return NextResponse.redirect(bishopDashboardUrl);
+      }
+      return NextResponse.next();
+    }
+
+    if (pathname.startsWith('/visitor') || pathname.startsWith('/api/visitor')) {
+      if (payload.role !== 'visitor') {
+        return NextResponse.redirect(bishopDashboardUrl);
+      }
+      return NextResponse.next();
+    }
+
     // 5. Protect dashboard routes
     if (pathname.startsWith('/dashboard')) {
       const dashboardUrl = payload.role === 'bishop' 
         ? bishopDashboardUrl 
+        : payload.role === 'leader'
+        ? leaderDashboardUrl
+        : payload.role === 'protocol'
+        ? protocolDashboardUrl
+        : payload.role === 'visitor'
+        ? visitorDashboardUrl
         : leaderDashboardUrl;
       return NextResponse.redirect(dashboardUrl);
     }
@@ -56,7 +78,11 @@ export const config = {
     '/dashboard/:path*',
     '/bishop/:path*',
     '/leader/:path*',
+    '/protocol/:path*',
+    '/visitor/:path*',
     '/api/bishop/:path*',
     '/api/leader/:path*',
+    '/api/protocol/:path*',
+    '/api/visitor/:path*',
   ],
 };

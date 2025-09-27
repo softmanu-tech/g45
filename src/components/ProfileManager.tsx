@@ -28,7 +28,7 @@ interface UserProfile {
   phone?: string
   residence?: string
   department?: string
-  role: 'bishop' | 'leader' | 'member'
+  role: 'bishop' | 'leader' | 'member' | 'protocol'
   profilePicture?: string
   group?: {
     _id: string
@@ -469,7 +469,7 @@ export function ProfileManager({
                   title="Upload profile picture"
                 >
                   {uploadingImage ? (
-                    <QuickLoading size="sm" />
+                    <QuickLoading />
                   ) : (
                     <Camera className="h-5 w-5" />
                   )}
@@ -621,7 +621,7 @@ export function ProfileManager({
                   >
                     {saving ? (
                       <>
-                        <QuickLoading size="sm" className="mr-2" />
+                        <QuickLoading />
                         Saving...
                       </>
                     ) : (
@@ -754,7 +754,7 @@ export function ProfileManager({
                 >
                   {changingPassword ? (
                     <>
-                      <QuickLoading size="sm" className="mr-2" />
+                      <QuickLoading />
                       Changing...
                     </>
                   ) : (

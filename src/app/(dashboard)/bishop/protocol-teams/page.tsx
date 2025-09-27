@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Loading } from "@/components/ui/loading"
 import { useAlerts } from "@/components/ui/alert-system"
+import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import { format } from "date-fns"
 import Link from "next/link"
 import {
@@ -20,7 +21,8 @@ import {
   Target,
   CheckCircle,
   AlertTriangle,
-  Plus
+  Plus,
+  LogOut
 } from "lucide-react"
 
 interface ProtocolTeam {
@@ -170,47 +172,41 @@ export default function ProtocolTeamsPage() {
     )
   }
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST" })
+      window.location.href = "/"
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-blue-300">
-      {/* Header */}
-      <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4 sm:py-6">
-            <div className="flex items-center gap-4">
-              <Link href="/bishop">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-blue-800 hover:bg-blue-100 p-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 hover:from-blue-100 hover:to-blue-200"
-                  style={{
-                    boxShadow: '0 8px 16px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
-                  }}
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">
-                  Protocol Teams Management
-                </h1>
-                <p className="text-xs sm:text-sm text-blue-700 mt-1">
-                  Manage visitor protocol teams and their performance
-                </p>
-              </div>
-            </div>
-            <Button
-              onClick={() => setShowCreateTeam(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Team
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-blue-300 overflow-x-hidden">
+      <ProfessionalHeader
+        title="Protocol Teams Management"
+        subtitle="Manage visitor protocol teams and their performance"
+        backHref="/bishop"
+        actions={[
+          {
+            label: "Create Team",
+            onClick: () => setShowCreateTeam(true),
+            variant: "default",
+            className: "bg-blue-600 hover:bg-blue-700 text-white",
+            icon: <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+          },
+          {
+            label: "Logout",
+            onClick: handleLogout,
+            variant: "outline",
+            className: "border-red-300 text-red-100 bg-red-600/20 hover:bg-red-600/30",
+            icon: <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
+          }
+        ]}
+      />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-6">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-4 sm:space-y-6">
         
         {/* Teams Overview */}
         {teams.length === 0 ? (
@@ -227,21 +223,21 @@ export default function ProtocolTeamsPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {teams.map((team) => (
               <motion.div
                 key={team._id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300 h-full">
+                <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300 h-full overflow-hidden">
                   <CardHeader>
-                    <CardTitle className="text-blue-800 flex items-center gap-2">
-                      <Shield className="h-5 w-5" />
-                      {team.name}
+                    <CardTitle className="text-blue-800 flex items-center gap-2 break-words">
+                      <Shield className="h-5 w-5 flex-shrink-0" />
+                      <span className="truncate">{team.name}</span>
                     </CardTitle>
                     {team.description && (
-                      <p className="text-sm text-blue-600">{team.description}</p>
+                      <p className="text-sm text-blue-600 break-words">{team.description}</p>
                     )}
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -252,13 +248,13 @@ export default function ProtocolTeamsPage() {
                       <div className="space-y-1">
                         <div className="font-medium text-blue-700">{team.leader.name}</div>
                         <div className="text-sm text-blue-600 flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {team.leader.email}
+                          <Mail className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{team.leader.email}</span>
                         </div>
                         {team.leader.phone && (
                           <div className="text-sm text-blue-600 flex items-center gap-1">
-                            <Phone className="h-3 w-3" />
-                            {team.leader.phone}
+                            <Phone className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{team.leader.phone}</span>
                           </div>
                         )}
                       </div>
@@ -299,7 +295,7 @@ export default function ProtocolTeamsPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         size="sm"
                         variant="outline"
@@ -311,10 +307,10 @@ export default function ProtocolTeamsPage() {
                       >
                         View Details
                       </Button>
-                      <Link href={`/bishop/protocol-teams/${team._id}/manage`}>
+                      <Link href={`/bishop/protocol-teams/${team._id}/manage`} className="flex-1">
                         <Button
                           size="sm"
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                         >
                           Manage
                         </Button>
@@ -337,7 +333,7 @@ export default function ProtocolTeamsPage() {
                 Create New Protocol Team
               </h3>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-sm font-medium text-blue-800 mb-2">Team Name</label>
                     <input
@@ -395,7 +391,7 @@ export default function ProtocolTeamsPage() {
                 </div>
               </div>
               
-              <div className="flex gap-3 mt-6">
+              <div className="flex flex-col sm:flex-row gap-3 mt-6">
                 <Button
                   onClick={() => setShowCreateTeam(false)}
                   variant="outline"
@@ -635,7 +631,7 @@ export default function ProtocolTeamsPage() {
                 </div>
               </div>
               
-              <div className="flex gap-3 mt-6">
+              <div className="flex flex-col sm:flex-row gap-3 mt-6">
                 <Button
                   onClick={() => {
                     setShowTeamDetails(false)
@@ -646,8 +642,8 @@ export default function ProtocolTeamsPage() {
                 >
                   Close
                 </Button>
-                <Link href={`/bishop/protocol-teams/${selectedTeam._id}/manage`}>
-                  <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                <Link href={`/bishop/protocol-teams/${selectedTeam._id}/manage`} className="flex-1">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                     Manage Team
                   </Button>
                 </Link>

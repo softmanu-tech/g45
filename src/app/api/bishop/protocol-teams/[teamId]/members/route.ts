@@ -129,7 +129,7 @@ export async function DELETE(
     }
 
     // Remove member from team
-    team.members = team.members.filter(id => id.toString() !== memberId);
+    team.members = team.members.filter((id: any) => id.toString() !== memberId);
     await team.save();
 
     // Update user's protocol team reference

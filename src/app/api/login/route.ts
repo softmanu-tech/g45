@@ -1,7 +1,7 @@
 // src/app/api/login/route.ts
 import { NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
-import bcryptjs from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import dbConnect from '@/lib/dbConnect';
 import { User } from '@/lib/models/User';
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       }
     }
 
-    if (!user || !(await bcryptjs.compare(password, user.password))) {
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
     }
 

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Loading } from "@/components/ui/loading"
 import { ProfileManager } from "@/components/ProfileManager"
 import { useAlerts } from "@/components/ui/alert-system"
+import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 
 interface UserProfile {
   _id: string
@@ -15,7 +16,7 @@ interface UserProfile {
   phone?: string
   residence?: string
   department?: string
-  role: 'bishop' | 'leader' | 'member'
+  role: 'bishop' | 'leader' | 'member' | 'protocol'
   profilePicture?: string
   group?: {
     _id: string
@@ -114,30 +115,16 @@ export default function BishopProfilePage() {
 
   return (
     <div className="min-h-screen bg-blue-300">
-      {/* Header */}
-      <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4 sm:py-6">
-            <div className="flex-1">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">
-                Profile Settings
-              </h1>
-            </div>
-            <Link href="/bishop">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-blue-800 hover:bg-blue-100 p-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 hover:from-blue-100 hover:to-blue-200"
-                style={{
-                  boxShadow: '0 8px 16px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
-                }}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <ProfessionalHeader
+        title="Profile Settings"
+        subtitle="Manage your personal information and leader passwords"
+        user={user ? {
+          name: user.name,
+          email: user.email,
+          profilePicture: user.profilePicture
+        } : undefined}
+        backHref="/bishop"
+      />
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">

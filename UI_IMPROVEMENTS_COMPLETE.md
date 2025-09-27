@@ -88,3 +88,12 @@ All pages now include:
 **Your bishop dashboard now has a professional, enterprise-grade appearance!** 🎉
 
 **Visit http://localhost:3000/bishop to see the beautiful new design!**
+
+Protocol Leader Login Credentials:
+
+Email: justine@gmail.com
+Password: v7hdimfubp
+Login URL: http://localhost:3000
+Role: Protocol Team Leader
+
+Please save these credentials securely and share them with the protocol leader.

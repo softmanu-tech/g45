@@ -166,13 +166,13 @@ export async function GET(request: Request) {
         leaderEmail: team.leader.email,
         conversionRate: team.metrics.conversionRate,
         joiningVisitors: team.metrics.joiningVisitors,
-        trainingAreas: [
+        recommendedActions: [
           'Visitor conversion techniques',
           'Follow-up communication skills',
           'Relationship building strategies',
           'Spiritual mentoring approaches'
         ],
-        urgency: team.metrics.conversionRate < 15 ? 'High' : 'Medium'
+        priority: team.metrics.conversionRate < 15 ? 'High' : 'Medium'
       })),
 
       monitoringAlerts: teamsWithRiskyVisitors.map(team => ({

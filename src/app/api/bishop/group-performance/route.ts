@@ -128,10 +128,10 @@ export async function GET(request: Request) {
 
           attendanceRecords.forEach((record) => {
             const isPresentInRecord = record.presentMembers?.some(
-              (id) => id.toString() === member._id.toString()
+              (id) => id.toString() === (member._id as any).toString()
             );
             const isAbsentInRecord = record.absentMembers?.some(
-              (id) => id.toString() === member._id.toString()
+              (id) => id.toString() === (member._id as any).toString()
             );
 
             if (isPresentInRecord || isAbsentInRecord) {

@@ -162,14 +162,14 @@ export default function BishopAnalyticsDashboard() {
           <div className="flex items-center space-x-2">
             <span>Group:</span>
             <Select
-              value={selectedGroup || ''}
-              onValueChange={(value) => setSelectedGroup(value || null)}
+              value={selectedGroup || 'all'}
+              onValueChange={(value) => setSelectedGroup(value === 'all' ? null : value)}
             >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="All Groups" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Groups</SelectItem>
+                <SelectItem value="all">All Groups</SelectItem>
                 {data.groupPerformance.map(group => (
                   <SelectItem key={group.group._id} value={group.group._id}>
                     {group.group.name}
@@ -192,7 +192,7 @@ export default function BishopAnalyticsDashboard() {
                 <Calendar
                   mode="single"
                   selected={dateRange.startDate}
-                  onSelect={(date) => date && setDateRange({ ...dateRange, startDate: date })}
+                  onSelect={(date: any) => date && setDateRange({ ...dateRange, startDate: date })}
                   initialFocus
                 />
               </PopoverContent>
@@ -212,7 +212,7 @@ export default function BishopAnalyticsDashboard() {
                 <Calendar
                   mode="single"
                   selected={dateRange.endDate}
-                  onSelect={(date) => date && setDateRange({ ...dateRange, endDate: date })}
+                  onSelect={(date: any) => date && setDateRange({ ...dateRange, endDate: date })}
                   initialFocus
                 />
               </PopoverContent>

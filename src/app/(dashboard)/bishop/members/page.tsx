@@ -6,6 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Loading } from "@/components/ui/loading"
 import { useAlerts } from "@/components/ui/alert-system"
+import { ProfessionalHeader } from "@/components/ProfessionalHeader"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { toast } from "sonner"
 import { format } from "date-fns"
 import Link from "next/link"
 import {
@@ -23,7 +31,15 @@ import {
   CheckCircle,
   XCircle,
   Calendar,
-  BarChart3
+  BarChart3,
+  Download,
+  FileSpreadsheet,
+  MessageSquare,
+  Send,
+  Plus,
+  Eye,
+  Clock,
+  AlertCircle
 } from "lucide-react"
 
 interface Member {
@@ -43,6 +59,18 @@ interface Member {
   rating?: string
   lastAttendanceDate?: string | null
   type?: string
+}
+
+interface Communication {
+  _id: string;
+  subject: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  category: 'announcement' | 'meeting' | 'event' | 'prayer' | 'general';
+  readBy: { userId: string; readAt: string }[];
+  sentAt?: string;
+  scheduledFor?: string;
+  createdAt: string;
 }
 
 interface MembersData {
@@ -68,6 +96,19 @@ export default function BishopMembersPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [ratingFilter, setRatingFilter] = useState<string>('all')
   const [groupFilter, setGroupFilter] = useState<string>('all')
+  const [communications, setCommunications] = useState<Communication[]>([])
+  const [showCompose, setShowCompose] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [activeTab, setActiveTab] = useState<'members' | 'communications'>('members')
+  
+  // Communication form state
+  const [commForm, setCommForm] = useState({
+    subject: '',
+    message: '',
+    priority: 'medium' as const,
+    category: 'general' as const,
+    scheduledFor: ''
+  })
 
   const fetchMembers = async () => {
     try {
@@ -96,7 +137,70 @@ export default function BishopMembersPage() {
 
   useEffect(() => {
     fetchMembers()
+    fetchCommunications()
   }, [])
+
+  const fetchCommunications = async () => {
+    try {
+      const response = await fetch('/api/bishop/communications?recipients=all_members');
+      const result = await response.json();
+      if (result.success) {
+        setCommunications(result.data.communications);
+      }
+    } catch (error) {
+      console.error('Error fetching communications:', error);
+    }
+  }
+
+  const handleSendMessage = async () => {
+    if (!commForm.subject || !commForm.message) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setSending(true);
+      
+      const response = await fetch('/api/bishop/communications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...commForm,
+          recipients: { type: 'all_members' },
+          scheduledFor: commForm.scheduledFor || undefined
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(result.message);
+        setShowCompose(false);
+        setCommForm({
+          subject: '',
+          message: '',
+          priority: 'medium',
+          category: 'general',
+          scheduledFor: ''
+        });
+        fetchCommunications();
+      } else {
+        toast.error(result.error || 'Failed to send message');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const priorityColors = {
+    low: 'bg-gray-100 text-gray-800',
+    medium: 'bg-blue-100 text-blue-800',
+    high: 'bg-orange-100 text-orange-800',
+    urgent: 'bg-red-100 text-red-800'
+  };
 
   // Filter members based on search and filters
   const filteredMembers = data?.members.filter(member => {
@@ -114,6 +218,84 @@ export default function BishopMembersPage() {
 
   // Get unique groups for filter
   const uniqueGroups = [...new Set(data?.members.map(m => m.group?.name).filter(Boolean))]
+
+  // Export functionality
+  const exportToCSV = () => {
+    try {
+      if (!filteredMembers.length) {
+        alerts.error("Export Failed", "No members to export. Please check your filters.")
+        return
+      }
+
+      const headers = [
+        'Name',
+        'Email', 
+        'Phone',
+        'Residence',
+        'Department',
+        'Group',
+        'Attendance Rate (%)',
+        'Rating',
+        'Events Attended',
+        'Total Events',
+        'Last Attendance Date',
+        'Status'
+      ]
+
+      const csvData = filteredMembers.map(member => [
+        member.name || '',
+        member.email || '',
+        member.phone || '',
+        member.residence || '',
+        member.department || '',
+        member.group?.name || 'No Group',
+        member.attendanceRate || 0,
+        member.rating || 'Not Rated',
+        member.attendanceCount || 0,
+        member.totalEvents || 0,
+        member.lastAttendanceDate ? format(new Date(member.lastAttendanceDate), "yyyy-MM-dd") : 'Never',
+        member.attendanceRate && member.attendanceRate >= 80 ? 'Active' : 
+        member.attendanceRate && member.attendanceRate >= 40 ? 'Moderate' : 'Inactive'
+      ])
+
+      const csvContent = [
+        headers.join(','),
+        ...csvData.map(row => 
+          row.map(cell => 
+            typeof cell === 'string' && (cell.includes(',') || cell.includes('"')) 
+              ? `"${cell.replace(/"/g, '""')}"` 
+              : cell
+          ).join(',')
+        )
+      ].join('\n')
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob)
+        link.setAttribute('href', url)
+        link.setAttribute('download', `church-members-${format(new Date(), 'yyyy-MM-dd')}.csv`)
+        link.style.visibility = 'hidden'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        
+        alerts.success(
+          "Export Successful", 
+          `Successfully exported ${filteredMembers.length} members to CSV file.`
+        )
+      } else {
+        throw new Error('CSV download not supported in this browser')
+      }
+    } catch (error) {
+      console.error('Export error:', error)
+      alerts.error(
+        "Export Failed", 
+        error instanceof Error ? error.message : "Failed to export members data"
+      )
+    }
+  }
 
   if (loading) {
     return <Loading message="Loading all members..." size="lg" />
@@ -152,38 +334,61 @@ export default function BishopMembersPage() {
 
   return (
     <div className="min-h-screen bg-blue-300">
-      {/* Header */}
-      <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4 sm:py-6">
-            <div className="flex items-center gap-4">
-              <Link href="/bishop">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-blue-800 hover:bg-blue-100 p-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 hover:from-blue-100 hover:to-blue-200"
-                  style={{
-                    boxShadow: '0 8px 16px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
-                  }}
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">
-                  All Members Management
-                </h1>
-                <p className="text-xs sm:text-sm text-blue-700 mt-1">
-                  {data.summary.totalMembers} members across all groups
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ProfessionalHeader
+        title="All Members Management"
+        subtitle={`${data.summary.totalMembers} members across all groups`}
+        backHref="/bishop"
+        actions={[
+          {
+            label: "Export CSV",
+            onClick: exportToCSV,
+            variant: "outline",
+            className: "border-green-300 text-green-100 bg-green-600/20 hover:bg-green-600/30",
+            icon: <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+          },
+          {
+            label: "Add Member",
+            onClick: () => {
+              alerts.info("Coming Soon", "Add member functionality will be implemented soon.")
+            },
+            variant: "default",
+            icon: <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+          }
+        ]}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-6">
+        {/* Tabs */}
+        <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4">
+          <div className="flex space-x-1">
+            <button
+              onClick={() => setActiveTab('members')}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'members'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-blue-700 hover:bg-blue-100'
+              }`}
+            >
+              <Users className="h-4 w-4 inline mr-2" />
+              Members
+            </button>
+            <button
+              onClick={() => setActiveTab('communications')}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'communications'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-blue-700 hover:bg-blue-100'
+              }`}
+            >
+              <MessageSquare className="h-4 w-4 inline mr-2" />
+              Communications
+            </button>
+          </div>
+        </div>
+
+        {activeTab === 'members' && (
+          <>
         
         {/* Summary Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
@@ -278,10 +483,23 @@ export default function BishopMembersPage() {
         {/* Members List */}
         <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
           <CardHeader>
-            <CardTitle className="text-blue-800 flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              All Members ({filteredMembers.length})
-            </CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <CardTitle className="text-blue-800 flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                All Members ({filteredMembers.length})
+              </CardTitle>
+              {filteredMembers.length > 0 && (
+                <Button
+                  onClick={exportToCSV}
+                  variant="outline"
+                  size="sm"
+                  className="border-green-300 text-green-700 bg-green-50 hover:bg-green-100 w-full sm:w-auto"
+                >
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Export {filteredMembers.length} Members
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {filteredMembers.length === 0 ? (
@@ -468,6 +686,183 @@ export default function BishopMembersPage() {
             )}
           </CardContent>
         </Card>
+          </>
+        )}
+
+        {activeTab === 'communications' && (
+          <div className="space-y-6">
+            {/* Compose Message */}
+            <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-blue-800">Send Message to All Members</CardTitle>
+                  <Dialog open={showCompose} onOpenChange={setShowCompose}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Compose
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl bg-blue-200/90 backdrop-blur-md border border-blue-300 max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle className="text-blue-800 text-lg sm:text-xl">Compose Message</DialogTitle>
+                        <DialogDescription className="text-blue-600 text-sm sm:text-base">
+                          Send a message to all members
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <div className="space-y-4 bg-white/80 backdrop-blur-sm rounded-lg p-3 sm:p-4 border border-blue-200">
+                        <div>
+                          <Label htmlFor="subject" className="text-blue-800 font-medium text-sm sm:text-base">Subject *</Label>
+                          <Input
+                            id="subject"
+                            value={commForm.subject}
+                            onChange={(e) => setCommForm({...commForm, subject: e.target.value})}
+                            placeholder="Enter message subject"
+                            className="bg-white/90 border-blue-300 text-blue-800 placeholder-blue-500 focus:border-blue-600 focus:ring-blue-600 text-sm sm:text-base"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                          <div>
+                            <Label htmlFor="priority" className="text-blue-800 font-medium text-sm sm:text-base">Priority</Label>
+                            <Select value={commForm.priority} onValueChange={(value: any) => setCommForm({...commForm, priority: value})}>
+                              <SelectTrigger className="bg-white/90 border-blue-300 text-blue-800 focus:border-blue-600 focus:ring-blue-600 text-sm sm:text-base">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white/95 backdrop-blur-sm border-blue-300">
+                                <SelectItem value="low" className="text-blue-800 hover:bg-blue-100 text-sm sm:text-base">Low</SelectItem>
+                                <SelectItem value="medium" className="text-blue-800 hover:bg-blue-100 text-sm sm:text-base">Medium</SelectItem>
+                                <SelectItem value="high" className="text-blue-800 hover:bg-blue-100 text-sm sm:text-base">High</SelectItem>
+                                <SelectItem value="urgent" className="text-blue-800 hover:bg-blue-100 text-sm sm:text-base">Urgent</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div>
+                            <Label htmlFor="category" className="text-blue-800 font-medium text-sm sm:text-base">Category</Label>
+                            <Select value={commForm.category} onValueChange={(value: any) => setCommForm({...commForm, category: value})}>
+                              <SelectTrigger className="bg-white/90 border-blue-300 text-blue-800 focus:border-blue-600 focus:ring-blue-600 text-sm sm:text-base">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white/95 backdrop-blur-sm border-blue-300">
+                                <SelectItem value="announcement" className="text-blue-800 hover:bg-blue-100 text-sm sm:text-base">Announcement</SelectItem>
+                                <SelectItem value="meeting" className="text-blue-800 hover:bg-blue-100 text-sm sm:text-base">Meeting</SelectItem>
+                                <SelectItem value="event" className="text-blue-800 hover:bg-blue-100 text-sm sm:text-base">Event</SelectItem>
+                                <SelectItem value="prayer" className="text-blue-800 hover:bg-blue-100 text-sm sm:text-base">Prayer</SelectItem>
+                                <SelectItem value="general" className="text-blue-800 hover:bg-blue-100 text-sm sm:text-base">General</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="scheduledFor" className="text-blue-800 font-medium text-sm sm:text-base">Schedule (Optional)</Label>
+                          <Input
+                            id="scheduledFor"
+                            type="datetime-local"
+                            value={commForm.scheduledFor}
+                            onChange={(e) => setCommForm({...commForm, scheduledFor: e.target.value})}
+                            className="bg-white/90 border-blue-300 text-blue-800 focus:border-blue-600 focus:ring-blue-600 text-sm sm:text-base"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="message" className="text-blue-800 font-medium text-sm sm:text-base">Message *</Label>
+                          <Textarea
+                            id="message"
+                            value={commForm.message}
+                            onChange={(e) => setCommForm({...commForm, message: e.target.value})}
+                            placeholder="Enter your message"
+                            rows={4}
+                            className="bg-white/90 border-blue-300 text-blue-800 placeholder-blue-500 focus:border-blue-600 focus:ring-blue-600 resize-none text-sm sm:text-base"
+                          />
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-2 sm:pt-4">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setShowCompose(false)}
+                            className="border-blue-300 text-blue-700 hover:bg-blue-50 bg-white/90 text-sm sm:text-base"
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            onClick={handleSendMessage} 
+                            disabled={sending}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base"
+                          >
+                            {sending ? 'Sending...' : 'Send Message'}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+            </Card>
+
+            {/* Communications List */}
+            <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
+              <CardHeader>
+                <CardTitle className="text-blue-800">Sent Messages</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {communications.length === 0 ? (
+                  <div className="text-center py-8">
+                    <MessageSquare className="h-12 w-12 text-blue-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-blue-800 mb-2">No messages sent</h3>
+                    <p className="text-blue-600">Start by composing your first message to members</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {communications.map((comm) => (
+                      <div key={comm._id} className="bg-white/90 rounded-lg p-4 border border-blue-200">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-lg font-semibold text-gray-900">{comm.subject}</h3>
+                              <Badge className={priorityColors[comm.priority]}>
+                                {comm.priority}
+                              </Badge>
+                              {comm.scheduledFor && !comm.sentAt && (
+                                <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  Scheduled
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <p className="text-gray-600 mb-3 line-clamp-2">{comm.message}</p>
+                            
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                              <span>To: All Members</span>
+                              <span>•</span>
+                              <span>
+                                {comm.sentAt 
+                                  ? `Sent: ${new Date(comm.sentAt).toLocaleDateString()}`
+                                  : `Scheduled: ${new Date(comm.scheduledFor!).toLocaleDateString()}`
+                                }
+                              </span>
+                              <span>•</span>
+                              <span>{comm.readBy.length} read</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 ml-4">
+                            <Button variant="ghost" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Loading } from "@/components/ui/loading"
 import { useAlerts } from "@/components/ui/alert-system"
+import { ProfileIcon } from "@/components/ProfileIcon"
+import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import { format } from "date-fns"
 import Link from "next/link"
 import {
@@ -26,7 +28,8 @@ import {
   Phone,
   MapPin,
   Mail,
-  BookOpen
+  BookOpen,
+  X
 } from "lucide-react"
 import {
   ResponsiveContainer,
@@ -48,6 +51,7 @@ interface ProtocolDashboardData {
   protocolMember: {
     name: string
     email: string
+    profilePicture?: string
     team: {
       name: string
       description?: string
@@ -86,6 +90,23 @@ export default function ProtocolDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCreateVisitor, setShowCreateVisitor] = useState(false)
+  const [registering, setRegistering] = useState(false)
+  const [newVisitor, setNewVisitor] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    age: '',
+    occupation: '',
+    maritalStatus: 'single',
+    type: 'first-time',
+    status: 'visiting',
+    referredBy: '',
+    howDidYouHear: '',
+    emergencyContactName: '',
+    emergencyContactPhone: '',
+    emergencyContactRelationship: ''
+  })
 
   const fetchData = async () => {
     try {
@@ -118,6 +139,52 @@ export default function ProtocolDashboard() {
       window.location.href = "/"
     } catch (error) {
       console.error("Logout error:", error)
+    }
+  }
+
+  const handleRegisterVisitor = async () => {
+    if (!newVisitor.name || !newVisitor.email) {
+      alerts.error("Validation Error", "Name and email are required")
+      return
+    }
+
+    try {
+      setRegistering(true)
+      const response = await fetch('/api/protocol/visitors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: "include",
+        body: JSON.stringify({
+          ...newVisitor,
+          age: newVisitor.age ? Number(newVisitor.age) : undefined,
+          emergencyContact: newVisitor.emergencyContactName ? {
+            name: newVisitor.emergencyContactName,
+            phone: newVisitor.emergencyContactPhone,
+            relationship: newVisitor.emergencyContactRelationship
+          } : undefined
+        })
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        // Refresh the dashboard data
+        await fetchData()
+        
+        // Reset form
+        setNewVisitor({
+          name: '', email: '', phone: '', address: '', age: '', occupation: '', maritalStatus: 'single',
+          type: 'first-time', status: 'visiting', referredBy: '', howDidYouHear: '',
+          emergencyContactName: '', emergencyContactPhone: '', emergencyContactRelationship: ''
+        })
+        setShowCreateVisitor(false)
+        alerts.success("Registration Success", `Visitor ${result.data.name} registered successfully!`)
+      } else {
+        alerts.error("Registration Error", result.error || "Failed to register visitor")
+      }
+    } catch (err) {
+      alerts.error("Registration Error", "Failed to register visitor")
+    } finally {
+      setRegistering(false)
     }
   }
 
@@ -174,59 +241,44 @@ export default function ProtocolDashboard() {
 
   return (
     <div className="min-h-screen bg-blue-300">
-      {/* Header */}
-      <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3 sm:gap-4">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800 truncate">
-                Protocol Dashboard - {data.protocolMember.name}
-              </h1>
-              <p className="text-xs sm:text-sm text-blue-700 mt-1">
-                {data.protocolMember.team.name} • Managing {data.statistics.totalVisitors} visitors
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={() => setShowCreateVisitor(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add Visitor
-              </Button>
-              <Link href="/protocol/strategies">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="border-green-300 text-green-800 bg-green-50 hover:bg-green-100"
-                >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Strategies
-                </Button>
-              </Link>
-              <Link href="/protocol/profile">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-300 text-blue-800 bg-white/80 hover:bg-white/90"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Profile
-                </Button>
-              </Link>
-              <Button 
-                onClick={handleLogout}
-                variant="outline"
-                size="sm"
-                className="border-blue-300 text-blue-800 bg-white/80 hover:bg-white/90"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ProfessionalHeader
+        title={`Protocol Dashboard - ${data.protocolMember.name}`}
+        subtitle={`${data.protocolMember.team.name} • Managing ${data.statistics.totalVisitors} visitors`}
+        user={{
+          name: data.protocolMember.name,
+          email: data.protocolMember.email,
+          profilePicture: data.protocolMember.profilePicture
+        }}
+        actions={[
+          {
+            label: "Add Visitor",
+            onClick: () => setShowCreateVisitor(true),
+            variant: "default",
+            icon: <UserPlus className="h-3 w-3 sm:h-4 sm:w-4" />
+          },
+          {
+            label: "Responsibilities",
+            href: "/protocol/responsibilities",
+            variant: "outline",
+            className: "border-purple-300 text-purple-100 bg-purple-600/20 hover:bg-purple-600/30",
+            icon: <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+          },
+          {
+            label: "Strategies",
+            href: "/protocol/strategies",
+            variant: "outline",
+            className: "border-green-300 text-green-100 bg-green-600/20 hover:bg-green-600/30",
+            icon: <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
+          },
+          {
+            label: "Logout",
+            onClick: handleLogout,
+            variant: "outline",
+            className: "border-red-300 text-red-100 bg-red-600/20 hover:bg-red-600/30",
+            icon: <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
+          }
+        ]}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-6">
@@ -533,6 +585,169 @@ export default function ProtocolDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Add Visitor Modal */}
+      {showCreateVisitor && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-blue-800">Register New Visitor</h3>
+                <Button
+                  onClick={() => setShowCreateVisitor(false)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-blue-800 hover:bg-blue-100"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Basic Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-blue-800 mb-1">Full Name *</label>
+                    <input
+                      type="text"
+                      value={newVisitor.name}
+                      onChange={(e) => setNewVisitor(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-blue-800"
+                      placeholder="Enter visitor's full name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-blue-800 mb-1">Email Address *</label>
+                    <input
+                      type="email"
+                      value={newVisitor.email}
+                      onChange={(e) => setNewVisitor(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-blue-800"
+                      placeholder="visitor@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-blue-800 mb-1">Phone Number</label>
+                    <input
+                      type="tel"
+                      value={newVisitor.phone}
+                      onChange={(e) => setNewVisitor(prev => ({ ...prev, phone: e.target.value }))}
+                      className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-blue-800"
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-blue-800 mb-1">Age</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="120"
+                      value={newVisitor.age}
+                      onChange={(e) => setNewVisitor(prev => ({ ...prev, age: e.target.value }))}
+                      className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-blue-800"
+                      placeholder="Age"
+                    />
+                  </div>
+                </div>
+
+                {/* Visitor Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-blue-800 mb-1">Visitor Type</label>
+                    <select
+                      value={newVisitor.type}
+                      onChange={(e) => setNewVisitor(prev => ({ ...prev, type: e.target.value }))}
+                      className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-blue-800"
+                    >
+                      <option value="first-time">First-time Visitor</option>
+                      <option value="from-other-altar">From Other Church</option>
+                      <option value="returning">Returning Visitor</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-blue-800 mb-1">Visitor Status</label>
+                    <select
+                      value={newVisitor.status}
+                      onChange={(e) => setNewVisitor(prev => ({ ...prev, status: e.target.value }))}
+                      className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-blue-800"
+                    >
+                      <option value="visiting">Just Visiting</option>
+                      <option value="joining">Interested in Joining</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Additional Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-blue-800 mb-1">Occupation</label>
+                    <input
+                      type="text"
+                      value={newVisitor.occupation}
+                      onChange={(e) => setNewVisitor(prev => ({ ...prev, occupation: e.target.value }))}
+                      className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-blue-800"
+                      placeholder="Occupation"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-blue-800 mb-1">Marital Status</label>
+                    <select
+                      value={newVisitor.maritalStatus}
+                      onChange={(e) => setNewVisitor(prev => ({ ...prev, maritalStatus: e.target.value }))}
+                      className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-blue-800"
+                    >
+                      <option value="single">Single</option>
+                      <option value="married">Married</option>
+                      <option value="divorced">Divorced</option>
+                      <option value="widowed">Widowed</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-blue-800 mb-1">Address</label>
+                  <textarea
+                    value={newVisitor.address}
+                    onChange={(e) => setNewVisitor(prev => ({ ...prev, address: e.target.value }))}
+                    className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-blue-800"
+                    rows={2}
+                    placeholder="Home address"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-blue-800 mb-1">How Did You Hear About Us?</label>
+                  <input
+                    type="text"
+                    value={newVisitor.howDidYouHear}
+                    onChange={(e) => setNewVisitor(prev => ({ ...prev, howDidYouHear: e.target.value }))}
+                    className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-blue-800"
+                    placeholder="Friend, online, social media, etc."
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    onClick={handleRegisterVisitor}
+                    disabled={registering || !newVisitor.name || !newVisitor.email}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {registering ? 'Registering...' : 'Register Visitor'}
+                  </Button>
+                  <Button
+                    onClick={() => setShowCreateVisitor(false)}
+                    variant="outline"
+                    className="border-blue-300 text-blue-800 hover:bg-blue-100"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

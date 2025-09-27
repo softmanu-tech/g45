@@ -133,8 +133,8 @@ export function AttendanceHistory({ groupId }: AttendanceHistoryProps) {
                 <Calendar
                   mode="single"
                   selected={startDate}
-                  onSelect={(date) => date && setStartDate(date)}
-                  disabled={(date) => date > endDate}
+                  onSelect={(date: any) => date && setStartDate(date)}
+                  disabled={(date: any) => date > endDate}
                   initialFocus
                 />
               </PopoverContent>
@@ -157,8 +157,8 @@ export function AttendanceHistory({ groupId }: AttendanceHistoryProps) {
                 <Calendar
                   mode="single"
                   selected={endDate}
-                  onSelect={(date) => date && setEndDate(date)}
-                  disabled={(date) => date < startDate || date > new Date()}
+                  onSelect={(date: any) => date && setEndDate(date)}
+                  disabled={(date: any) => date < startDate || date > new Date()}
                   initialFocus
                 />
               </PopoverContent>

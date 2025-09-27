@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     console.log('Found protocol teams:', protocolTeams.length);
 
     // Get all visitors
-    let allVisitors = [];
+    let allVisitors: any[] = [];
     try {
       allVisitors = await Visitor.find({}).exec();
       console.log('Found visitors:', allVisitors.length);
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
       }
 
       // Member performance
-      const memberPerformance = team.members.map((member) => {
+      const memberPerformance = team.members.map((member: any) => {
         const memberVisitors = teamVisitors.filter(v => 
           v.assignedProtocolMember && v.assignedProtocolMember.toString() === member._id.toString()
         );

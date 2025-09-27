@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Loading } from "@/components/ui/loading"
 import { useAlerts } from "@/components/ui/alert-system"
+import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import { format } from "date-fns"
 import Link from "next/link"
 import { useParams } from "next/navigation"
@@ -16,7 +17,6 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  ArrowLeft,
   User,
   MessageSquare,
   TrendingUp,
@@ -118,15 +118,24 @@ export default function EventDetailsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-blue-300 flex items-center justify-center px-4">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg max-w-md text-center">
-          <strong>Error:</strong> {error}
-          <button 
-            onClick={fetchEventResponses}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-          >
-            Try Again
-          </button>
+      <div className="min-h-screen bg-blue-300">
+        <ProfessionalHeader
+          title="Event Details"
+          subtitle="View event information and member responses"
+          backHref="/leader/events"
+        />
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
+          <Card className="bg-red-200/90 backdrop-blur-md border border-red-300">
+            <CardContent className="p-6 text-center">
+              <strong className="text-red-800">Error:</strong> {error}
+              <Button 
+                onClick={fetchEventResponses}
+                className="mt-4 bg-red-600 hover:bg-red-700 text-white"
+              >
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
@@ -134,14 +143,23 @@ export default function EventDetailsPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-blue-300 flex items-center justify-center px-4">
-        <div className="bg-blue-200/90 backdrop-blur-md rounded-lg p-6 border border-blue-300 text-center">
-          <p className="text-blue-800">No event data available.</p>
-          <Link href="/leader/events">
-            <Button className="mt-4 bg-blue-600 hover:bg-blue-700 text-white">
-              Back to Events
-            </Button>
-          </Link>
+      <div className="min-h-screen bg-blue-300">
+        <ProfessionalHeader
+          title="Event Details"
+          subtitle="View event information and member responses"
+          backHref="/leader/events"
+        />
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
+          <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
+            <CardContent className="p-6 text-center">
+              <p className="text-blue-800">No event data available.</p>
+              <Link href="/leader/events">
+                <Button className="mt-4 bg-blue-600 hover:bg-blue-700 text-white">
+                  Back to Events
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
@@ -151,117 +169,93 @@ export default function EventDetailsPage() {
 
   return (
     <div className="min-h-screen bg-blue-300">
-      {/* Header */}
-      <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4 sm:py-6">
-            <div className="flex items-center gap-4">
-              <Link href="/leader/events">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-blue-800 hover:bg-blue-100 p-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 hover:from-blue-100 hover:to-blue-200"
-                  style={{
-                    boxShadow: '0 8px 16px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
-                  }}
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">
-                  {data.event.title}
-                </h1>
-                <p className="text-xs sm:text-sm text-blue-700 mt-1">
-                  Event Details & Member Responses
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ProfessionalHeader
+        title={data.event.title}
+        subtitle="Event Details & Member Responses"
+        backHref="/leader/events"
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-6">
         
         {/* Event Information */}
         <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
-          <CardHeader>
-            <CardTitle className="text-blue-800 flex items-center gap-2">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-blue-800 flex items-center gap-2 text-lg sm:text-xl">
               <Calendar className="h-5 w-5" />
               Event Information
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <CardContent className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-blue-800 mb-2">Event Details</h3>
-                <div className="space-y-2 text-sm">
+                <h3 className="font-semibold text-blue-800 mb-2 text-sm sm:text-base">Event Details</h3>
+                <div className="space-y-2 text-xs sm:text-sm">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-blue-600" />
-                    <span>{format(new Date(data.event.date), "PPPp")}</span>
+                    <span className="text-blue-800">{format(new Date(data.event.date), "PPPp")}</span>
                   </div>
                   {data.event.location && (
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-blue-600" />
-                      <span>{data.event.location}</span>
+                      <span className="text-blue-800">{data.event.location}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-blue-600" />
-                    <span>{data.event.group.name}</span>
+                    <span className="text-blue-800">{data.event.group.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-blue-600" />
-                    <span>Created by {data.event.createdBy.name}</span>
+                    <span className="text-blue-800">Created by {data.event.createdBy.name}</span>
                   </div>
                 </div>
               </div>
               {data.event.description && (
                 <div>
-                  <h3 className="font-semibold text-blue-800 mb-2">Description</h3>
-                  <p className="text-sm text-blue-700">{data.event.description}</p>
+                  <h3 className="font-semibold text-blue-800 mb-2 text-sm sm:text-base">Description</h3>
+                  <p className="text-xs sm:text-sm text-blue-700">{data.event.description}</p>
                 </div>
               )}
             </div>
             
             {/* Response Summary */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-blue-800 mb-2">Response Summary</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-green-100 p-4 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-green-800">{data.summary.attending}</div>
-                  <div className="text-sm text-green-600">Attending</div>
+              <h3 className="font-semibold text-blue-800 mb-2 text-sm sm:text-base">Response Summary</h3>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="bg-green-100 p-3 sm:p-4 rounded-lg text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-green-800">{data.summary.attending}</div>
+                  <div className="text-xs sm:text-sm text-green-600">Attending</div>
                 </div>
-                <div className="bg-red-100 p-4 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-red-800">{data.summary.notAttending}</div>
-                  <div className="text-sm text-red-600">Not Attending</div>
+                <div className="bg-red-100 p-3 sm:p-4 rounded-lg text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-red-800">{data.summary.notAttending}</div>
+                  <div className="text-xs sm:text-sm text-red-600">Not Attending</div>
                 </div>
               </div>
-              <div className="bg-blue-100 p-4 rounded-lg text-center">
-                <div className="text-lg font-bold text-blue-800">{data.summary.totalResponses}</div>
-                <div className="text-sm text-blue-600">Total Responses</div>
+              <div className="bg-blue-100 p-3 sm:p-4 rounded-lg text-center">
+                <div className="text-lg sm:text-xl font-bold text-blue-800">{data.summary.totalResponses}</div>
+                <div className="text-xs sm:text-sm text-blue-700">Total Responses</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Member Responses */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           
           {/* Members Attending */}
           <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
-            <CardHeader>
-              <CardTitle className="text-blue-800 flex items-center gap-2">
-                <UserCheck className="h-5 w-5 text-green-600" />
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-blue-800 flex items-center gap-2 text-sm sm:text-base">
+                <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                 Members Attending ({data.summary.attending})
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6">
               {data.responses.attending.length === 0 ? (
-                <div className="text-center py-8">
-                  <UserCheck className="mx-auto h-12 w-12 text-blue-400 mb-4" />
-                  <p className="text-blue-600">No confirmations yet</p>
+                <div className="text-center py-6 sm:py-8">
+                  <UserCheck className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-blue-400 mb-4" />
+                  <p className="text-blue-700 text-sm sm:text-base">No confirmations yet</p>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -274,14 +268,14 @@ export default function EventDetailsPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="font-medium text-green-800">{response.member.name}</div>
-                          <div className="text-sm text-green-600">{response.member.email}</div>
+                          <div className="font-medium text-green-800 text-sm sm:text-base">{response.member.name}</div>
+                          <div className="text-xs sm:text-sm text-green-600">{response.member.email}</div>
                           {response.member.phone && (
                             <div className="text-xs text-green-500">{response.member.phone}</div>
                           )}
                         </div>
                         <div className="text-right">
-                          <CheckCircle className="h-5 w-5 text-green-600 mb-1" />
+                          <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mb-1" />
                           <div className="text-xs text-green-500">
                             {format(new Date(response.responseDate), "MMM dd, h:mm a")}
                           </div>
@@ -296,17 +290,17 @@ export default function EventDetailsPage() {
 
           {/* Members Not Attending */}
           <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
-            <CardHeader>
-              <CardTitle className="text-blue-800 flex items-center gap-2">
-                <UserX className="h-5 w-5 text-red-600" />
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-blue-800 flex items-center gap-2 text-sm sm:text-base">
+                <UserX className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
                 Members Not Attending ({data.summary.notAttending})
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6">
               {data.responses.notAttending.length === 0 ? (
-                <div className="text-center py-8">
-                  <UserX className="mx-auto h-12 w-12 text-blue-400 mb-4" />
-                  <p className="text-blue-600">No apologies received</p>
+                <div className="text-center py-6 sm:py-8">
+                  <UserX className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-blue-400 mb-4" />
+                  <p className="text-blue-700 text-sm sm:text-base">No apologies received</p>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -320,11 +314,11 @@ export default function EventDetailsPage() {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-medium text-red-800">{response.member.name}</div>
-                            <div className="text-sm text-red-600">{response.member.email}</div>
+                            <div className="font-medium text-red-800 text-sm sm:text-base">{response.member.name}</div>
+                            <div className="text-xs sm:text-sm text-red-600">{response.member.email}</div>
                           </div>
                           <div className="text-right">
-                            <XCircle className="h-5 w-5 text-red-600 mb-1" />
+                            <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 mb-1" />
                             <div className="text-xs text-red-500">
                               {format(new Date(response.responseDate), "MMM dd, h:mm a")}
                             </div>
@@ -333,10 +327,10 @@ export default function EventDetailsPage() {
                         {response.reason && (
                           <div className="mt-2 p-2 bg-red-100 rounded border-l-4 border-red-400">
                             <div className="flex items-start gap-2">
-                              <MessageSquare className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                              <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-red-600 mt-0.5 flex-shrink-0" />
                               <div>
                                 <div className="text-xs font-medium text-red-700 mb-1">Reason:</div>
-                                <div className="text-sm text-red-800">{response.reason}</div>
+                                <div className="text-xs sm:text-sm text-red-800">{response.reason}</div>
                               </div>
                             </div>
                           </div>
@@ -351,15 +345,15 @@ export default function EventDetailsPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
           <Link href="/leader/events">
-            <Button variant="outline" className="border-blue-300 text-blue-800 hover:bg-blue-50">
+            <Button variant="outline" className="border-blue-300 text-blue-800 hover:bg-blue-50 text-sm sm:text-base w-full sm:w-auto">
               Back to Events
             </Button>
           </Link>
           {isUpcoming && (
             <Link href="/leader/attendance">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base w-full sm:w-auto">
                 Mark Attendance
               </Button>
             </Link>

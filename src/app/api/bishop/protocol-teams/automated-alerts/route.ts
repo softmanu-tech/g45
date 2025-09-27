@@ -24,10 +24,10 @@ export async function GET(request: Request) {
       .populate('assignedProtocolMember', 'name email');
 
     // Categorize visitors by urgency
-    const criticalVisitors = []; // < 1 week remaining
-    const urgentVisitors = [];   // 1-2 weeks remaining
-    const warningVisitors = [];  // 2-4 weeks remaining
-    const normalVisitors = [];   // > 4 weeks remaining
+    const criticalVisitors: any[] = []; // < 1 week remaining
+    const urgentVisitors: any[] = [];   // 1-2 weeks remaining
+    const warningVisitors: any[] = [];  // 2-4 weeks remaining
+    const normalVisitors: any[] = [];   // > 4 weeks remaining
 
     activeVisitors.forEach(visitor => {
       const startDate = visitor.monitoringStartDate ? new Date(visitor.monitoringStartDate) : new Date(visitor.createdAt);
@@ -98,7 +98,7 @@ export async function GET(request: Request) {
     }
 
     // Team-specific alerts
-    const teamAlerts = {};
+    const teamAlerts: any = {};
     [...criticalVisitors, ...urgentVisitors, ...warningVisitors].forEach(visitor => {
       if (!teamAlerts[visitor.teamName]) {
         teamAlerts[visitor.teamName] = {

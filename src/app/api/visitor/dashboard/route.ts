@@ -43,19 +43,19 @@ export async function GET(request: Request) {
 
     // Calculate statistics
     const totalVisits = visitor.visitHistory.length;
-    const presentCount = visitor.visitHistory.filter(v => v.attendanceStatus === 'present').length;
+    const presentCount = visitor.visitHistory.filter((v: any) => v.attendanceStatus === 'present').length;
     const attendanceRate = totalVisits > 0 ? Math.round((presentCount / totalVisits) * 100) : 0;
     
-    const completedMilestones = visitor.milestones.filter(m => m.completed).length;
+    const completedMilestones = visitor.milestones.filter((m: any) => m.completed).length;
     const averageRating = visitor.experiences.length > 0 
-      ? Math.round((visitor.experiences.reduce((sum, exp) => sum + exp.rating, 0) / visitor.experiences.length) * 10) / 10
+      ? Math.round((visitor.experiences.reduce((sum: any, exp: any) => sum + exp.rating, 0) / visitor.experiences.length) * 10) / 10
       : 0;
 
     const monitoringStartDate = new Date(visitor.monitoringStartDate || visitor.createdAt);
     const daysInProgram = Math.floor((Date.now() - monitoringStartDate.getTime()) / (1000 * 60 * 60 * 24));
 
     // Get milestone progress for charts
-    const milestoneProgress = visitor.milestones.map(milestone => ({
+    const milestoneProgress = visitor.milestones.map((milestone: any) => ({
       week: milestone.week,
       completed: milestone.completed,
       notes: milestone.notes,
@@ -76,11 +76,11 @@ export async function GET(request: Request) {
           monitoringProgress: Math.round((completedMilestones / 12) * 100),
           daysRemaining
         },
-        visitHistory: visitor.visitHistory.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+        visitHistory: visitor.visitHistory.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()),
         milestones: milestoneProgress,
         upcomingEvents,
-        suggestions: visitor.suggestions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
-        experiences: visitor.experiences.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+        suggestions: visitor.suggestions.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+        experiences: visitor.experiences.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()),
         statistics: {
           totalVisits,
           presentCount,

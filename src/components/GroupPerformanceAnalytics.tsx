@@ -4,8 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Loading, QuickLoading } from './ui/loading';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { Loader2 } from 'lucide-react';
-import { Button } from './button';
-import { DatePickerWithRange } from './ui/date-range-picker';
+import { Button } from './ui/button';
+// import { DatePickerWithRange } from './ui/date-range-picker';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
@@ -159,10 +159,10 @@ export default function GroupPerformanceAnalytics() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold tracking-tight">Group Performance Analytics</h2>
-        <DatePickerWithRange
+        {/* <DatePickerWithRange
           date={dateRange}
           setDate={(range) => setDateRange(range)}
-        />
+        /> */}
       </div>
 
       {data && data.groupPerformance.length > 0 && (
@@ -412,7 +412,7 @@ export default function GroupPerformanceAnalytics() {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          label={({ name, percent }: any) => `${name}: ${((percent as number) * 100).toFixed(0)}%`}
                           outerRadius={150}
                           fill="#8884d8"
                           dataKey="value"
@@ -516,7 +516,7 @@ export default function GroupPerformanceAnalytics() {
                             <Line 
                               type="monotone" 
                               dataKey={`groupRates[${comparisonData.groupComparison.findIndex(
-                                g => g.group._id === selectedGroupData.group._id
+                                (g: any) => g.group._id === selectedGroupData.group._id
                               )}].attendanceRate`} 
                               stroke="#82ca9d" 
                               name={selectedGroupData.group.name} 

@@ -131,20 +131,20 @@ export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
       className="max-w-2xl mx-auto"
     >
       <Card className="bg-blue-200/90 backdrop-blur-md shadow-lg border border-blue-300">
-        <CardHeader className="bg-blue-200/90 backdrop-blur-md text-blue-800 rounded-t-lg border-b border-blue-300">
-          <CardTitle className="text-xl font-bold flex items-center gap-2">
+        <CardHeader className="bg-blue-200/90 backdrop-blur-md text-blue-800 rounded-t-lg border-b border-blue-300 p-4 sm:p-6">
+          <CardTitle className="text-lg sm:text-xl font-bold flex items-center gap-2">
             <Calendar className="h-5 w-5" />
             Create New Event
           </CardTitle>
         </CardHeader>
         
-        <CardContent className="p-6 bg-blue-200/90 backdrop-blur-md">
+        <CardContent className="p-4 sm:p-6 bg-blue-200/90 backdrop-blur-md">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
+                className="bg-red-200/90 backdrop-blur-md border border-red-300 text-red-800 px-4 py-3 rounded-lg"
               >
                 {error}
               </motion.div>
@@ -161,7 +161,7 @@ export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 bg-white/90 text-blue-800 placeholder-blue-600"
+                  className="w-full pl-10 pr-4 py-2 sm:py-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 bg-white/90 text-blue-800 placeholder-blue-600 text-sm sm:text-base"
                   placeholder="Enter event title"
                   required
                   disabled={loading}
@@ -171,7 +171,7 @@ export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
             </div>
 
             {/* Date and Time */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-blue-800">
                   Event Date *
@@ -182,7 +182,7 @@ export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 bg-white/90 text-blue-800"
+                    className="w-full pl-10 pr-4 py-2 sm:py-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 bg-white/90 text-blue-800 text-sm sm:text-base"
                     required
                     disabled={loading}
                     min={today}
@@ -200,7 +200,7 @@ export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
                     type="time"
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 bg-white/90 text-blue-800"
+                    className="w-full pl-10 pr-4 py-2 sm:py-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 bg-white/90 text-blue-800 text-sm sm:text-base"
                     required
                     disabled={loading}
                     min={minTime}
@@ -220,7 +220,7 @@ export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 bg-white/90 text-blue-800 placeholder-blue-600"
+                  className="w-full pl-10 pr-4 py-2 sm:py-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 bg-white/90 text-blue-800 placeholder-blue-600 text-sm sm:text-base"
                   placeholder="Enter event location (optional)"
                   disabled={loading}
                   maxLength={200}
@@ -236,7 +236,7 @@ export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 resize-vertical bg-white/90 text-blue-800 placeholder-blue-600"
+                className="w-full px-4 py-2 sm:py-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 resize-vertical bg-white/90 text-blue-800 placeholder-blue-600 text-sm sm:text-base"
                 placeholder="Enter event description (optional)"
                 disabled={loading}
                 rows={4}
@@ -248,11 +248,11 @@ export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1 border-blue-300 text-blue-800 bg-white/80 hover:bg-white/90"
+                className="flex-1 border-blue-300 text-blue-800 bg-white/80 hover:bg-white/90 text-sm sm:text-base"
                 disabled={loading}
                 onClick={() => {
                   setTitle("")
@@ -268,7 +268,7 @@ export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
               
               <Button
                 type="submit"
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base"
                 disabled={loading}
               >
                 {loading ? (

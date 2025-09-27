@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import { User } from '@/lib/models/User';
+import { Group } from '@/lib/models/Group';
 import Event from '@/lib/models/Event';
 import Attendance from '@/lib/models/Attendance';
 import { requireSessionAndRoles } from '@/lib/authMiddleware';
@@ -15,23 +16,42 @@ export async function GET(request: Request) {
 
     await dbConnect();
 
-    // Get the member's details with group info
+    // Ensure Group model is registered
+    const { Group } = await import('@/lib/models/Group');
+
+    // Get the member's details with groups info
     const member = await User.findById(user.id)
-      .populate('group', 'name')
-      .select('name email phone residence department group');
+      .populate('group', 'name') // Keep for backward compatibility
+      .populate('groups', 'name') // New: multiple groups
+      .select('name email phone residence department group groups');
 
     if (!member) {
       return NextResponse.json({ error: 'Member not found' }, { status: 404 });
     }
 
-    // Get upcoming events for the member's group
+    // Get all groups the member belongs to (combine old and new group fields)
+    const memberGroups = [];
+    if (member.group) {
+      memberGroups.push(member.group);
+    }
+    if (member.groups && member.groups.length > 0) {
+      memberGroups.push(...member.groups);
+    }
+
+    // Remove duplicates
+    const uniqueGroups = memberGroups.filter((group, index, self) => 
+      index === self.findIndex(g => g._id.toString() === group._id.toString())
+    );
+
+    // Get upcoming events for all member's groups
     const upcomingEvents = await Event.find({
-      group: member.group,
+      group: { $in: uniqueGroups.map(g => g._id) },
       date: { $gte: new Date() }
     })
       .sort({ date: 1 })
       .populate('createdBy', 'name')
-      .limit(10);
+      .populate('group', 'name')
+      .limit(20);
 
     // Get member's attendance history
     const attendanceHistory = await Attendance.find({
@@ -69,7 +89,8 @@ export async function GET(request: Request) {
           phone: member.phone,
           residence: member.residence,
           department: member.department,
-          group: member.group
+          group: member.group, // Keep for backward compatibility
+          groups: uniqueGroups // New: all groups member belongs to
         },
         upcomingEvents,
         attendanceStats: {

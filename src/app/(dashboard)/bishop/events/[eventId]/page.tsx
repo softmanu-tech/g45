@@ -23,8 +23,10 @@ import {
   UserCheck,
   UserX,
   Crown,
-  Shield
+  Shield,
+  LogOut
 } from "lucide-react"
+import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 
 interface Member {
   _id: string
@@ -108,6 +110,15 @@ export default function BishopEventDetailsPage() {
     }
   }
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST" })
+      window.location.href = "/"
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
+  }
+
   useEffect(() => {
     if (eventId) {
       fetchEventResponses()
@@ -153,70 +164,60 @@ export default function BishopEventDetailsPage() {
 
   return (
     <div className="min-h-screen bg-blue-300">
-      {/* Header */}
-      <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4 sm:py-6">
-            <div className="flex items-center gap-4">
-              <Link href="/bishop">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-blue-800 hover:bg-blue-100 p-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 hover:from-blue-100 hover:to-blue-200"
-                  style={{
-                    boxShadow: '0 8px 16px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
-                  }}
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800 flex items-center gap-2">
-                  <Crown className="h-6 w-6" />
-                  {data.event.title}
-                </h1>
-                <p className="text-xs sm:text-sm text-blue-700 mt-1">
-                  Bishop View - Event Details & Member Responses
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ProfessionalHeader
+        title={data.event.title}
+        subtitle={`Bishop View - Event Details & Member Responses`}
+        backHref="/bishop"
+        actions={[
+          {
+            label: "View Events",
+            href: "/bishop",
+            variant: "outline",
+            icon: <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+          },
+          {
+            label: "Logout",
+            onClick: handleLogout,
+            variant: "outline",
+            className: "border-red-300 text-red-100 bg-red-600/20 hover:bg-red-600/30",
+            icon: <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
+          }
+        ]}
+      />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-6">
+      <div className="max-w-7xl mx-auto px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2 sm:py-4 md:py-6 space-y-4 sm:space-y-6">
         
         {/* Event Information */}
         <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
-          <CardHeader>
-            <CardTitle className="text-blue-800 flex items-center gap-2">
-              <Shield className="h-5 w-5" />
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-sm sm:text-base md:text-lg text-blue-800 flex items-center gap-2">
+              <Shield className="h-4 w-4 sm:h-5 sm:w-5" />
               Event Overview
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <CardContent className="p-3 sm:p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="space-y-4">
               <div>
                 <h3 className="font-semibold text-blue-800 mb-2">Event Details</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-blue-600" />
-                    <span>{format(new Date(data.event.date), "PPPp")}</span>
+                    <span className="text-blue-700">{format(new Date(data.event.date), "PPPp")}</span>
                   </div>
                   {data.event.location && (
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-blue-600" />
-                      <span>{data.event.location}</span>
+                      <span className="text-blue-700">{data.event.location}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-blue-600" />
-                    <span>{data.event.group.name}</span>
+                    <span className="text-blue-700">{data.event.group.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-blue-600" />
-                    <span>Created by {data.event.createdBy.name}</span>
+                    <span className="text-blue-700">Created by {data.event.createdBy.name}</span>
                   </div>
                 </div>
               </div>
@@ -229,41 +230,41 @@ export default function BishopEventDetailsPage() {
             </div>
             
             {/* Response Summary */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-blue-800 mb-2">Response Summary</h3>
-              <div className="space-y-3">
-                <div className="bg-green-100 p-4 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-green-800">{data.summary.attending}</div>
-                  <div className="text-sm text-green-600">Will Attend</div>
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="text-sm sm:text-base font-semibold text-blue-800 mb-2">Response Summary</h3>
+              <div className="space-y-2 sm:space-y-3">
+                <div className="bg-green-100 p-3 sm:p-4 rounded-lg text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-green-800">{data.summary.attending}</div>
+                  <div className="text-xs sm:text-sm text-green-600">Will Attend</div>
                 </div>
-                <div className="bg-red-100 p-4 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-red-800">{data.summary.notAttending}</div>
-                  <div className="text-sm text-red-600">Won't Attend</div>
+                <div className="bg-red-100 p-3 sm:p-4 rounded-lg text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-red-800">{data.summary.notAttending}</div>
+                  <div className="text-xs sm:text-sm text-red-600">Won't Attend</div>
                 </div>
-                <div className="bg-blue-100 p-4 rounded-lg text-center">
-                  <div className="text-lg font-bold text-blue-800">{data.summary.totalResponses}</div>
-                  <div className="text-sm text-blue-600">Total Responses</div>
+                <div className="bg-blue-100 p-3 sm:p-4 rounded-lg text-center">
+                  <div className="text-lg sm:text-xl font-bold text-blue-800">{data.summary.totalResponses}</div>
+                  <div className="text-xs sm:text-sm text-blue-600">Total Responses</div>
                 </div>
               </div>
             </div>
 
             {/* Engagement Metrics */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-blue-800 mb-2">Engagement Metrics</h3>
-              <div className="space-y-3">
-                <div className="bg-purple-100 p-4 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-purple-800">
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="text-sm sm:text-base font-semibold text-blue-800 mb-2">Engagement Metrics</h3>
+              <div className="space-y-2 sm:space-y-3">
+                <div className="bg-purple-100 p-3 sm:p-4 rounded-lg text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-purple-800">
                     {data.summary.totalResponses > 0 
                       ? Math.round((data.summary.attending / data.summary.totalResponses) * 100)
                       : 0}%
                   </div>
-                  <div className="text-sm text-purple-600">Attendance Rate</div>
+                  <div className="text-xs sm:text-sm text-purple-600">Attendance Rate</div>
                 </div>
-                <div className="bg-indigo-100 p-4 rounded-lg text-center">
-                  <div className="text-lg font-bold text-indigo-800">{data.summary.responseRate}%</div>
-                  <div className="text-sm text-indigo-600">Response Rate</div>
+                <div className="bg-indigo-100 p-3 sm:p-4 rounded-lg text-center">
+                  <div className="text-lg sm:text-xl font-bold text-indigo-800">{data.summary.responseRate}%</div>
+                  <div className="text-xs sm:text-sm text-indigo-600">Response Rate</div>
                 </div>
-                <div className={`p-3 rounded-lg text-center text-sm ${
+                <div className={`p-2 sm:p-3 rounded-lg text-center text-xs sm:text-sm ${
                   data.summary.attending >= data.summary.notAttending 
                     ? 'bg-green-50 text-green-700' 
                     : 'bg-amber-50 text-amber-700'
@@ -278,24 +279,24 @@ export default function BishopEventDetailsPage() {
         </Card>
 
         {/* Member Responses */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           
           {/* Members Attending */}
           <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
-            <CardHeader>
-              <CardTitle className="text-blue-800 flex items-center gap-2">
-                <UserCheck className="h-5 w-5 text-green-600" />
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-sm sm:text-base md:text-lg text-blue-800 flex items-center gap-2">
+                <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                 Confirmed Attendance ({data.summary.attending})
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-4 md:p-6">
               {data.responses.attending.length === 0 ? (
                 <div className="text-center py-8">
                   <UserCheck className="mx-auto h-12 w-12 text-blue-400 mb-4" />
                   <p className="text-blue-600">No confirmations yet</p>
                 </div>
               ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className="space-y-3 max-h-96 overflow-y-auto scrollbar-thin">
                   {data.responses.attending.map((response) => (
                     <motion.div
                       key={response._id}
@@ -330,20 +331,20 @@ export default function BishopEventDetailsPage() {
 
           {/* Members Not Attending */}
           <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
-            <CardHeader>
-              <CardTitle className="text-blue-800 flex items-center gap-2">
-                <UserX className="h-5 w-5 text-red-600" />
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-sm sm:text-base md:text-lg text-blue-800 flex items-center gap-2">
+                <UserX className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
                 Apologies Received ({data.summary.notAttending})
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-4 md:p-6">
               {data.responses.notAttending.length === 0 ? (
                 <div className="text-center py-8">
                   <UserX className="mx-auto h-12 w-12 text-blue-400 mb-4" />
                   <p className="text-blue-600">No apologies received</p>
                 </div>
               ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className="space-y-3 max-h-96 overflow-y-auto scrollbar-thin">
                   {data.responses.notAttending.map((response) => (
                     <motion.div
                       key={response._id}
@@ -388,19 +389,19 @@ export default function BishopEventDetailsPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 justify-center">
           <Link href="/bishop">
-            <Button variant="outline" className="border-blue-300 text-blue-800 hover:bg-blue-50">
+            <Button variant="outline" className="w-full sm:w-auto border-blue-300 text-blue-800 hover:bg-blue-50 px-3 sm:px-4 py-2 text-sm sm:text-base">
               Back to Dashboard
             </Button>
           </Link>
           <Link href="/bishop/leaders">
-            <Button variant="outline" className="border-blue-300 text-blue-800 hover:bg-blue-50">
+            <Button variant="outline" className="w-full sm:w-auto border-blue-300 text-blue-800 hover:bg-blue-50 px-3 sm:px-4 py-2 text-sm sm:text-base">
               View Leaders
             </Button>
           </Link>
           <Link href="/bishop/groups">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 text-sm sm:text-base">
               Manage Groups
             </Button>
           </Link>

@@ -17,7 +17,7 @@ export interface IVisitor extends Document {
   password?: string; // Only for joining visitors who get accounts
   monitoringStartDate?: Date;
   monitoringEndDate?: Date; // 3 months from start
-  monitoringStatus: 'active' | 'completed' | 'converted-to-member' | 'inactive';
+  monitoringStatus: 'active' | 'completed' | 'converted-to-member' | 'inactive' | 'needs-attention';
   
   // Assignment
   protocolTeam: mongoose.Types.ObjectId;
@@ -74,6 +74,16 @@ export interface IVisitor extends Document {
   referredBy?: string;
   howDidYouHear?: string;
   previousChurch?: string;
+  
+  // Integration tracking
+  integrationChecklist: {
+    welcomePackage: boolean;
+    homeVisit: boolean;
+    smallGroupIntro: boolean;
+    ministryOpportunities: boolean;
+    mentorAssigned: boolean;
+    regularCheckIns: boolean;
+  };
   
   // Status flags
   isActive: boolean;
@@ -143,7 +153,7 @@ const VisitorSchema = new Schema<IVisitor>({
   },
   monitoringStatus: {
     type: String,
-    enum: ['active', 'completed', 'converted-to-member', 'inactive'],
+    enum: ['active', 'completed', 'converted-to-member', 'inactive', 'needs-attention'],
     default: 'active'
   },
   
@@ -242,6 +252,16 @@ const VisitorSchema = new Schema<IVisitor>({
   howDidYouHear: String,
   previousChurch: String,
   
+  // Integration tracking
+  integrationChecklist: {
+    welcomePackage: { type: Boolean, default: false },
+    homeVisit: { type: Boolean, default: false },
+    smallGroupIntro: { type: Boolean, default: false },
+    ministryOpportunities: { type: Boolean, default: false },
+    mentorAssigned: { type: Boolean, default: false },
+    regularCheckIns: { type: Boolean, default: false }
+  },
+  
   // Status
   isActive: {
     type: Boolean,
@@ -279,6 +299,14 @@ VisitorSchema.virtual('daysRemaining').get(function() {
   const timeDiff = endDate.getTime() - today.getTime();
   const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
   return Math.max(0, daysDiff);
+});
+
+// Virtual for integration completion percentage
+VisitorSchema.virtual('integrationProgress').get(function() {
+  if (!this.integrationChecklist) return 0;
+  const total = 6; // Total checklist items
+  const completed = Object.values(this.integrationChecklist).filter(Boolean).length;
+  return Math.round((completed / total) * 100);
 });
 
 // Add indexes

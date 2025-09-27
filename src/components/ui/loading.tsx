@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import Image from "next/image"
 import { motion } from "framer-motion"
 
 interface LoadingProps {
@@ -29,6 +30,42 @@ export function Loading({
   const LoadingContent = () => (
     <div className="bg-blue-200/95 backdrop-blur-md rounded-xl shadow-xl border border-blue-300/50 p-8">
       <div className="flex flex-col items-center gap-6">
+        {/* Logo with Loading Animation */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="relative"
+        >
+          <div className="bg-white/20 backdrop-blur-md rounded-full p-3 shadow-lg border border-white/30">
+            <Image
+              src="/logo.jpg"
+              alt="G-45 Main Logo"
+              width={60}
+              height={60}
+              className="rounded-full object-cover"
+              priority
+            />
+          </div>
+          {/* Animated Ring around Logo */}
+          <motion.div
+            className="absolute inset-0 border-2 border-blue-600 rounded-full"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          />
+        </motion.div>
+
+        {/* Project Name */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="text-center"
+        >
+          <h2 className="text-xl font-bold text-blue-800 mb-1">G-45 Main</h2>
+          <div className="w-16 h-0.5 bg-blue-600 mx-auto rounded-full"></div>
+        </motion.div>
+
         {/* Animated Loading Rings */}
         <div className="relative">
           {/* Outer Ring */}

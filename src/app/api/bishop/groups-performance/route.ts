@@ -51,15 +51,15 @@ export async function GET(request: Request) {
     // Group performance analysis
     const groupPerformance = await Promise.all(groups.map(async (group) => {
       const groupAttendance = attendanceRecords.filter(record => 
-        record.group._id.toString() === group._id.toString()
+        record.group._id.toString() === (group._id as any).toString()
       );
       
       const groupEvents = events.filter(event => 
-        event.group._id.toString() === group._id.toString()
+        event.group._id.toString() === (group._id as any).toString()
       );
 
       const groupMembers = allMembers.filter(member => 
-        member.group && member.group._id.toString() === group._id.toString()
+        member.group && member.group._id.toString() === (group._id as any).toString()
       );
 
       const totalPresent = groupAttendance.reduce((sum, record) => 
@@ -115,7 +115,7 @@ export async function GET(request: Request) {
       const trendPercentage = previousAvg > 0 ? Math.round(((recentAvg - previousAvg) / previousAvg) * 100 * 10) / 10 : 0;
 
       return {
-        groupId: group._id.toString(),
+        groupId: (group._id as any).toString(),
         groupName: group.name,
         leaderName: group.leader?.name || 'Unassigned',
         leaderEmail: group.leader?.email || '',

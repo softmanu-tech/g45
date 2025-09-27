@@ -31,12 +31,12 @@ export async function GET(request: Request) {
 
     // 2. Get Leader with Group
     const leader = await User.findById(user.id).populate<{ group: IGroup }>('group');
-    if (!leader?.group) {
+    if (!(leader as any)?.group) {
       return NextResponse.json({ error: 'Leader group not found' }, { status: 404 });
     }
 
     // Optionally, fetch the group details if needed
-    const groupDetails = await Group.findById(leader.group._id);
+    const groupDetails = await Group.findById((leader as any).group._id);
     if (!groupDetails) {
       return NextResponse.json({ error: 'Group not found' }, { status: 404 });
     }
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
 
     // 4. Build Secure Filters
     const attendanceFilter: FilterQuery<IAttendance> = {
-      group: leader.group._id,
+      group: (leader as any).group._id,
       ...(eventId && { event: new mongoose.Types.ObjectId(eventId) }),
       ...(fromDate || toDate) && {
         date: {
@@ -69,8 +69,8 @@ export async function GET(request: Request) {
     // 5. Fetch Data
     const [attendanceRecords, events, rawMembers] = await Promise.all([
       Attendance.find(attendanceFilter).lean<IAttendance[]>(),
-      Event.find({ group: leader.group._id }).lean(),
-      User.find({ group: leader.group._id, role: 'member' })
+      Event.find({ group: (leader as any).group._id }).lean(),
+      User.find({ group: (leader as any).group._id, role: 'member' })
         .select('name email phone')
         .lean<IUser[]>()
     ]);
@@ -109,8 +109,8 @@ export async function GET(request: Request) {
     // 8. Return Secure Response
     return NextResponse.json({
       group: {
-        _id: leader.group._id.toString(),
-        name: leader.group.name
+        _id: (leader as any).group._id.toString(),
+        name: (leader as any).group.name
       },
       events,
       members: enhancedMembers,
@@ -139,7 +139,7 @@ export async function POST(request: Request) {
 
     // 2. Get Leader with Group
     const leader = await User.findById(user.id).populate<{ group: IGroup }>('group');
-    if (!leader?.group) {
+    if (!(leader as any)?.group) {
       return NextResponse.json({ error: 'Leader group not found' }, { status: 404 });
     }
 
@@ -155,7 +155,7 @@ export async function POST(request: Request) {
       email,
       phone,
       role: 'member',
-      group: leader.group._id
+      group: (leader as any).group._id
     });
 
     await newMember.save();
@@ -184,7 +184,7 @@ export async function PUT(request: Request) {
 
     // 2. Get Leader with Group
     const leader = await User.findById(user.id).populate<{ group: IGroup }>('group');
-    if (!leader?.group) {
+    if (!(leader as any)?.group) {
       return NextResponse.json({ error: 'Leader group not found' }, { status: 404 });
     }
 
@@ -196,7 +196,7 @@ export async function PUT(request: Request) {
 
     // 4. Find and Update Member
     const updatedMember = await User.findOneAndUpdate(
-      { _id: memberId, group: leader.group._id },
+      { _id: memberId, group: (leader as any).group._id },
       { name, email, phone },
       { new: true }
     );
@@ -229,7 +229,7 @@ export async function DELETE(request: Request) {
 
     // 2. Get Leader with Group
     const leader = await User.findById(user.id).populate<{ group: IGroup }>('group');
-    if (!leader?.group) {
+    if (!(leader as any)?.group) {
       return NextResponse.json({ error: 'Leader group not found' }, { status: 404 });
     }
 
@@ -242,7 +242,7 @@ export async function DELETE(request: Request) {
     // 4. Find and Delete Member
     const deletedMember = await User.findOneAndDelete({
       _id: memberId,
-      group: leader.group._id
+      group: (leader as any).group._id
     });
 
     if (!deletedMember) {

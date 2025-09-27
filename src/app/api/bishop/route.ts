@@ -6,6 +6,8 @@ import { User } from "@/lib/models/User";
 import {Group} from "@/lib/models/Group";
 import { Attendance } from "@/lib/models/Attendance";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   const auth = await requireSessionAndRoles(req, ["bishop"]);
 

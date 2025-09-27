@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       groups.map(async (group) => {
         // Get group's attendance records
         const groupAttendanceRecords = allAttendanceRecords.filter(
-          (record) => record.group.toString() === group._id.toString()
+          (record) => record.group.toString() === (group._id as any).toString()
         );
 
         // Calculate attendance rate

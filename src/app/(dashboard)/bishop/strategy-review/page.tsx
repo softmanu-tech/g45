@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Loading } from "@/components/ui/loading"
 import { useAlerts } from "@/components/ui/alert-system"
+import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { format } from "date-fns"
@@ -17,6 +18,7 @@ import {
   Users,
   Target,
   Clock,
+  X,
   TrendingUp,
   ArrowLeft,
   Settings,
@@ -110,7 +112,7 @@ export default function StrategyReviewPage() {
     }
   }
 
-  const handleReviewStrategy = async (strategyId: string, action: 'approve' | 'reject') => {
+  const handleReviewStrategy = async (strategyId: string, action: 'approve' | 'reject' | 'feature') => {
     try {
       setReviewing(true)
       const response = await fetch('/api/bishop/strategies/review', {
@@ -133,12 +135,12 @@ export default function StrategyReviewPage() {
         setShowReviewModal(false)
         setSelectedStrategy(null)
         setReviewNotes('')
-        alerts.success(`Strategy ${action === 'approve' ? 'approved' : 'rejected'} successfully`)
+        alerts.success(`Strategy ${action === 'approve' ? 'approved' : 'rejected'} successfully`, "Success")
       } else {
-        alerts.error(result.error || `Failed to ${action} strategy`)
+        alerts.error(result.error || `Failed to ${action} strategy`, "Error")
       }
     } catch (err) {
-      alerts.error(`Failed to ${action} strategy`)
+      alerts.error(`Failed to ${action} strategy`, "Error")
     } finally {
       setReviewing(false)
     }
@@ -187,48 +189,19 @@ export default function StrategyReviewPage() {
 
   return (
     <div className="min-h-screen bg-blue-300">
-      {/* Header */}
-      <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3 sm:gap-4">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-3">
-                <Link href="/bishop">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-blue-800 hover:bg-blue-100"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <div>
-                  <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800 truncate">
-                    Protocol Strategy Review
-                  </h1>
-                  <p className="text-xs sm:text-sm text-blue-700 mt-1">
-                    Review and approve real success strategies from protocol teams
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="text-sm text-blue-700">
-                {pendingStrategies.length} pending review
-              </div>
-              <Button 
-                onClick={handleLogout}
-                variant="outline"
-                size="sm"
-                className="border-blue-300 text-blue-800 bg-white/80 hover:bg-white/90"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ProfessionalHeader
+        title="Protocol Strategy Review"
+        subtitle="Review and approve team success strategies"
+        backHref="/bishop"
+        actions={[
+          {
+            label: "Logout",
+            onClick: handleLogout,
+            variant: "outline",
+            className: "border-red-300 text-red-100 bg-red-600/20 hover:bg-red-600/30"
+          }
+        ]}
+      />
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-6">
         

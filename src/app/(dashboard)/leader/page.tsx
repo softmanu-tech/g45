@@ -9,9 +9,11 @@ import {
 import Link from 'next/link';
 import { fadeIn } from '@/lib/motion';
 import { CreateMemberForm } from '@/components/CreateMemberForm';
-import { Users, Calendar, TrendingUp, Settings, LogOut } from 'lucide-react';
+import { AddExistingMemberForm } from '@/components/AddExistingMemberForm';
+import { Users, Calendar, TrendingUp, Settings, LogOut, MessageSquare, UserPlus } from 'lucide-react';
 import { Loading } from '@/components/ui/loading';
 import { ProfileIcon } from '@/components/ProfileIcon';
+import { ProfessionalHeader } from '@/components/ProfessionalHeader';
 
 interface Member {
   _id: string;
@@ -40,6 +42,12 @@ interface Group {
 
 export interface DashboardResponse {
   group: Group;
+  leader?: {
+    _id: string;
+    name: string;
+    email: string;
+    profilePicture?: string;
+  };
   members: Member[];
   events: Event[];
   attendanceRecords: {
@@ -65,6 +73,7 @@ export default function LeaderDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openAddMember, setOpenAddMember] = useState(false);
+  const [openAddExistingMember, setOpenAddExistingMember] = useState(false);
 
   // Filtering and pagination state
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,6 +83,18 @@ export default function LeaderDashboard() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [performanceData, setPerformanceData] = useState<any>(null);
   const [performanceLoading, setPerformanceLoading] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -222,105 +243,126 @@ export default function LeaderDashboard() {
 
   return (
     <div className="min-h-screen bg-blue-300">
-      {/* Header */}
-                <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center py-4 sm:py-6 gap-4">
-                            <div>
-                                <h1 className="text-xl sm:text-2xl font-bold text-blue-800">{data.group.name} - Leader Dashboard</h1>
-                                <p className="text-sm text-blue-700 mt-1">Manage your group members and events</p>
-                            </div>
-                            <div className="flex items-center gap-2 sm:gap-3">
-                                <Link href="/leader/profile">
-                                    <ProfileIcon 
-                                        profilePicture={data.leader?.profilePicture}
-                                        name={data.leader?.name}
-                                        size="lg"
-                                        className="hover:border-blue-600"
-                                    />
-                                </Link>
-                                <div className="grid grid-cols-2 lg:flex gap-2 sm:gap-3 w-full lg:w-auto">
-                                <button
-                                    onClick={() => setOpenAddMember(true)}
-                                    className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-blue-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-blue-800 bg-white/80 backdrop-blur-sm hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                >
-                                    Add Member
-                                </button>
-                                <Link
-                                    href="/leader/attendance"
-                                    className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-blue-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-blue-800 bg-white/80 backdrop-blur-sm hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                >
-                                    Mark Attendance
-                                </Link>
-                                <Link
-                                    href="/leader/events"
-                                    className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-800"
-                                >
-                                    Manage Events
-                                </Link>
-                                <Link
-                                    href="/leader/analytics"
-                                    className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-blue-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-blue-800 bg-white/80 backdrop-blur-sm hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                >
-                                    View Analytics
-                                </Link>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+      <ProfessionalHeader
+        title={`${data.group.name} - Leader Dashboard`}
+        subtitle="Manage your group members and events"
+        user={data.leader ? {
+          name: data.leader.name,
+          email: data.leader.email,
+          profilePicture: data.leader.profilePicture
+        } : undefined}
+        actions={[
+          {
+            label: "Add Existing",
+            onClick: () => setOpenAddExistingMember(true),
+            variant: "outline",
+            icon: <UserPlus className="h-3 w-3 sm:h-4 sm:w-4" />
+          },
+          {
+            label: "Add New",
+            onClick: () => setOpenAddMember(true),
+            variant: "outline",
+            icon: <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+          },
+          {
+            label: "Mark Attendance",
+            href: "/leader/attendance",
+            variant: "outline",
+            icon: <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+          },
+          {
+            label: "Manage Events",
+            href: "/leader/events",
+            variant: "default",
+            icon: <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+          },
+          {
+            label: "View Analytics",
+            href: "/leader/analytics",
+            variant: "outline",
+            className: "border-green-300 text-green-100 bg-green-600/20 hover:bg-green-600/30",
+            icon: <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
+          },
+          {
+            label: "Communications",
+            href: "/leader/communications",
+            variant: "outline",
+            className: "border-blue-300 text-blue-100 bg-blue-600/20 hover:bg-blue-600/30",
+            icon: <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+          },
+          {
+            label: "Logout",
+            onClick: handleLogout,
+            variant: "outline",
+            className: "border-red-300 text-red-100 bg-red-600/20 hover:bg-red-600/30",
+            icon: <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
+          }
+        ]}
+      />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="space-y-6"
+          className="space-y-4 sm:space-y-6 md:space-y-8"
         >
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+                  <Users className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-blue-600" />
                 </div>
-                <div className="ml-3 sm:ml-4">
+                <div className="ml-2 sm:ml-3 md:ml-4">
                   <p className="text-xs sm:text-sm font-medium text-blue-700 uppercase tracking-wide">Total Members</p>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-800">{data.members.length}</p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">{data.members.length}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+                  <Calendar className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-blue-600" />
                 </div>
-                <div className="ml-3 sm:ml-4">
+                <div className="ml-2 sm:ml-3 md:ml-4">
                   <p className="text-xs sm:text-sm font-medium text-blue-700 uppercase tracking-wide">Total Events</p>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-800">{data.events.length}</p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">{data.events.length}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6 sm:col-span-2 lg:col-span-1">
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+                  <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-blue-600" />
                 </div>
-                <div className="ml-3 sm:ml-4">
+                <div className="ml-2 sm:ml-3 md:ml-4">
                   <p className="text-xs sm:text-sm font-medium text-blue-700 uppercase tracking-wide">Attendance Records</p>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-800">{data.attendanceRecords.length}</p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">{data.attendanceRecords.length}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-blue-600" />
+                </div>
+                <div className="ml-2 sm:ml-3 md:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-blue-700 uppercase tracking-wide">Communications</p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">View Messages</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-medium text-blue-800 mb-4">Filter Members</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
+            <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 mb-3 sm:mb-4">Filter Members</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
               <input
                 type="text"
                 placeholder="Search members..."
@@ -329,7 +371,7 @@ export default function LeaderDashboard() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="border border-blue-300 rounded-md px-4 py-2 bg-white/90 text-blue-800 placeholder-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="border border-blue-300 rounded-md px-2 sm:px-4 py-2 bg-white/90 text-blue-800 placeholder-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm"
               />
 
               <select
@@ -338,7 +380,7 @@ export default function LeaderDashboard() {
                   setRatingFilter(e.target.value || null);
                   setCurrentPage(1);
                 }}
-                className="border border-blue-300 rounded-md px-4 py-2 bg-white/90 text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="border border-blue-300 rounded-md px-2 sm:px-4 py-2 bg-white/90 text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm"
               >
                 <option value="">All Ratings</option>
                 <option value="Excellent">Excellent</option>
@@ -349,7 +391,7 @@ export default function LeaderDashboard() {
               <select
                 value={sortKey}
                 onChange={(e) => setSortKey(e.target.value as typeof sortKey)}
-                className="border border-blue-300 rounded-md px-4 py-2 bg-white/90 text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="border border-blue-300 rounded-md px-2 sm:px-4 py-2 bg-white/90 text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm"
               >
                 <option value="name">Sort by Name</option>
                 <option value="attendanceCount">Sort by Attendance</option>
@@ -360,7 +402,7 @@ export default function LeaderDashboard() {
               <select
                 value={sortDirection}
                 onChange={(e) => setSortDirection(e.target.value as 'asc' | 'desc')}
-                className="border border-blue-300 rounded-md px-4 py-2 bg-white/90 text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="border border-blue-300 rounded-md px-2 sm:px-4 py-2 bg-white/90 text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm"
               >
                 <option value="asc">Ascending</option>
                 <option value="desc">Descending</option>
@@ -370,12 +412,12 @@ export default function LeaderDashboard() {
 
           {/* Members Grid */}
           <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300">
-            <div className="px-4 sm:px-6 py-4 border-b border-blue-300">
-              <h3 className="text-base sm:text-lg font-medium text-blue-800">Group Members</h3>
+            <div className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-b border-blue-300">
+              <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800">Group Members</h3>
               <p className="text-xs sm:text-sm text-blue-700 mt-1">Showing {paginatedMembers.length} of {filteredMembers.length} members</p>
             </div>
             
-            <div className="p-4 sm:p-6">
+            <div className="p-3 sm:p-4 md:p-6">
               {filteredMembers.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="mx-auto h-12 w-12 text-blue-400 mb-4" />
@@ -383,14 +425,14 @@ export default function LeaderDashboard() {
                   <p className="text-blue-600">Try adjusting your search filters or add new members to your group.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                   {paginatedMembers.map((member) => (
                     <motion.div
                       key={member._id}
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.2 }}
-                      className="bg-white/80 backdrop-blur-sm rounded-lg border border-blue-200 p-4 sm:p-6 hover:shadow-md transition-shadow"
+                      className="bg-white/80 backdrop-blur-sm rounded-lg border border-blue-200 p-3 sm:p-4 md:p-6 hover:shadow-md transition-shadow"
                     >
                       <div className="flex items-center justify-between mb-3 sm:mb-4">
                         <h4 className="text-base sm:text-lg font-semibold text-blue-800">{member.name}</h4>
@@ -456,10 +498,10 @@ export default function LeaderDashboard() {
           )}
 
           {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-medium text-blue-800 mb-3 sm:mb-4">Attendance Trend</h3>
-              <ResponsiveContainer width="100%" height={250}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
+              <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 mb-3 sm:mb-4">Attendance Trend</h3>
+              <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={attendanceTrend}>
                   <XAxis dataKey="date" />
                   <YAxis allowDecimals={false} />
@@ -469,9 +511,9 @@ export default function LeaderDashboard() {
               </ResponsiveContainer>
             </div>
 
-            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-medium text-blue-800 mb-3 sm:mb-4">Member Rating Distribution</h3>
-              <ResponsiveContainer width="100%" height={250}>
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
+              <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 mb-3 sm:mb-4">Member Rating Distribution</h3>
+              <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie
                     data={ratingDistribution}
@@ -494,8 +536,8 @@ export default function LeaderDashboard() {
           </div>
 
           {/* Group Performance Analytics */}
-          <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-medium text-blue-800 mb-4 flex items-center gap-2">
+          <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
+            <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 mb-3 sm:mb-4 flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
               Group Performance Analytics
             </h3>
@@ -508,8 +550,8 @@ export default function LeaderDashboard() {
             ) : performanceData ? (
               <div className="space-y-6">
                 {/* Performance Summary Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-white/80 p-4 rounded-lg border border-blue-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="bg-white/80 p-3 sm:p-4 rounded-lg border border-blue-200">
                     <div className="text-2xl font-bold text-blue-800">{performanceData.overallStats.attendanceRate}%</div>
                     <div className="text-sm text-blue-600">Overall Attendance Rate</div>
                     <div className={`text-xs mt-1 ${
@@ -522,7 +564,7 @@ export default function LeaderDashboard() {
                     </div>
                   </div>
                   
-                  <div className="bg-white/80 p-4 rounded-lg border border-blue-200">
+                  <div className="bg-white/80 p-3 sm:p-4 rounded-lg border border-blue-200">
                     <div className="text-2xl font-bold text-green-800">{performanceData.overallStats.totalPresent}</div>
                     <div className="text-sm text-blue-600">Total Present</div>
                     <div className="text-xs text-blue-600 mt-1">
@@ -530,7 +572,7 @@ export default function LeaderDashboard() {
                     </div>
                   </div>
                   
-                  <div className="bg-white/80 p-4 rounded-lg border border-blue-200">
+                  <div className="bg-white/80 p-3 sm:p-4 rounded-lg border border-blue-200">
                     <div className="text-2xl font-bold text-blue-800">{performanceData.groupInfo.totalEvents}</div>
                     <div className="text-sm text-blue-600">Total Events</div>
                     <div className="text-xs text-blue-600 mt-1">
@@ -538,7 +580,7 @@ export default function LeaderDashboard() {
                     </div>
                   </div>
                   
-                  <div className="bg-white/80 p-4 rounded-lg border border-blue-200">
+                  <div className="bg-white/80 p-3 sm:p-4 rounded-lg border border-blue-200">
                     <div className="text-2xl font-bold text-purple-800">{performanceData.insights.excellentMembers}</div>
                     <div className="text-sm text-blue-600">Excellent Members</div>
                     <div className="text-xs text-blue-600 mt-1">
@@ -548,9 +590,9 @@ export default function LeaderDashboard() {
                 </div>
 
                 {/* Monthly Performance Chart */}
-                <div className="bg-white/80 p-4 rounded-lg border border-blue-200">
-                  <h4 className="text-lg font-medium text-blue-800 mb-4">Monthly Attendance Trend</h4>
-                  <ResponsiveContainer width="100%" height={300}>
+                <div className="bg-white/80 p-3 sm:p-4 rounded-lg border border-blue-200">
+                  <h4 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 mb-3 sm:mb-4">Monthly Attendance Trend</h4>
+                  <ResponsiveContainer width="100%" height={250}>
                     <AreaChart data={performanceData.monthlyData}>
                       <defs>
                         <linearGradient id="colorAttendance" x1="0" y1="0" x2="0" y2="1">
@@ -585,9 +627,9 @@ export default function LeaderDashboard() {
                 </div>
 
                 {/* Top Performing Members */}
-                <div className="bg-white/80 p-4 rounded-lg border border-blue-200">
-                  <h4 className="text-lg font-medium text-blue-800 mb-4">Top Performing Members</h4>
-                  <ResponsiveContainer width="100%" height={250}>
+                <div className="bg-white/80 p-3 sm:p-4 rounded-lg border border-blue-200">
+                  <h4 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 mb-3 sm:mb-4">Top Performing Members</h4>
+                  <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={performanceData.memberPerformance.slice(0, 8)}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E0E7FF" />
                       <XAxis 
@@ -608,58 +650,55 @@ export default function LeaderDashboard() {
                       />
                       <Bar 
                         dataKey="attendanceRate" 
-                        fill={(entry) => {
-                          const rate = entry?.attendanceRate || 0;
-                          return rate >= 80 ? '#10B981' : rate >= 60 ? '#3B82F6' : rate >= 40 ? '#F59E0B' : '#EF4444';
-                        }}
+                        fill="#3B82F6"
                         radius={[4, 4, 0, 0]}
                       />
                     </BarChart>
                   </ResponsiveContainer>
                   
                   {/* Performance Legend */}
-                  <div className="flex flex-wrap gap-4 mt-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-green-500 rounded"></div>
-                      <span>Excellent (80%+)</span>
+                  <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 mt-3 sm:mt-4 text-xs sm:text-sm">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded"></div>
+                      <span className="text-blue-800 font-medium">Excellent (80%+)</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                      <span>Good (60-79%)</span>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-500 rounded"></div>
+                      <span className="text-blue-800 font-medium">Good (60-79%)</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-yellow-500 rounded"></div>
-                      <span>Average (40-59%)</span>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <div className="w-2 h-2 sm:w-3 sm:h-3 bg-yellow-500 rounded"></div>
+                      <span className="text-blue-800 font-medium">Average (40-59%)</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-red-500 rounded"></div>
-                      <span>Poor (<40%)</span>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded"></div>
+                      <span className="text-blue-800 font-medium">Poor (&lt;40%)</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Performance Insights */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                    <h5 className="font-medium text-green-800 mb-2">🏆 Best Performance</h5>
-                    <p className="text-sm text-green-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-200">
+                    <h5 className="font-medium text-green-800 mb-2 text-sm sm:text-base">🏆 Best Performance</h5>
+                    <p className="text-xs sm:text-sm text-green-700">
                       <strong>{performanceData.insights.bestMonth.month}</strong> had the highest attendance rate at 
                       <strong>{performanceData.insights.bestMonth.attendanceRate}%</strong>
                     </p>
                   </div>
                   
-                  <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
-                    <h5 className="font-medium text-amber-800 mb-2">⚠️ Needs Attention</h5>
-                    <p className="text-sm text-amber-700">
+                  <div className="bg-amber-50 p-3 sm:p-4 rounded-lg border border-amber-200">
+                    <h5 className="font-medium text-amber-800 mb-2 text-sm sm:text-base">⚠️ Needs Attention</h5>
+                    <p className="text-xs sm:text-sm text-amber-700">
                       <strong>{performanceData.insights.needsAttention}</strong> members have poor attendance and may need follow-up
                     </p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8 text-blue-600">
-                <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Performance analytics will appear here once data is available.</p>
+              <div className="text-center py-6 sm:py-8 text-blue-600">
+                <TrendingUp className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+                <p className="text-sm sm:text-base">Performance analytics will appear here once data is available.</p>
               </div>
             )}
           </div>
@@ -667,12 +706,22 @@ export default function LeaderDashboard() {
         </motion.div>
       </div>
 
-      {/* Add Member Modal */}
+      {/* Add Member Modals */}
       {openAddMember && (
         <CreateMemberForm
           groupId={data.group._id}
           onMemberCreated={() => {
             setOpenAddMember(false);
+            fetchData();
+          }}
+        />
+      )}
+
+      {openAddExistingMember && (
+        <AddExistingMemberForm
+          groupId={data.group._id}
+          onMemberAdded={() => {
+            setOpenAddExistingMember(false);
             fetchData();
           }}
         />

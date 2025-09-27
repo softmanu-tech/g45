@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Loading } from "@/components/ui/loading"
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfileIcon } from "@/components/ProfileIcon"
+import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import { 
   User, 
   Calendar, 
@@ -23,7 +24,9 @@ import {
   Settings,
   BarChart3,
   Target,
-  Award
+  Award,
+  Heart,
+  MessageSquare
 } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
@@ -50,10 +53,14 @@ interface Member {
   phone?: string
   residence?: string
   department?: string
-  group: {
+  group?: {
     _id: string
     name: string
   }
+  groups?: {
+    _id: string
+    name: string
+  }[]
 }
 
 interface Event {
@@ -61,7 +68,12 @@ interface Event {
   title: string
   date: string
   location?: string
+  group: {
+    _id: string
+    name: string
+  }
   createdBy: {
+    _id: string
     name: string
   }
 }
@@ -226,40 +238,26 @@ export default function MemberDashboard() {
 
   return (
     <div className="min-h-screen bg-blue-300">
-      {/* Header */}
-      <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3 sm:gap-4">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800 truncate">
-                Welcome, {data.member.name}
-              </h1>
-              <p className="text-xs sm:text-sm text-blue-700 mt-1">
-                {data.member.group.name} Group Member
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link href="/member/profile">
-                <ProfileIcon 
-                  profilePicture={data.member.profilePicture}
-                  name={data.member.name}
-                  size="lg"
-                  className="hover:border-blue-600"
-                />
-              </Link>
-              <Button 
-                onClick={handleLogout}
-                variant="outline"
-                size="sm"
-                className="border-blue-300 text-blue-800 bg-white/80 hover:bg-white/90"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ProfessionalHeader
+        title={`Welcome, ${data.member.name}`}
+        subtitle={`${data.member.groups && data.member.groups.length > 0 ? 
+          `${data.member.groups.length} Group${data.member.groups.length > 1 ? 's' : ''} Member` : 
+          'Group Member'}`}
+        user={{
+          name: data.member.name,
+          email: data.member.email,
+          profilePicture: (data.member as any).profilePicture
+        }}
+        actions={[
+          {
+            label: "Logout",
+            onClick: handleLogout,
+            variant: "outline",
+            className: "border-red-300 text-red-100 bg-red-600/20 hover:bg-red-600/30",
+            icon: <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
+          }
+        ]}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
@@ -313,11 +311,28 @@ export default function MemberDashboard() {
                   </div>
                 )}
                 
-                <div className="flex items-center gap-3">
-                  <Users className="h-4 w-4 text-blue-600" />
+                <div className="flex items-start gap-3">
+                  <Users className="h-4 w-4 text-blue-600 mt-1" />
                   <div>
-                    <p className="text-xs sm:text-sm text-blue-600">Group</p>
-                    <p className="text-sm sm:text-base font-medium text-blue-800">{data.member.group.name}</p>
+                    <p className="text-xs sm:text-sm text-blue-600">Groups</p>
+                    {data.member.groups && data.member.groups.length > 0 ? (
+                      <div>
+                        <p className="text-sm sm:text-base font-medium text-blue-800 mb-1">
+                          {data.member.groups.length} Group{data.member.groups.length > 1 ? 's' : ''}
+                        </p>
+                        <div className="space-y-1">
+                          {data.member.groups.map((group, index) => (
+                            <p key={group._id} className="text-xs sm:text-sm text-blue-700">
+                              • {group.name}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    ) : data.member.group ? (
+                      <p className="text-sm sm:text-base font-medium text-blue-800">{data.member.group.name}</p>
+                    ) : (
+                      <p className="text-sm sm:text-base font-medium text-blue-800">No groups assigned</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -545,6 +560,54 @@ export default function MemberDashboard() {
             </Card>
           </div>
 
+          {/* Communications Card */}
+          <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-blue-800 flex items-center gap-2 text-base sm:text-lg">
+                <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
+                Communications
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <div className="text-center">
+                <MessageSquare className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-blue-400 mb-4" />
+                <p className="text-blue-600 text-sm mb-4">
+                  View messages from your leaders and the Bishop
+                </p>
+                <Link href="/inbox">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    View Messages
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Prayer Requests Card */}
+          <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-blue-800 flex items-center gap-2 text-base sm:text-lg">
+                <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
+                Prayer Requests
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <div className="text-center">
+                <Heart className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-blue-400 mb-4" />
+                <p className="text-blue-600 text-sm mb-4">
+                  Submit your prayer requests to the Bishop and track their status
+                </p>
+                <Link href="/member/prayer-requests">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Heart className="h-4 w-4 mr-2" />
+                    Manage Prayer Requests
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             
@@ -577,6 +640,7 @@ export default function MemberDashboard() {
                             <div className="text-xs sm:text-sm text-blue-600 space-y-1">
                               <div>{format(new Date(event.date), "MMM dd, yyyy 'at' h:mm a")}</div>
                               {event.location && <div>📍 {event.location}</div>}
+                              <div>Group: {event.group.name}</div>
                               <div>By: {event.createdBy.name}</div>
                             </div>
                           </div>

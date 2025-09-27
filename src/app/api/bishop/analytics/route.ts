@@ -6,6 +6,8 @@ import { Attendance } from "@/lib/models/Attendance";
 import Event from "@/lib/models/Event";
 import { requireSessionAndRoles } from "@/lib/authMiddleware";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   const { user } = await requireSessionAndRoles(request, ["bishop"]);
   if (!user?.id)
@@ -45,7 +47,7 @@ export async function GET(request: Request) {
       
       const groupAnalytics = groups.map(group => {
         const groupAttendance = attendanceRecords.filter(
-          record => record.group._id.toString() === group._id.toString()
+          record => record.group._id.toString() === (group._id as any).toString()
         );
         
         const totalPresent = groupAttendance.reduce(
@@ -60,7 +62,7 @@ export async function GET(request: Request) {
           : 0;
         
         return {
-          groupId: group._id.toString(),
+          groupId: (group._id as any).toString(),
           groupName: group.name,
           leaderName: group.leader?.name || "Unassigned",
           totalAttendanceRecords: groupAttendance.length,
@@ -96,11 +98,11 @@ export async function GET(request: Request) {
           eventId: event._id.toString(),
           title: event.title,
           date: event.date,
-          groupName: event.group?.name || "Unknown",
+          groupName: (event.group as any)?.name || "Unknown",
           presentCount,
           absentCount,
           attendanceRate: Math.round(attendanceRate),
-          createdBy: event.createdBy?.name || "Unknown"
+          createdBy: (event.createdBy as any)?.name || "Unknown"
         };
       });
       
@@ -117,21 +119,21 @@ export async function GET(request: Request) {
       
       const memberAnalytics = members.map(member => {
         const presentCount = attendanceRecords.filter(record => 
-          record.presentMembers.some(m => m._id.toString() === member._id.toString())
+          record.presentMembers.some(m => m._id.toString() === (member._id as any).toString())
         ).length;
         
         const absentCount = attendanceRecords.filter(record => 
-          record.absentMembers.some(m => m._id.toString() === member._id.toString())
+          record.absentMembers.some(m => m._id.toString() === (member._id as any).toString())
         ).length;
         
         const totalEvents = presentCount + absentCount;
         const attendanceRate = totalEvents > 0 ? (presentCount / totalEvents) * 100 : 0;
         
         return {
-          memberId: member._id.toString(),
+          memberId: (member._id as any).toString(),
           name: member.name,
           email: member.email,
-          groupName: member.group?.name || "Unassigned",
+          groupName: (member.group as any)?.name || "Unassigned",
           presentCount,
           absentCount,
           totalEvents,

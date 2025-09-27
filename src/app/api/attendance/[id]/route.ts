@@ -1,7 +1,6 @@
 // src/app/api/attendance/route.ts
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth'
+import { requireSessionAndRoles } from '@/lib/authMiddleware'
 import dbConnect from '@/lib/dbConnect'
 import { Attendance, IAttendance } from '@/lib/models/Attendance'
 import { Group } from '@/lib/models/Group'
@@ -16,8 +15,8 @@ interface AttendanceRequest {
 export async function POST(request: Request) {
     try {
         // Verify authentication
-        const session = await getServerSession(authOptions)
-        if (!session?.user?.id) {
+        const { user } = await requireSessionAndRoles(request, ['leader']);
+        if (!user?.id) {
             return NextResponse.json(
                 { error: 'Unauthorized' },
                 { status: 401 }
@@ -54,7 +53,7 @@ export async function POST(request: Request) {
             )
         }
 
-        if (group.leader.toString() !== session.user.id) {
+        if (group.leader.toString() !== user.id) {
             return NextResponse.json(
                 { error: 'Only group leaders can record attendance' },
                 { status: 403 }
@@ -99,7 +98,7 @@ export async function POST(request: Request) {
             date: attendanceDate,
             presentMembers: presentIds,
             absentMembers: absentMemberIds,
-            recordedBy: session.user.id,
+            recordedBy: user.id,
             notes: '' // Optional empty notes
         }) as IAttendance;
 

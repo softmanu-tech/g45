@@ -5,6 +5,8 @@ import { Group } from "@/lib/models/Group";
 import { Attendance } from "@/lib/models/Attendance";
 import Event from "@/lib/models/Event";
 import { requireSessionAndRoles } from "@/lib/authMiddleware";
+
+export const dynamic = 'force-dynamic';
 import { Types } from "mongoose";
 
 interface Leader {
@@ -119,18 +121,18 @@ export async function GET(request: Request) {
         // Calculate member attendance stats
         const memberAttendance = members.map(member => {
           const presentCount = attendanceData.filter(a => 
-            a.presentMembers.some(m => m._id.toString() === member._id.toString())
+            a.presentMembers.some(m => m._id.toString() === (member._id as any).toString())
           ).length;
           
           const absentCount = attendanceData.filter(a => 
-            a.absentMembers.some(m => m._id.toString() === member._id.toString())
+            a.absentMembers.some(m => m._id.toString() === (member._id as any).toString())
           ).length;
           
           const totalEvents = presentCount + absentCount;
           const attendanceRate = totalEvents > 0 ? (presentCount / totalEvents) * 100 : 0;
           
           return {
-            memberId: member._id.toString(),
+            memberId: (member._id as any).toString(),
             name: member.name,
             email: member.email,
             presentCount,

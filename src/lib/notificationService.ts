@@ -117,3 +117,19 @@ export async function createAttendanceReminderNotifications() {
   for (const event of recentEvents) {
     // Check if attendance has been marked
     const attendanceExists = await Attendance.findOne({ event: event._id });
+    
+    if (!attendanceExists) {
+      // Find the leader of the group for this event
+      const group = await Group.findById(event.group);
+      if (group && group.leader) {
+        await createNotification(
+          group.leader.toString(),
+          'attendance',
+          'Mark Attendance Required',
+          `Please mark attendance for the event "${event.title}" that took place on ${event.date.toLocaleDateString()}`,
+          event._id.toString()
+        );
+      }
+    }
+  }
+}

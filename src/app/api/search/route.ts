@@ -120,3 +120,28 @@ export async function GET(request: Request) {
           .limit(limit),
         Event.countDocuments(eventQuery)
       ]);
+      
+      results.events = events;
+      totalResults += eventCount;
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        results,
+        totalResults,
+        query,
+        type
+      }
+    });
+  } catch (error: unknown) {
+    let errorMsg = 'Unknown error';
+    if (error instanceof Error) {
+      errorMsg = error.message;
+    } else if (typeof error === 'string') {
+      errorMsg = error;
+    }
+    console.error('Search error:', error);
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
+  }
+}

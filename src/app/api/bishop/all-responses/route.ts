@@ -124,6 +124,11 @@ export async function GET(request: Request) {
       };
     }));
 
+    // Get all members from Member and User models
+    const { Member } = require('@/lib/models/Member');
+    const members = await Member.find({}).populate('group', 'name').exec();
+    const userMembers = await User.find({ role: 'member' }).populate('group', 'name').exec();
+
     // Members who haven't responded to recent events
     const allMembers = [...members, ...userMembers];
     const recentEventIds = recentEvents.map(e => e._id.toString());

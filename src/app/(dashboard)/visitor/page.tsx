@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Loading } from "@/components/ui/loading"
 import { useAlerts } from "@/components/ui/alert-system"
+import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import { format } from "date-fns"
 import Link from "next/link"
 import {
@@ -247,130 +248,118 @@ export default function VisitorDashboard() {
   }))
 
   return (
-    <div className="min-h-screen bg-purple-300">
-      {/* Header */}
-      <div className="bg-purple-200/90 backdrop-blur-md border-b border-purple-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3 sm:gap-4">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-purple-800 truncate">
-                Welcome, {data.visitor.name}! 🌟
-              </h1>
-              <p className="text-xs sm:text-sm text-purple-700 mt-1">
-                Joining Visitor • {data.visitor.daysRemaining} days remaining in monitoring
-              </p>
-              <p className="text-xs text-purple-600">
-                Guided by {data.visitor.assignedProtocolMember.name} • {data.visitor.protocolTeam.name}
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link href="/visitor/profile">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="border-purple-300 text-purple-800 bg-white/80 hover:bg-white/90"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Profile
-                </Button>
-              </Link>
-              <Button 
-                onClick={handleLogout}
-                variant="outline"
-                size="sm"
-                className="border-purple-300 text-purple-800 bg-white/80 hover:bg-white/90"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-blue-300">
+      <ProfessionalHeader
+        title={`Welcome, ${data.visitor.name}! 🌟`}
+        subtitle={`Joining Visitor • ${data.visitor.daysRemaining} days remaining in monitoring`}
+        user={{
+          name: data.visitor.name,
+          email: data.visitor.email,
+          profilePicture: (data.visitor as any).profilePicture
+        }}
+        actions={[
+          {
+            label: "Profile",
+            href: "/visitor/profile",
+            variant: "outline",
+            icon: <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
+          },
+          {
+            label: "Logout",
+            onClick: handleLogout,
+            variant: "outline",
+            className: "border-red-300 text-red-100 bg-red-600/20 hover:bg-red-600/30",
+            icon: <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
+          }
+        ]}
+      />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-4 sm:space-y-6 md:space-y-8"
+        >
         
-        {/* Progress Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <Card className="bg-purple-200/90 backdrop-blur-md border border-purple-300">
-            <CardContent className="p-4 sm:p-6 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                  <Target className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <Target className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-blue-600" />
+                </div>
+                <div className="ml-2 sm:ml-3 md:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-blue-700 uppercase tracking-wide">Progress</p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">{data.visitor.monitoringProgress}%</p>
                 </div>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-purple-700 uppercase tracking-wide">Monitoring Progress</p>
-              <p className="text-xl sm:text-2xl font-bold text-purple-800">{data.visitor.monitoringProgress}%</p>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card className="bg-purple-200/90 backdrop-blur-md border border-purple-300">
-            <CardContent className="p-4 sm:p-6 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-500 rounded-full flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-blue-600" />
+                </div>
+                <div className="ml-2 sm:ml-3 md:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-blue-700 uppercase tracking-wide">Attendance</p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">{data.statistics.attendanceRate}%</p>
                 </div>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-purple-700 uppercase tracking-wide">Attendance Rate</p>
-              <p className="text-xl sm:text-2xl font-bold text-purple-800">{data.statistics.attendanceRate}%</p>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card className="bg-purple-200/90 backdrop-blur-md border border-purple-300">
-            <CardContent className="p-4 sm:p-6 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-700 rounded-full flex items-center justify-center">
-                  <Award className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <Award className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-blue-600" />
+                </div>
+                <div className="ml-2 sm:ml-3 md:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-blue-700 uppercase tracking-wide">Milestones</p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">{data.statistics.completedMilestones}/12</p>
                 </div>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-purple-700 uppercase tracking-wide">Milestones</p>
-              <p className="text-xl sm:text-2xl font-bold text-purple-800">{data.statistics.completedMilestones}/12</p>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card className="bg-purple-200/90 backdrop-blur-md border border-purple-300">
-            <CardContent className="p-4 sm:p-6 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-400 rounded-full flex items-center justify-center">
-                  <Star className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <Star className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-blue-600" />
+                </div>
+                <div className="ml-2 sm:ml-3 md:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-blue-700 uppercase tracking-wide">Rating</p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">{data.statistics.averageRating}/5</p>
                 </div>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-purple-700 uppercase tracking-wide">Average Rating</p>
-              <p className="text-xl sm:text-2xl font-bold text-purple-800">{data.statistics.averageRating}/5</p>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
 
-        {/* Analytics Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          {/* Milestone Progress Chart */}
-          <Card className="bg-purple-200/90 backdrop-blur-md border border-purple-300">
-            <CardHeader>
-              <CardTitle className="text-purple-800 flex items-center gap-2">
+          {/* Analytics Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            
+            {/* Milestone Progress Chart */}
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
+              <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 mb-2 sm:mb-3 md:mb-4 flex items-center gap-2">
                 <Target className="h-5 w-5" />
                 3-Month Journey Progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+              </h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={milestoneData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E0E7FF" />
-                    <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#6B21A8' }} />
-                    <YAxis tick={{ fontSize: 12, fill: '#6B21A8' }} domain={[0, 100]} />
+                    <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#1E40AF' }} />
+                    <YAxis tick={{ fontSize: 12, fill: '#1E40AF' }} domain={[0, 100]} />
                     <Tooltip 
                       formatter={(value, name) => [value === 100 ? 'Completed' : 'Pending', 'Status']}
                       contentStyle={{ 
                         backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                        border: '1px solid #A855F7',
+                        border: '1px solid #3B82F6',
                         borderRadius: '8px'
                       }}
                     />
                     <Bar 
                       dataKey="completed" 
-                      fill="#A855F7"
+                      fill="#3B82F6"
                       radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
@@ -379,39 +368,35 @@ export default function VisitorDashboard() {
               
               {/* Progress Bar */}
               <div className="mt-4">
-                <div className="flex justify-between text-sm text-purple-700 mb-2">
+                <div className="flex justify-between text-sm text-blue-700 mb-2">
                   <span>Overall Progress</span>
                   <span>{data.visitor.monitoringProgress}%</span>
                 </div>
-                <div className="w-full bg-purple-100 rounded-full h-3">
+                <div className="w-full bg-blue-100 rounded-full h-3">
                   <div 
-                    className="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-500"
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
                     style={{ width: `${data.visitor.monitoringProgress}%` }}
                   ></div>
                 </div>
-                <div className="text-xs text-purple-600 mt-1">
+                <div className="text-xs text-blue-600 mt-1">
                   {data.visitor.daysRemaining} days remaining until membership eligibility
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Attendance Analytics */}
-          <Card className="bg-purple-200/90 backdrop-blur-md border border-purple-300">
-            <CardHeader>
-              <CardTitle className="text-purple-800 flex items-center gap-2">
+            {/* Attendance Analytics */}
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
+              <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 mb-2 sm:mb-3 md:mb-4 flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
                 Attendance Analytics
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+              </h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <div className="relative">
                     <PieChart>
                       <Pie
                         data={[
-                          { name: 'Present', value: data.statistics.presentCount, color: '#A855F7' },
+                          { name: 'Present', value: data.statistics.presentCount, color: '#3B82F6' },
                           { name: 'Absent', value: data.statistics.totalVisits - data.statistics.presentCount, color: '#E5E7EB' }
                         ]}
                         cx="50%"
@@ -421,104 +406,100 @@ export default function VisitorDashboard() {
                         paddingAngle={5}
                         dataKey="value"
                       >
-                        <Cell fill="#A855F7" />
+                        <Cell fill="#3B82F6" />
                         <Cell fill="#E5E7EB" />
                       </Pie>
                       <Tooltip />
                     </PieChart>
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-purple-800">
+                        <div className="text-2xl font-bold text-blue-800">
                           {data.statistics.attendanceRate}%
                         </div>
-                        <div className="text-xs text-purple-600">Attendance</div>
+                        <div className="text-xs text-blue-600">Attendance</div>
                       </div>
                     </div>
                   </div>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Button
-            onClick={() => setShowSuggestionModal(true)}
-            className="bg-purple-600 hover:bg-purple-700 text-white p-4 h-auto flex-col gap-2"
-          >
-            <MessageSquare className="h-6 w-6" />
-            <span>Share Suggestion</span>
-          </Button>
-          
-          <Button
-            onClick={() => setShowExperienceModal(true)}
-            className="bg-purple-500 hover:bg-purple-600 text-white p-4 h-auto flex-col gap-2"
-          >
-            <Star className="h-6 w-6" />
-            <span>Share Experience</span>
-          </Button>
-          
-          <Link href="/visitor/events">
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <Button
-              variant="outline"
-              className="border-purple-300 text-purple-800 hover:bg-purple-50 p-4 h-auto flex-col gap-2 w-full"
+              onClick={() => setShowSuggestionModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white p-3 sm:p-4 h-auto flex-col gap-2 text-sm sm:text-base"
             >
-              <Calendar className="h-6 w-6" />
-              <span>View Events</span>
+              <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span>Share Suggestion</span>
             </Button>
-          </Link>
-          
-          <Link href="/visitor/milestones">
+            
             <Button
-              variant="outline"
-              className="border-purple-300 text-purple-800 hover:bg-purple-50 p-4 h-auto flex-col gap-2 w-full"
+              onClick={() => setShowExperienceModal(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white p-3 sm:p-4 h-auto flex-col gap-2 text-sm sm:text-base"
             >
-              <Target className="h-6 w-6" />
-              <span>My Milestones</span>
+              <Star className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span>Share Experience</span>
             </Button>
-          </Link>
-        </div>
+            
+            <Link href="/visitor/events">
+              <Button
+                variant="outline"
+                className="border-blue-300 text-blue-800 hover:bg-blue-50 p-3 sm:p-4 h-auto flex-col gap-2 w-full text-sm sm:text-base"
+              >
+                <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
+                <span>View Events</span>
+              </Button>
+            </Link>
+            
+            <Link href="/visitor/milestones">
+              <Button
+                variant="outline"
+                className="border-blue-300 text-blue-800 hover:bg-blue-50 p-3 sm:p-4 h-auto flex-col gap-2 w-full text-sm sm:text-base"
+              >
+                <Target className="h-5 w-5 sm:h-6 sm:w-6" />
+                <span>My Milestones</span>
+              </Button>
+            </Link>
+          </div>
 
-        {/* Recent Activity & Upcoming Events */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          {/* Recent Visits */}
-          <Card className="bg-purple-200/90 backdrop-blur-md border border-purple-300">
-            <CardHeader>
-              <CardTitle className="text-purple-800 flex items-center gap-2">
+          {/* Recent Activity & Upcoming Events */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            
+            {/* Recent Visits */}
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
+              <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 mb-2 sm:mb-3 md:mb-4 flex items-center gap-2">
                 <Clock className="h-5 w-5" />
                 Recent Visits
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+              </h3>
               {data.visitHistory.length === 0 ? (
                 <div className="text-center py-8">
-                  <Clock className="mx-auto h-12 w-12 text-purple-400 mb-4" />
-                  <p className="text-purple-600">No visits recorded yet</p>
+                  <Clock className="mx-auto h-12 w-12 text-blue-400 mb-4" />
+                  <p className="text-blue-600">No visits recorded yet</p>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-80 overflow-y-auto">
                   {data.visitHistory.slice(-5).map((visit, index) => (
                     <div
                       key={index}
-                      className="p-3 bg-white/80 rounded-lg border border-purple-200"
+                      className="p-3 bg-white/80 rounded-lg border border-blue-200"
                     >
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-2">
                             {visit.attendanceStatus === 'present' ? (
-                              <CheckCircle className="h-4 w-4 text-purple-600" />
+                              <CheckCircle className="h-4 w-4 text-blue-600" />
                             ) : (
-                              <XCircle className="h-4 w-4 text-purple-400" />
+                              <XCircle className="h-4 w-4 text-blue-400" />
                             )}
-                            <span className="font-medium text-purple-800">{visit.eventType}</span>
+                            <span className="font-medium text-blue-800">{visit.eventType}</span>
                           </div>
-                          <p className="text-sm text-purple-600">
+                          <p className="text-sm text-blue-600">
                             {format(new Date(visit.date), "MMM dd, yyyy")}
                           </p>
                           {visit.notes && (
-                            <p className="text-xs text-purple-500 mt-1">{visit.notes}</p>
+                            <p className="text-xs text-blue-500 mt-1">{visit.notes}</p>
                           )}
                         </div>
                       </div>
@@ -526,36 +507,32 @@ export default function VisitorDashboard() {
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Upcoming Events */}
-          <Card className="bg-purple-200/90 backdrop-blur-md border border-purple-300">
-            <CardHeader>
-              <CardTitle className="text-purple-800 flex items-center gap-2">
+            {/* Upcoming Events */}
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
+              <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 mb-2 sm:mb-3 md:mb-4 flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
                 Upcoming Events
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+              </h3>
               {data.upcomingEvents.length === 0 ? (
                 <div className="text-center py-8">
-                  <Calendar className="mx-auto h-12 w-12 text-purple-400 mb-4" />
-                  <p className="text-purple-600">No upcoming events</p>
+                  <Calendar className="mx-auto h-12 w-12 text-blue-400 mb-4" />
+                  <p className="text-blue-600">No upcoming events</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {data.upcomingEvents.map((event) => (
                     <div
                       key={event._id}
-                      className="p-3 bg-white/80 rounded-lg border border-purple-200"
+                      className="p-3 bg-white/80 rounded-lg border border-blue-200"
                     >
                       <div className="flex justify-between items-start gap-3">
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-medium text-purple-800 text-sm truncate">
+                          <h4 className="font-medium text-blue-800 text-sm truncate">
                             {event.title}
                           </h4>
-                          <div className="text-xs text-purple-600 space-y-1">
+                          <div className="text-xs text-blue-600 space-y-1">
                             <div>{format(new Date(event.date), "MMM dd, yyyy 'at' h:mm a")}</div>
                             {event.location && <div>📍 {event.location}</div>}
                           </div>
@@ -563,14 +540,14 @@ export default function VisitorDashboard() {
                         <div className="flex flex-col gap-2">
                           <Button
                             size="sm"
-                            className="bg-purple-600 hover:bg-purple-700 text-white text-xs"
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
                           >
                             Will Attend
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-purple-300 text-purple-800 hover:bg-purple-50 text-xs"
+                            className="border-blue-300 text-blue-800 hover:bg-blue-50 text-xs"
                           >
                             Can't Attend
                           </Button>
@@ -580,30 +557,26 @@ export default function VisitorDashboard() {
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
 
-        {/* Feedback Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          {/* Recent Suggestions */}
-          <Card className="bg-purple-200/90 backdrop-blur-md border border-purple-300">
-            <CardHeader>
-              <CardTitle className="text-purple-800 flex items-center gap-2">
+          {/* Feedback Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            
+            {/* Recent Suggestions */}
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
+              <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 mb-2 sm:mb-3 md:mb-4 flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
                 Your Suggestions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+              </h3>
               {data.suggestions.length === 0 ? (
                 <div className="text-center py-8">
-                  <MessageSquare className="mx-auto h-12 w-12 text-purple-400 mb-4" />
-                  <p className="text-purple-600">No suggestions yet</p>
+                  <MessageSquare className="mx-auto h-12 w-12 text-blue-400 mb-4" />
+                  <p className="text-blue-600">No suggestions yet</p>
                   <Button
                     onClick={() => setShowSuggestionModal(true)}
                     size="sm"
-                    className="mt-2 bg-purple-600 hover:bg-purple-700 text-white"
+                    className="mt-2 bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     Share Your First Suggestion
                   </Button>
@@ -611,40 +584,36 @@ export default function VisitorDashboard() {
               ) : (
                 <div className="space-y-3 max-h-64 overflow-y-auto">
                   {data.suggestions.slice(-3).map((suggestion, index) => (
-                    <div key={index} className="p-3 bg-white/80 rounded-lg border border-purple-200">
+                    <div key={index} className="p-3 bg-white/80 rounded-lg border border-blue-200">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
                           {suggestion.category}
                         </span>
-                        <span className="text-xs text-purple-500">
+                        <span className="text-xs text-blue-500">
                           {format(new Date(suggestion.date), "MMM dd")}
                         </span>
                       </div>
-                      <p className="text-sm text-purple-700">{suggestion.message}</p>
+                      <p className="text-sm text-blue-700">{suggestion.message}</p>
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Recent Experiences */}
-          <Card className="bg-purple-200/90 backdrop-blur-md border border-purple-300">
-            <CardHeader>
-              <CardTitle className="text-purple-800 flex items-center gap-2">
+            {/* Recent Experiences */}
+            <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
+              <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 mb-2 sm:mb-3 md:mb-4 flex items-center gap-2">
                 <Star className="h-5 w-5" />
                 Your Experiences
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+              </h3>
               {data.experiences.length === 0 ? (
                 <div className="text-center py-8">
-                  <Star className="mx-auto h-12 w-12 text-purple-400 mb-4" />
-                  <p className="text-purple-600">No experiences shared yet</p>
+                  <Star className="mx-auto h-12 w-12 text-blue-400 mb-4" />
+                  <p className="text-blue-600">No experiences shared yet</p>
                   <Button
                     onClick={() => setShowExperienceModal(true)}
                     size="sm"
-                    className="mt-2 bg-purple-600 hover:bg-purple-700 text-white"
+                    className="mt-2 bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     Share Your Experience
                   </Button>
@@ -652,48 +621,48 @@ export default function VisitorDashboard() {
               ) : (
                 <div className="space-y-3 max-h-64 overflow-y-auto">
                   {data.experiences.slice(-3).map((experience, index) => (
-                    <div key={index} className="p-3 bg-white/80 rounded-lg border border-purple-200">
+                    <div key={index} className="p-3 bg-white/80 rounded-lg border border-blue-200">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`h-4 w-4 ${i < experience.rating ? 'fill-yellow-400 text-yellow-400' : 'text-purple-400'}`}
+                              className={`h-4 w-4 ${i < experience.rating ? 'fill-yellow-400 text-yellow-400' : 'text-blue-400'}`}
                             />
                           ))}
                         </div>
-                        <span className="text-xs text-purple-500">
+                        <span className="text-xs text-blue-500">
                           {format(new Date(experience.date), "MMM dd")}
                         </span>
                       </div>
-                      <p className="text-sm text-purple-700">{experience.message}</p>
+                      <p className="text-sm text-blue-700">{experience.message}</p>
                       {experience.eventType && (
-                        <p className="text-xs text-purple-500 mt-1">Event: {experience.eventType}</p>
+                        <p className="text-xs text-blue-500 mt-1">Event: {experience.eventType}</p>
                       )}
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       {/* Suggestion Modal */}
       {showSuggestionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-blue-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-blue-200/95 backdrop-blur-md rounded-lg shadow-xl max-w-md w-full border border-blue-300">
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-blue-800 mb-4">
                 Share Your Suggestion
               </h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-purple-800 mb-2">Category</label>
+                  <label className="block text-sm font-medium text-blue-800 mb-2">Category</label>
                   <select
                     value={newSuggestion.category}
                     onChange={(e) => setNewSuggestion({...newSuggestion, category: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full p-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/90 text-blue-800"
                   >
                     <option value="service">Service</option>
                     <option value="facility">Facility</option>
@@ -703,15 +672,15 @@ export default function VisitorDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-purple-800 mb-2">Your Suggestion</label>
+                  <label className="block text-sm font-medium text-blue-800 mb-2">Your Suggestion</label>
                   <textarea
                     value={newSuggestion.message}
                     onChange={(e) => setNewSuggestion({...newSuggestion, message: e.target.value})}
                     placeholder="Share your suggestion to help us improve..."
-                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[100px]"
+                    className="w-full p-3 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px] bg-white/90 text-blue-800 placeholder-blue-600"
                     maxLength={500}
                   />
-                  <div className="text-xs text-purple-600 mt-1">
+                  <div className="text-xs text-blue-600 mt-1">
                     {newSuggestion.message.length}/500 characters
                   </div>
                 </div>
@@ -720,14 +689,14 @@ export default function VisitorDashboard() {
                 <Button
                   onClick={() => setShowSuggestionModal(false)}
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 border-blue-300 text-blue-800 hover:bg-blue-50"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={submitSuggestion}
                   disabled={!newSuggestion.message.trim()}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Submit
                 </Button>
@@ -739,15 +708,15 @@ export default function VisitorDashboard() {
 
       {/* Experience Modal */}
       {showExperienceModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-blue-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-blue-200/95 backdrop-blur-md rounded-lg shadow-xl max-w-md w-full border border-blue-300">
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold text-blue-800 mb-4">
                 Share Your Experience
               </h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-purple-800 mb-2">Rating</label>
+                  <label className="block text-sm font-medium text-blue-800 mb-2">Rating</label>
                   <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((rating) => (
                       <Star
@@ -755,7 +724,7 @@ export default function VisitorDashboard() {
                         className={`h-8 w-8 cursor-pointer ${
                           rating <= newExperience.rating 
                             ? 'fill-yellow-400 text-yellow-400' 
-                            : 'text-purple-400 hover:text-yellow-300'
+                            : 'text-blue-400 hover:text-yellow-300'
                         }`}
                         onClick={() => setNewExperience({...newExperience, rating})}
                       />
@@ -763,25 +732,25 @@ export default function VisitorDashboard() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-purple-800 mb-2">Event Type (Optional)</label>
+                  <label className="block text-sm font-medium text-blue-800 mb-2">Event Type (Optional)</label>
                   <input
                     type="text"
                     value={newExperience.eventType}
                     onChange={(e) => setNewExperience({...newExperience, eventType: e.target.value})}
                     placeholder="e.g., Sunday Service, Bible Study..."
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full p-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/90 text-blue-800 placeholder-blue-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-purple-800 mb-2">Your Experience</label>
+                  <label className="block text-sm font-medium text-blue-800 mb-2">Your Experience</label>
                   <textarea
                     value={newExperience.message}
                     onChange={(e) => setNewExperience({...newExperience, message: e.target.value})}
                     placeholder="Tell us about your experience..."
-                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[100px]"
+                    className="w-full p-3 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px] bg-white/90 text-blue-800 placeholder-blue-600"
                     maxLength={500}
                   />
-                  <div className="text-xs text-purple-600 mt-1">
+                  <div className="text-xs text-blue-600 mt-1">
                     {newExperience.message.length}/500 characters
                   </div>
                 </div>
@@ -790,14 +759,14 @@ export default function VisitorDashboard() {
                 <Button
                   onClick={() => setShowExperienceModal(false)}
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 border-blue-300 text-blue-800 hover:bg-blue-50"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={submitExperience}
                   disabled={!newExperience.message.trim()}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Submit
                 </Button>

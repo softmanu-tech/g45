@@ -189,13 +189,13 @@ async function generateDetailedReport(groupIds: string[], dateFilter: any) {
   const detailedData = attendanceRecords.map(record => {
     return {
       date: record.date.toLocaleDateString(),
-      groupName: record.group.name,
-      eventTitle: record.event ? record.event.title : 'N/A',
-      eventDate: record.event ? record.event.date.toLocaleDateString() : 'N/A',
+      groupName: (record.group as any).name,
+      eventTitle: record.event ? (record.event as any).title : 'N/A',
+      eventDate: record.event ? (record.event as any).date.toLocaleDateString() : 'N/A',
       presentCount: record.presentMembers.length,
       absentCount: record.absentMembers.length,
       attendanceRate: `${Math.round((record.presentMembers.length / (record.presentMembers.length + record.absentMembers.length)) * 100)}%`,
-      recordedBy: record.recordedBy.name,
+      recordedBy: (record.recordedBy as any).name,
       notes: record.notes || 'N/A'
     };
   });

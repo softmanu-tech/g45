@@ -43,24 +43,24 @@ export async function GET(request: Request) {
 
     const recentVisitors = visitors.filter(v => new Date(v.createdAt) >= thirtyDaysAgo);
     const recentSuggestions = visitors.reduce((acc, visitor) => {
-      const recent = visitor.suggestions.filter(s => new Date(s.date) >= thirtyDaysAgo);
-      return acc.concat(recent.map(suggestion => ({
+      const recent = visitor.suggestions.filter((s: any) => new Date(s.date) >= thirtyDaysAgo);
+      return acc.concat(recent.map((suggestion: any) => ({
         ...suggestion,
         visitorName: visitor.name,
         visitorEmail: visitor.email,
         protocolTeam: visitor.protocolTeam
       })));
-    }, [] as any[]).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }, [] as any[]).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     const recentExperiences = visitors.reduce((acc, visitor) => {
-      const recent = visitor.experiences.filter(e => new Date(e.date) >= thirtyDaysAgo);
-      return acc.concat(recent.map(experience => ({
+      const recent = visitor.experiences.filter((e: any) => new Date(e.date) >= thirtyDaysAgo);
+      return acc.concat(recent.map((experience: any) => ({
         ...experience,
         visitorName: visitor.name,
         visitorEmail: visitor.email,
         protocolTeam: visitor.protocolTeam
       })));
-    }, [] as any[]).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }, [] as any[]).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     // Team performance analysis
     const teamPerformance = await Promise.all(protocolTeams.map(async (team) => {
@@ -122,7 +122,7 @@ export async function GET(request: Request) {
       const monthJoining = monthVisitors.filter(v => v.status === 'joining');
       const monthConverted = visitors.filter(v => {
         if (v.monitoringStatus !== 'converted-to-member') return false;
-        const completedDate = v.milestones.find(m => m.completed && m.week === 12)?.completedDate;
+        const completedDate = v.milestones.find((m: any) => m.completed && m.week === 12)?.completedDate;
         if (!completedDate) return false;
         const convertedDate = new Date(completedDate);
         return convertedDate >= monthStart && convertedDate <= monthEnd;
@@ -176,7 +176,7 @@ export async function GET(request: Request) {
           totalSuggestions: visitors.reduce((sum, v) => sum + v.suggestions.length, 0),
           averageRating: visitors.reduce((sum, v) => {
             const avgRating = v.experiences.length > 0 
-              ? v.experiences.reduce((s, e) => s + e.rating, 0) / v.experiences.length 
+              ? v.experiences.reduce((s: any, e: any) => s + e.rating, 0) / v.experiences.length 
               : 0;
             return sum + avgRating;
           }, 0) / (visitors.filter(v => v.experiences.length > 0).length || 1)

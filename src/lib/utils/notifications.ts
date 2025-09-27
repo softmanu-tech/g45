@@ -197,10 +197,10 @@ export async function sendAttendanceReminders() {
       // Get the leader for this group
       const group = await Group.findById(event.group).populate('leader').lean();
       
-      if (group && group.leader) {
+      if (group && (group as any).leader) {
         // Send reminder to leader
         await sendNotification({
-          recipientId: group.leader._id,
+          recipientId: (group as any).leader._id,
           title: 'Attendance Marking Reminder',
           message: `Please mark attendance for the event "${event.title}" that took place yesterday.`,
           type: 'reminder',

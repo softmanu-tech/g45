@@ -199,7 +199,7 @@ export function ResponsiveDashboard({ attendance, events, members, formatDate }:
                                                         <div className="flex items-center">
                                                             <div className="w-2 h-2 bg-blue-500 rounded-full mr-1"></div>
                                                             {event.attendanceCount || 0}
-                                                            {event.totalMembers > 0 && (
+                                                            {event.totalMembers && event.totalMembers > 0 && (
                                                                 <span className="ml-1">({event.attendanceRate || 0}%)</span>
                                                             )}
                                                         </div>
@@ -262,7 +262,7 @@ export function ResponsiveDashboard({ attendance, events, members, formatDate }:
                                                                 <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                                                                 <span className="font-medium">{event.attendanceCount || 0}</span>
                                                             </div>
-                                                            {event.totalMembers > 0 && (
+                                                            {event.totalMembers && event.totalMembers > 0 && (
                                                                 <div className="text-xs opacity-75">
                                                                     {event.attendanceRate || 0}%
                                                                 </div>

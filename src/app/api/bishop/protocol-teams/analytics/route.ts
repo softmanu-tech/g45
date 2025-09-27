@@ -81,7 +81,7 @@ export async function GET(request: Request) {
       const trendDirection = growthTrend > 5 ? 'growing' : growthTrend < -5 ? 'declining' : 'stable';
 
       // Member performance within the team
-      const memberPerformance = await Promise.all(team.members.map(async (member) => {
+      const memberPerformance = await Promise.all(team.members.map(async (member: any) => {
         const memberVisitors = teamVisitors.filter(v => v.assignedProtocolMember && v.assignedProtocolMember.toString() === member._id.toString());
         const memberConversions = memberVisitors.filter(v => v.monitoringStatus === 'converted-to-member').length;
         
@@ -181,6 +181,7 @@ export async function GET(request: Request) {
 
     // Monthly church-wide growth
     const churchGrowth = [];
+    const now = new Date();
     for (let i = 11; i >= 0; i--) {
       const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);

@@ -3,13 +3,14 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarIcon, Layers, RefreshCw, Users, Wifi, Settings, TrendingUp, Award, AlertTriangle, BarChart3, MessageSquare } from "lucide-react"
+import { CalendarIcon, Layers, RefreshCw, Users, Wifi, Settings, TrendingUp, Award, AlertTriangle, BarChart3, MessageSquare, Heart, LogOut } from "lucide-react"
 import { format } from "date-fns"
 import { motion } from "framer-motion"
 import { fadeIn, staggerContainer } from "@/lib/motion"
 import { Loading } from "@/components/ui/loading"
 import { ResponsiveDashboard } from "@/components/ResponsiveDashboard"
 import { ProfileIcon } from "@/components/ProfileIcon"
+import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import {
   ResponsiveContainer,
   BarChart,
@@ -193,6 +194,18 @@ export default function BishopDashboard() {
     const [allResponses, setAllResponses] = useState<any>(null)
     const [responsesLoading, setResponsesLoading] = useState(false)
 
+    const handleLogout = async () => {
+        try {
+            await fetch("/api/logout", {
+                method: "POST",
+                credentials: "include"
+            });
+            window.location.href = "/";
+        } catch (error) {
+            console.error("Logout error:", error);
+        }
+    };
+
     const parseJsonSafely = async (response: Response) => {
         try {
             const text = await response.text()
@@ -209,7 +222,7 @@ export default function BishopDashboard() {
             setError("")
 
             const [statsRes, eventsRes, profileRes, membersRes] = await Promise.all([
-                fetch("/api/bishop"),
+                fetch("/api/bishop/dashboard"),
                 fetch("/api/events"),
                 fetch("/api/bishop/profile"),
                 fetch("/api/bishop/members"),
@@ -343,122 +356,161 @@ export default function BishopDashboard() {
     }
 
     return (
-            <div className="min-h-screen bg-blue-300">
-                {/* Header */}
-                <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
-                    <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-                        <div className="flex flex-col space-y-3 sm:space-y-4 py-3 sm:py-4 md:py-6">
-                            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 sm:gap-4">
-                                <div className="min-w-0 flex-1">
-                                    <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-blue-800 truncate">Bishop Dashboard</h1>
-                                    <p className="text-xs sm:text-sm text-blue-700 mt-1">Manage your church community</p>
-                                </div>
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <Link href="/bishop/profile">
-                                        <ProfileIcon 
-                                            profilePicture={bishop?.profilePicture}
-                                            name={bishop?.name}
-                                            size="lg"
-                                            className="hover:border-blue-600"
-                                        />
-                                    </Link>
-                                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 w-full lg:w-auto lg:min-w-0">
-                                    <Link
-                                        href="/bishop/leaders"
-                                        className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-blue-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-blue-800 bg-white/80 backdrop-blur-sm hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-w-0 truncate"
-                                    >
-                                        Leaders
-                                    </Link>
-                                    <Link
-                                        href="/bishop/groups"
-                                        className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-800 min-w-0 truncate"
-                                    >
-                                        Groups
-                                    </Link>
-                                    <Link
-                                        href="/bishop/members"
-                                        className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-green-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-green-800 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 min-w-0 truncate"
-                                    >
-                                        Members
-                                    </Link>
-                                    <Link
-                                        href="/bishop/protocol-teams"
-                                        className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-purple-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-purple-800 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 min-w-0 truncate"
-                                    >
-                                        Protocol Teams
-                                    </Link>
-                                    <Link
-                                        href="/bishop/protocol-analytics"
-                                        className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-teal-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-teal-800 bg-teal-50 hover:bg-teal-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 min-w-0 truncate"
-                                    >
-                                        Protocol Analytics
-                                    </Link>
-                                    <Link
-                                        href="/bishop/protocol-support"
-                                        className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-indigo-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-indigo-800 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 min-w-0 truncate"
-                                    >
-                                        Protocol Support
-                                    </Link>
-                                    <Link
-                                        href="/bishop/strategy-review"
-                                        className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-emerald-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 min-w-0 truncate"
-                                    >
-                                        Strategy Review
-                                    </Link>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div className="min-h-screen bg-blue-300">
+            <ProfessionalHeader
+                title="Bishop Dashboard"
+                subtitle="Manage your church community"
+                user={bishop ? {
+                    name: bishop.name,
+                    email: bishop.email,
+                    profilePicture: bishop.profilePicture
+                } : undefined}
+                actions={[
+                    {
+                        label: "Leaders",
+                        href: "/bishop/leaders",
+                        variant: "outline",
+                        icon: <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                    },
+                    {
+                        label: "Groups",
+                        href: "/bishop/groups",
+                        variant: "default",
+                        icon: <Layers className="h-3 w-3 sm:h-4 sm:w-4" />
+                    },
+                    {
+                        label: "Members",
+                        href: "/bishop/members",
+                        variant: "outline",
+                        className: "border-green-300 text-green-100 bg-green-600/20 hover:bg-green-600/30",
+                        icon: <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                    },
+                    {
+                        label: "Protocol Teams",
+                        href: "/bishop/protocol-teams",
+                        variant: "outline",
+                        className: "border-purple-300 text-purple-100 bg-purple-600/20 hover:bg-purple-600/30",
+                        icon: <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                    },
+                    {
+                        label: "Analytics",
+                        href: "/bishop/protocol-analytics",
+                        variant: "outline",
+                        className: "border-teal-300 text-teal-100 bg-teal-600/20 hover:bg-teal-600/30",
+                        icon: <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+                    },
+                    {
+                        label: "Support",
+                        href: "/bishop/protocol-support",
+                        variant: "outline",
+                        className: "border-indigo-300 text-indigo-100 bg-indigo-600/20 hover:bg-indigo-600/30",
+                        icon: <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+                    },
+                    {
+                        label: "Strategy Review",
+                        href: "/bishop/strategy-review",
+                        variant: "outline",
+                        className: "border-emerald-300 text-emerald-100 bg-emerald-600/20 hover:bg-emerald-600/30",
+                        icon: <Award className="h-3 w-3 sm:h-4 sm:w-4" />
+                    },
+                    {
+                        label: "Prayer Requests",
+                        href: "/bishop/prayer-requests",
+                        variant: "outline",
+                        className: "border-pink-300 text-pink-100 bg-pink-600/20 hover:bg-pink-600/30",
+                        icon: <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
+                    },
+                    {
+                        label: "Logout",
+                        onClick: handleLogout,
+                        variant: "outline",
+                        className: "border-red-300 text-red-100 bg-red-600/20 hover:bg-red-600/30",
+                        icon: <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
+                    }
+                ]}
+            />
 
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-4 sm:space-y-6 md:space-y-8"
+                >
 
-                {/* Error State */}
-                {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-                        <div className="flex">
-                            <div className="ml-3">
-                                <h3 className="text-sm font-medium text-red-800">Error</h3>
-                                <div className="mt-2 text-sm text-red-700">{error}</div>
+                    {/* Error State */}
+                    {error && (
+                        <div className="bg-red-200/90 backdrop-blur-md border border-red-300 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
+                            <div className="flex items-center">
+                                <AlertTriangle className="h-5 w-5 text-red-600 mr-3" />
+                                <div>
+                                    <h3 className="text-sm font-medium text-red-800">Error</h3>
+                                    <div className="mt-1 text-sm text-red-700">{error}</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* Loading State */}
-                {loading ? (
-                    <Loading message="Loading bishop dashboard..." size="lg" fullScreen={false} />
-                ) : (
-                    <div className="space-y-4 sm:space-y-6">
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-                        <StatCard
-                            title="Leaders"
-                            value={stats.leaders}
-                            delay={0.2}
-                        />
-                        <StatCard
-                            title="Groups"
-                            value={stats.groups}
-                            delay={0.3}
-                        />
-                        <StatCard
-                            title="Members"
-                            value={stats.members}
-                            delay={0.4}
-                        />
-                        <StatCard
-                            title="Total Attendance"
-                            value={stats.totalAttendance}
-                            delay={0.5}
-                        />
-                        </div>
+                    {/* Loading State */}
+                    {loading ? (
+                        <Loading message="Loading bishop dashboard..." size="lg" fullScreen={false} />
+                    ) : (
+                        <div className="space-y-4 sm:space-y-6 md:space-y-8">
+                            {/* Stats Cards */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+                                <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
+                                    <div className="flex items-center">
+                                        <div className="flex-shrink-0">
+                                            <Users className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-blue-600" />
+                                        </div>
+                                        <div className="ml-2 sm:ml-3 md:ml-4">
+                                            <p className="text-xs sm:text-sm font-medium text-blue-700 uppercase tracking-wide">Leaders</p>
+                                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">{stats.leaders}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
+                                    <div className="flex items-center">
+                                        <div className="flex-shrink-0">
+                                            <Layers className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-blue-600" />
+                                        </div>
+                                        <div className="ml-2 sm:ml-3 md:ml-4">
+                                            <p className="text-xs sm:text-sm font-medium text-blue-700 uppercase tracking-wide">Groups</p>
+                                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">{stats.groups}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
+                                    <div className="flex items-center">
+                                        <div className="flex-shrink-0">
+                                            <Users className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-blue-600" />
+                                        </div>
+                                        <div className="ml-2 sm:ml-3 md:ml-4">
+                                            <p className="text-xs sm:text-sm font-medium text-blue-700 uppercase tracking-wide">Members</p>
+                                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">{stats.members}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
+                                    <div className="flex items-center">
+                                        <div className="flex-shrink-0">
+                                            <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-blue-600" />
+                                        </div>
+                                        <div className="ml-2 sm:ml-3 md:ml-4">
+                                            <p className="text-xs sm:text-sm font-medium text-blue-700 uppercase tracking-wide">Total Attendance</p>
+                                            <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">{stats.totalAttendance}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                         {/* Groups Performance Analytics */}
                         <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
-                            <h3 className="text-base sm:text-lg font-medium text-blue-800 mb-4 flex items-center gap-2">
+                            <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 mb-2 sm:mb-3 md:mb-4 flex items-center gap-2">
                                 <BarChart3 className="h-5 w-5" />
                                 All Groups Performance Analysis
                             </h3>
@@ -471,8 +523,8 @@ export default function BishopDashboard() {
                             ) : groupsPerformance ? (
                                 <div className="space-y-6">
                                     {/* Performance Summary Cards */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <div className="bg-white/80 p-4 rounded-lg border border-blue-200">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+                                        <div className="bg-white/80 p-2 sm:p-3 md:p-2 sm:p-3 md:p-4 rounded-lg border border-blue-200">
                                             <div className="text-2xl font-bold text-blue-800">{groupsPerformance.insights.averageAttendanceRate}%</div>
                                             <div className="text-sm text-blue-600">Church Average</div>
                                             <div className="text-xs text-gray-600 mt-1">
@@ -480,7 +532,7 @@ export default function BishopDashboard() {
                                             </div>
                                         </div>
                                         
-                                        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                                        <div className="bg-green-50 p-2 sm:p-3 md:p-4 rounded-lg border border-green-200">
                                             <div className="text-2xl font-bold text-green-800">{groupsPerformance.insights.excellentGroups}</div>
                                             <div className="text-sm text-green-600">Excellent Groups</div>
                                             <div className="text-xs text-gray-600 mt-1">
@@ -488,7 +540,7 @@ export default function BishopDashboard() {
                                             </div>
                                         </div>
                                         
-                                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                        <div className="bg-blue-50 p-2 sm:p-3 md:p-4 rounded-lg border border-blue-200">
                                             <div className="text-2xl font-bold text-blue-800">{groupsPerformance.insights.improvingGroups}</div>
                                             <div className="text-sm text-blue-600">Improving Groups</div>
                                             <div className="text-xs text-gray-600 mt-1">
@@ -496,7 +548,7 @@ export default function BishopDashboard() {
                                             </div>
                                         </div>
                                         
-                                        <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                                        <div className="bg-amber-50 p-2 sm:p-3 md:p-4 rounded-lg border border-amber-200">
                                             <div className="text-2xl font-bold text-amber-800">{groupsPerformance.insights.needsImprovementGroups}</div>
                                             <div className="text-sm text-amber-600">Need Attention</div>
                                             <div className="text-xs text-gray-600 mt-1">
@@ -506,7 +558,7 @@ export default function BishopDashboard() {
                                     </div>
 
                                     {/* Groups Comparison Chart */}
-                                    <div className="bg-white/80 p-4 rounded-lg border border-blue-200">
+                                    <div className="bg-white/80 p-2 sm:p-3 md:p-4 rounded-lg border border-blue-200">
                                         <h4 className="text-lg font-medium text-blue-800 mb-4">Groups Attendance Comparison</h4>
                                         <ResponsiveContainer width="100%" height={350}>
                                             <BarChart data={groupsPerformance.groupPerformance}>
@@ -553,7 +605,7 @@ export default function BishopDashboard() {
                                     </div>
 
                                     {/* Church-wide Monthly Trend */}
-                                    <div className="bg-white/80 p-4 rounded-lg border border-blue-200">
+                                    <div className="bg-white/80 p-2 sm:p-3 md:p-4 rounded-lg border border-blue-200">
                                         <h4 className="text-lg font-medium text-blue-800 mb-4">Church-wide Monthly Attendance Trend</h4>
                                         <ResponsiveContainer width="100%" height={300}>
                                             <LineChart data={groupsPerformance.churchWideMonthly}>
@@ -585,9 +637,9 @@ export default function BishopDashboard() {
                                     </div>
 
                                     {/* Performance Insights */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                                         {groupsPerformance.insights.topPerformer && (
-                                            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                                            <div className="bg-green-50 p-2 sm:p-3 md:p-4 rounded-lg border border-green-200">
                                                 <h5 className="font-medium text-green-800 mb-2 flex items-center gap-2">
                                                     <Award className="h-4 w-4" />
                                                     Top Performing Group
@@ -603,7 +655,7 @@ export default function BishopDashboard() {
                                         )}
                                         
                                         {groupsPerformance.insights.needsAttention && (
-                                            <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                                            <div className="bg-amber-50 p-2 sm:p-3 md:p-4 rounded-lg border border-amber-200">
                                                 <h5 className="font-medium text-amber-800 mb-2 flex items-center gap-2">
                                                     <AlertTriangle className="h-4 w-4" />
                                                     Needs Attention
@@ -629,7 +681,7 @@ export default function BishopDashboard() {
 
                         {/* All Member Responses Overview */}
                         <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
-                            <h3 className="text-base sm:text-lg font-medium text-blue-800 mb-4 flex items-center gap-2">
+                            <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 mb-2 sm:mb-3 md:mb-4 flex items-center gap-2">
                                 <Users className="h-5 w-5" />
                                 Recent Member Responses (Last 30 Days)
                             </h3>
@@ -642,26 +694,26 @@ export default function BishopDashboard() {
                             ) : allResponses ? (
                                 <div className="space-y-6">
                                     {/* Response Summary Cards */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+                                        <div className="bg-green-50 p-2 sm:p-3 md:p-4 rounded-lg border border-green-200">
                                             <div className="text-2xl font-bold text-green-800">{allResponses.summary.attendingCount}</div>
                                             <div className="text-sm text-green-600">Will Attend</div>
                                             <div className="text-xs text-gray-600 mt-1">Confirmations received</div>
                                         </div>
                                         
-                                        <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                                        <div className="bg-red-50 p-2 sm:p-3 md:p-4 rounded-lg border border-red-200">
                                             <div className="text-2xl font-bold text-red-800">{allResponses.summary.notAttendingCount}</div>
                                             <div className="text-sm text-red-600">Won't Attend</div>
                                             <div className="text-xs text-gray-600 mt-1">Apologies received</div>
                                         </div>
                                         
-                                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                        <div className="bg-blue-50 p-2 sm:p-3 md:p-4 rounded-lg border border-blue-200">
                                             <div className="text-2xl font-bold text-blue-800">{allResponses.summary.responseRate}%</div>
                                             <div className="text-sm text-blue-600">Response Rate</div>
                                             <div className="text-xs text-gray-600 mt-1">Member engagement</div>
                                         </div>
                                         
-                                        <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                        <div className="bg-purple-50 p-2 sm:p-3 md:p-4 rounded-lg border border-purple-200">
                                             <div className="text-2xl font-bold text-purple-800">{allResponses.needsFollowUp.length}</div>
                                             <div className="text-sm text-purple-600">Need Follow-up</div>
                                             <div className="text-xs text-gray-600 mt-1">No recent responses</div>
@@ -669,7 +721,7 @@ export default function BishopDashboard() {
                                     </div>
 
                                     {/* Members Not Attending with Reasons */}
-                                    <div className="bg-white/80 p-4 rounded-lg border border-blue-200">
+                                    <div className="bg-white/80 p-2 sm:p-3 md:p-4 rounded-lg border border-blue-200">
                                         <h4 className="text-lg font-medium text-blue-800 mb-4 flex items-center gap-2">
                                             <AlertTriangle className="h-5 w-5 text-red-600" />
                                             Members Not Attending - Apology Reasons
@@ -680,7 +732,7 @@ export default function BishopDashboard() {
                                                 <p className="text-blue-600">No apologies received in the last 30 days</p>
                                             </div>
                                         ) : (
-                                            <div className="space-y-3 max-h-96 overflow-y-auto">
+                                            <div className="space-y-3 max-h-96 overflow-y-auto scrollbar-thin">
                                                 {allResponses.responses.notAttending.map((response: any) => (
                                                     <motion.div
                                                         key={response._id}
@@ -727,12 +779,12 @@ export default function BishopDashboard() {
 
                                     {/* Members Needing Follow-up */}
                                     {allResponses.needsFollowUp.length > 0 && (
-                                        <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                                        <div className="bg-amber-50 p-2 sm:p-3 md:p-4 rounded-lg border border-amber-200">
                                             <h4 className="text-lg font-medium text-amber-800 mb-4 flex items-center gap-2">
                                                 <AlertTriangle className="h-5 w-5" />
                                                 Members Needing Follow-up
                                             </h4>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                                                 {allResponses.needsFollowUp.map((item: any) => (
                                                     <div key={item.member._id} className="bg-white p-3 rounded border border-amber-300">
                                                         <div className="font-medium text-amber-800">{item.member.name}</div>
@@ -754,6 +806,233 @@ export default function BishopDashboard() {
                             )}
                         </div>
 
+                        {/* All Members Overview */}
+                        <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6">
+                                <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 flex items-center gap-2">
+                                    <Users className="h-5 w-5" />
+                                    All Members Overview ({members.length})
+                                </h3>
+                                <Link 
+                                    href="/bishop/members"
+                                    className="inline-flex items-center px-3 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-800 bg-white/80 backdrop-blur-sm hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                >
+                                    <Users className="h-4 w-4 mr-2" />
+                                    View All Members
+                                </Link>
+                            </div>
+
+                            {members.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <Users className="mx-auto h-12 w-12 text-blue-400 mb-4" />
+                                    <p className="text-blue-600">No members found</p>
+                                    <p className="text-sm text-blue-500 mt-2">Members will appear here once they are added to groups</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {/* Performance Summary */}
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+                                        <div className="bg-green-50 p-2 sm:p-3 md:p-4 rounded-lg border border-green-200 text-center">
+                                            <div className="text-xl sm:text-2xl font-bold text-green-800">
+                                                {members.filter(m => m.attendanceRate && m.attendanceRate >= 80).length}
+                                            </div>
+                                            <div className="text-xs sm:text-sm text-green-600">Excellent (80%+)</div>
+                                        </div>
+                                        
+                                        <div className="bg-blue-50 p-2 sm:p-3 md:p-4 rounded-lg border border-blue-200 text-center">
+                                            <div className="text-xl sm:text-2xl font-bold text-blue-800">
+                                                {members.filter(m => m.attendanceRate && m.attendanceRate >= 60 && m.attendanceRate < 80).length}
+                                            </div>
+                                            <div className="text-xs sm:text-sm text-blue-600">Good (60-79%)</div>
+                                        </div>
+                                        
+                                        <div className="bg-yellow-50 p-2 sm:p-3 md:p-4 rounded-lg border border-yellow-200 text-center">
+                                            <div className="text-xl sm:text-2xl font-bold text-yellow-800">
+                                                {members.filter(m => m.attendanceRate && m.attendanceRate >= 40 && m.attendanceRate < 60).length}
+                                            </div>
+                                            <div className="text-xs sm:text-sm text-yellow-600">Average (40-59%)</div>
+                                        </div>
+                                        
+                                        <div className="bg-red-50 p-2 sm:p-3 md:p-4 rounded-lg border border-red-200 text-center">
+                                            <div className="text-xl sm:text-2xl font-bold text-red-800">
+                                                {members.filter(m => !m.attendanceRate || m.attendanceRate < 40).length}
+                                            </div>
+                                            <div className="text-xs sm:text-sm text-red-600">Needs Attention</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Members List - Mobile Cards */}
+                                    <div className="block lg:hidden space-y-3">
+                                        {members.slice(0, 10).map((member) => (
+                                            <motion.div
+                                                key={member._id}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="bg-white/80 rounded-lg border border-blue-200 p-3 sm:p-4"
+                                            >
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <div className="flex-1">
+                                                        <h4 className="font-semibold text-blue-800 text-sm sm:text-base">{member.name}</h4>
+                                                        <p className="text-xs sm:text-sm text-blue-600">{member.email}</p>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                                {member.group?.name || 'No Group'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {member.attendanceRate !== undefined && (
+                                                        <div className={`px-2 py-1 rounded text-center text-xs font-medium ${ 
+                                                            member.attendanceRate >= 80 ? 'bg-green-100 text-green-800' :
+                                                            member.attendanceRate >= 60 ? 'bg-blue-100 text-blue-800' :
+                                                            member.attendanceRate >= 40 ? 'bg-yellow-100 text-yellow-800' :
+                                                            'bg-red-100 text-red-800'
+                                                        }`}>
+                                                            <div className="text-sm font-bold">{member.attendanceRate}%</div>
+                                                            <div className="text-xs">{member.rating || 'N/A'}</div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                
+                                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                                    <div className="text-blue-600">
+                                                        <span className="font-medium">Events:</span> {member.attendanceCount || 0}/{member.totalEvents || 0}
+                                                    </div>
+                                                    <div className="text-blue-600">
+                                                        <span className="font-medium">Last:</span> {
+                                                            member.lastAttendanceDate 
+                                                                ? format(new Date(member.lastAttendanceDate), "MMM dd")
+                                                                : 'Never'
+                                                        }
+                                                    </div>
+                                                    {member.phone && (
+                                                        <div className="text-blue-600 col-span-2">
+                                                            <span className="font-medium">Phone:</span> {member.phone}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                        
+                                        {members.length > 10 && (
+                                            <div className="text-center py-4">
+                                                <Link 
+                                                    href="/bishop/members"
+                                                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                                >
+                                                    View all {members.length} members →
+                                                </Link>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Members List - Desktop Table */}
+                                    <div className="hidden lg:block overflow-x-auto scrollbar-thin">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr className="border-b border-blue-300">
+                                                    <th className="text-left p-3 text-sm font-medium text-blue-800">Member</th>
+                                                    <th className="text-left p-3 text-sm font-medium text-blue-800">Contact</th>
+                                                    <th className="text-left p-3 text-sm font-medium text-blue-800">Group</th>
+                                                    <th className="text-left p-3 text-sm font-medium text-blue-800">Attendance</th>
+                                                    <th className="text-left p-3 text-sm font-medium text-blue-800">Performance</th>
+                                                    <th className="text-left p-3 text-sm font-medium text-blue-800">Last Seen</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {members.slice(0, 15).map((member) => (
+                                                    <motion.tr
+                                                        key={member._id}
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        className="border-b border-blue-200 hover:bg-white/50 transition-colors"
+                                                    >
+                                                        <td className="p-3">
+                                                            <div>
+                                                                <div className="font-medium text-blue-800 text-sm">{member.name}</div>
+                                                                <div className="text-xs text-blue-600">{member.email}</div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-3">
+                                                            <div className="text-xs text-blue-600">
+                                                                {member.phone && (
+                                                                    <div className="flex items-center gap-1">
+                                                                        <span>{member.phone}</span>
+                                                                    </div>
+                                                                )}
+                                                                {member.residence && (
+                                                                    <div className="mt-1 text-blue-500">{member.residence}</div>
+                                                                )}
+                                                                {!member.phone && !member.residence && (
+                                                                    <span className="text-blue-400">No contact info</span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-3">
+                                                            <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                                {member.group?.name || 'No Group'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-3">
+                                                            <div className="text-sm">
+                                                                <div className="font-medium text-blue-800">
+                                                                    {member.attendanceCount || 0}/{member.totalEvents || 0}
+                                                                </div>
+                                                                <div className="text-xs text-blue-600">events attended</div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-3">
+                                                            {member.attendanceRate !== undefined ? (
+                                                                <div className="space-y-1">
+                                                                    <div className={`inline-block px-2 py-1 rounded text-xs font-medium ${ 
+                                                                        member.attendanceRate >= 80 ? 'bg-green-100 text-green-800' :
+                                                                        member.attendanceRate >= 60 ? 'bg-blue-100 text-blue-800' :
+                                                                        member.attendanceRate >= 40 ? 'bg-yellow-100 text-yellow-800' :
+                                                                        'bg-red-100 text-red-800'
+                                                                    }`}>
+                                                                        {member.attendanceRate}%
+                                                                    </div>
+                                                                    <div className="text-xs text-blue-600">
+                                                                        {member.rating || 'Not Rated'}
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-blue-400 text-xs">No data</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="p-3">
+                                                            <div className="text-xs text-blue-600">
+                                                                {member.lastAttendanceDate ? (
+                                                                    <div>
+                                                                        <div>{format(new Date(member.lastAttendanceDate), "MMM dd, yyyy")}</div>
+                                                                        <div className="text-blue-500">{format(new Date(member.lastAttendanceDate), "h:mm a")}</div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-blue-400">Never attended</span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </motion.tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                        
+                                        {members.length > 15 && (
+                                            <div className="text-center py-4 border-t border-blue-200 mt-4">
+                                                <Link 
+                                                    href="/bishop/members"
+                                                    className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-800 bg-white/80 backdrop-blur-sm hover:bg-white/90"
+                                                >
+                                                    <Users className="h-4 w-4 mr-2" />
+                                                    View all {members.length} members
+                                                </Link>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
                         {/* Dashboard Content */}
                         <ResponsiveDashboard
                             attendance={attendance}
@@ -761,8 +1040,9 @@ export default function BishopDashboard() {
                             members={members}
                             formatDate={formatDate}
                         />
-                    </div>
-            )}
+                        </div>
+                    )}
+                </motion.div>
             </div>
         </div>
     )

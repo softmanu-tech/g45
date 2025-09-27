@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Calendar, Users, CheckCircle, XCircle, Clock, ArrowLeft } from "lucide-react"
+import { Calendar, Users, CheckCircle, XCircle, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Loading, QuickLoading } from "@/components/ui/loading"
 import { useAlerts } from "@/components/ui/alert-system"
+import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import { format } from "date-fns"
 import Link from "next/link"
 
@@ -203,15 +204,24 @@ export default function MarkAttendanceForm() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-blue-300 flex items-center justify-center px-4">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg max-w-md text-center">
-          <strong>Error:</strong> {error}
-          <button 
-            onClick={fetchData}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-          >
-            Try Again
-          </button>
+      <div className="min-h-screen bg-blue-300">
+        <ProfessionalHeader
+          title="Mark Attendance"
+          subtitle="Record member attendance for your group"
+          backHref="/leader"
+        />
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
+          <Card className="bg-red-200/90 backdrop-blur-md border border-red-300">
+            <CardContent className="p-6 text-center">
+              <strong className="text-red-800">Error:</strong> {error}
+              <Button 
+                onClick={fetchData}
+                className="mt-4 bg-red-600 hover:bg-red-700 text-white"
+              >
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
@@ -219,24 +229,11 @@ export default function MarkAttendanceForm() {
 
   return (
     <div className="min-h-screen bg-blue-300">
-      {/* Header */}
-      <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3 sm:gap-4">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800 truncate">Mark Attendance</h1>
-              <p className="text-xs sm:text-sm text-blue-700 mt-1">Record member attendance for your group</p>
-            </div>
-            <Link 
-              href="/leader" 
-              className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-blue-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-blue-800 bg-white/80 backdrop-blur-sm hover:bg-white/90 w-full sm:w-auto"
-            >
-              <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-              Back to Dashboard
-            </Link>
-          </div>
-        </div>
-      </div>
+      <ProfessionalHeader
+        title="Mark Attendance"
+        subtitle="Record member attendance for your group"
+        backHref="/leader"
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Loading } from "@/components/ui/loading"
 import { useAlerts } from "@/components/ui/alert-system"
+import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { motion } from "framer-motion"
@@ -25,7 +26,8 @@ import {
   CheckCircle,
   BarChart3,
   TrendingUp,
-  Star
+  Star,
+  LogOut
 } from "lucide-react"
 
 interface TeamMember {
@@ -105,7 +107,7 @@ export default function ProtocolTeamManagePage() {
 
   const handleAddMember = async () => {
     if (!newMemberName || !newMemberEmail) {
-      alerts.error("Please provide both name and email")
+      alerts.error("Please provide both name and email", "Validation Error")
       return
     }
 
@@ -127,12 +129,12 @@ export default function ProtocolTeamManagePage() {
         setNewMemberName('')
         setNewMemberEmail('')
         setShowAddMember(false)
-        alerts.success(result.message)
+        alerts.success(result.message, "Success")
       } else {
-        alerts.error(result.error || "Failed to add member")
+        alerts.error(result.error || "Failed to add member", "Error")
       }
     } catch (err) {
-      alerts.error("Failed to add member")
+      alerts.error("Failed to add member", "Error")
     } finally {
       setAddingMember(false)
     }
@@ -154,12 +156,12 @@ export default function ProtocolTeamManagePage() {
       const result = await response.json()
       if (result.success) {
         setTeamData(result.data)
-        alerts.success(result.message)
+        alerts.success(result.message, "Success")
       } else {
-        alerts.error(result.error || "Failed to remove member")
+        alerts.error(result.error || "Failed to remove member", "Error")
       }
     } catch (err) {
-      alerts.error("Failed to remove member")
+      alerts.error("Failed to remove member", "Error")
     }
   }
 
@@ -181,12 +183,12 @@ export default function ProtocolTeamManagePage() {
       if (result.success) {
         setTeamData(prev => prev ? { ...prev, name: teamName, description: teamDescription, responsibilities: teamResponsibilities } : null)
         setEditingSettings(false)
-        alerts.success("Team settings updated successfully")
+        alerts.success("Team settings updated successfully", "Success")
       } else {
-        alerts.error(result.error || "Failed to update settings")
+        alerts.error(result.error || "Failed to update settings", "Error")
       }
     } catch (err) {
-      alerts.error("Failed to update settings")
+      alerts.error("Failed to update settings", "Error")
     } finally {
       setSavingSettings(false)
     }
@@ -245,39 +247,34 @@ export default function ProtocolTeamManagePage() {
     )
   }
 
-  return (
-    <div className="min-h-screen bg-blue-300">
-      <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4 sm:py-6">
-            <div className="flex items-center gap-4">
-              <Link href="/bishop/protocol-teams">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-blue-800 hover:bg-blue-100 p-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 hover:from-blue-100 hover:to-blue-200"
-                  style={{
-                    boxShadow: '0 8px 16px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
-                  }}
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800">
-                  {teamData.name} - Management
-                </h1>
-                <p className="text-xs sm:text-sm text-blue-700 mt-1">
-                  Leader: {teamData.leader.name} • {teamData.members.length} members
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST" })
+      window.location.href = "/"
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
+  }
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4">
-        <div className="flex gap-2 bg-blue-200/90 backdrop-blur-md rounded-lg p-2 border border-blue-300">
+  return (
+    <div className="min-h-screen bg-blue-300 overflow-x-hidden">
+      <ProfessionalHeader
+        title={`${teamData.name} - Management`}
+        subtitle={`Leader: ${teamData.leader.name} • ${teamData.members.length} members`}
+        backHref="/bishop/protocol-teams"
+        actions={[
+          {
+            label: "Logout",
+            onClick: handleLogout,
+            variant: "outline",
+            className: "border-red-300 text-red-100 bg-red-600/20 hover:bg-red-600/30",
+            icon: <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
+          }
+        ]}
+      />
+
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4">
+        <div className="flex flex-col sm:flex-row gap-2 bg-blue-200/90 backdrop-blur-md rounded-lg p-2 border border-blue-300">
           <Button
             variant={activeTab === 'members' ? 'default' : 'ghost'}
             className={`flex-1 ${activeTab === 'members' ? 'bg-blue-600 text-white' : 'text-blue-800 hover:bg-blue-100'}`}
@@ -305,7 +302,7 @@ export default function ProtocolTeamManagePage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-8 space-y-6">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-8 space-y-4 sm:space-y-6">
         {activeTab === 'members' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -332,7 +329,7 @@ export default function ProtocolTeamManagePage() {
               </CardHeader>
               {showAddMember && (
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
                       <label className="block text-sm font-medium text-blue-800 mb-2">Member Name</label>
                       <input
@@ -375,7 +372,7 @@ export default function ProtocolTeamManagePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {teamData.members.map((member) => (
                     <div key={member._id} className="bg-white/80 p-4 rounded-lg border border-blue-200">
                       <div className="flex items-center justify-between">
@@ -389,13 +386,13 @@ export default function ProtocolTeamManagePage() {
                             )}
                           </div>
                           <div className="text-sm text-blue-600 flex items-center gap-1 mt-1">
-                            <Mail className="h-3 w-3" />
-                            {member.email}
+                            <Mail className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{member.email}</span>
                           </div>
                           {member.phone && (
                             <div className="text-sm text-blue-600 flex items-center gap-1 mt-1">
-                              <Phone className="h-3 w-3" />
-                              {member.phone}
+                              <Phone className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{member.phone}</span>
                             </div>
                           )}
                         </div>
@@ -549,7 +546,7 @@ export default function ProtocolTeamManagePage() {
 
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                   <h4 className="font-medium text-blue-800 mb-2">Team Information</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
                     <div>
                       <span className="text-blue-600">Created:</span>
                       <span className="text-blue-800 ml-2">{format(new Date(teamData.createdAt), "MMM dd, yyyy")}</span>
@@ -588,7 +585,7 @@ export default function ProtocolTeamManagePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                   <div className="bg-white/80 p-4 rounded-lg border border-blue-200 text-center">
                     <div className="text-2xl font-bold text-blue-800">{teamData.stats?.totalVisitors || 0}</div>
                     <div className="text-sm text-blue-600">Total Visitors</div>

@@ -21,8 +21,35 @@ const cinzel = Cinzel({
 });
 
 export const metadata: Metadata = {
-    title: "G-45",
-    description: "prepare the way",
+    title: "G-45 Main - Church Management System",
+    description: "Prepare the way - Professional church management platform",
+    icons: {
+        icon: [
+            {
+                url: "/logo.jpg",
+                sizes: "32x32",
+                type: "image/jpeg",
+            },
+            {
+                url: "/logo.jpg", 
+                sizes: "16x16",
+                type: "image/jpeg",
+            }
+        ],
+        apple: [
+            {
+                url: "/logo.jpg",
+                sizes: "180x180",
+                type: "image/jpeg",
+            }
+        ],
+        other: [
+            {
+                rel: "icon",
+                url: "/logo.jpg",
+            }
+        ]
+    },
 };
 
 export default async function RootLayout({children,}: Readonly<{ children: React.ReactNode;}>) {
@@ -32,6 +59,11 @@ export default async function RootLayout({children,}: Readonly<{ children: React
 
     return (
         <html lang="en">
+        <head>
+            <link rel="icon" href="/logo.jpg" type="image/jpeg" />
+            <link rel="apple-touch-icon" href="/logo.jpg" />
+            <link rel="shortcut icon" href="/logo.jpg" />
+        </head>
         <body
             className={`${rowdies.variable} ${cinzel.variable} antialiased`}
         >

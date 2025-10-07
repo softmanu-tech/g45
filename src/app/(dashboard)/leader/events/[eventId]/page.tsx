@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loading } from "@/components/ui/loading"
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import { format } from "date-fns"
@@ -113,7 +113,25 @@ export default function EventDetailsPage() {
   }, [eventId])
 
   if (loading) {
-    return <Loading message="Loading event details..." size="lg" />
+    return (
+      <div className="min-h-screen bg-blue-300">
+        <ProfessionalHeader
+          title="Event Details"
+          subtitle="Loading event information..."
+        />
+        
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+          {/* Event Details Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+
+          {/* Responses Table Skeleton */}
+          <TableSkeleton />
+        </div>
+      </div>
+    )
   }
 
   if (error) {

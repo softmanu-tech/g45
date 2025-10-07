@@ -6,10 +6,10 @@ import { startTransition } from "react";
 export default function ErrorBoundary({ 
     error,
     reset,
-
-}: { error: Error;
+}: { 
+    error: Error & { digest?: string };
     reset: () => void;
- }) {
+}) {
     const router = useRouter()
     const reload = () => {
         startTransition(() => {

@@ -9,25 +9,51 @@ import { requireSessionAndRoles } from "@/lib/authMiddleware";
 import mongoose, { FilterQuery } from 'mongoose';
 import { IAttendance, IUser, IGroup } from '@/lib/models';
 
+// Define EnhancedMember interface
 interface EnhancedMember {
-  _id: mongoose.Types.ObjectId;
+  _id: string;
   name: string;
   email: string;
-  phone?: string;
+  phone: string;
   attendanceCount: number;
   lastAttendanceDate: Date | null;
   rating: 'Excellent' | 'Average' | 'Poor';
 }
 
+// Ultra-fast caching for leader data
+const leaderCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+const CACHE_DURATION = 5 * 1000; // 5 seconds for ultra-fast updates
+
+// Aggressive cache cleanup
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, value] of leaderCache.entries()) {
+        if (now - value.timestamp > value.ttl) {
+            leaderCache.delete(key);
+        }
+    }
+}, 10000); // Clean every 10 seconds
+
 export async function GET(request: Request) {
   try {
-    await dbConnect();
-
     // 1. Strict Authentication
     const { user } = await requireSessionAndRoles(request, ['leader']);
     if (!user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Check cache first
+    const cacheKey = `leader-${user.id}`;
+    const cached = leaderCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
+      return NextResponse.json({
+        success: true,
+        data: cached.data,
+        cached: true
+      });
+    }
+
+    await dbConnect();
 
     // 2. Get Leader with Group
     const leader = await User.findById(user.id).populate<{ group: IGroup }>('group');
@@ -66,48 +92,86 @@ export async function GET(request: Request) {
       }
     };
 
-    // 5. Fetch Data
-    const [attendanceRecords, events, rawMembers] = await Promise.all([
+    // 5. Fetch Data - Optimized with aggregation
+    const [attendanceRecords, events, rawMembers, memberStats] = await Promise.all([
       Attendance.find(attendanceFilter).lean<IAttendance[]>(),
       Event.find({ group: (leader as any).group._id }).lean(),
       User.find({ group: (leader as any).group._id, role: 'member' })
         .select('name email phone')
-        .lean<IUser[]>()
-    ]);
-
-    // 6. Process Member Attendance
-    const memberStats = new Map<string, { count: number; lastDate: Date | null }>(
-      rawMembers.map(m => [m._id.toString(), { count: 0, lastDate: null }])
-    );
-
-    for (const record of attendanceRecords) {
-      for (const memberId of record.presentMembers) {
-        const stats = memberStats.get(memberId.toString());
-        if (stats) {
-          stats.count++;
-          if (!stats.lastDate || record.date > stats.lastDate) {
-            stats.lastDate = record.date;
+        .lean<IUser[]>(),
+      // Single aggregation query for member statistics
+      Attendance.aggregate([
+        { $match: attendanceFilter },
+        { $unwind: { path: "$presentMembers", preserveNullAndEmptyArrays: true } },
+        {
+          $group: {
+            _id: "$presentMembers",
+            attendanceCount: { $sum: 1 },
+            lastAttendanceDate: { $max: "$date" }
+          }
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "_id",
+            as: "member"
+          }
+        },
+        { $unwind: "$member" },
+        {
+          $project: {
+            memberId: "$_id",
+            name: "$member.name",
+            email: "$member.email",
+            attendanceCount: 1,
+            lastAttendanceDate: 1,
+            rating: {
+              $cond: {
+                if: { $gte: ["$attendanceCount", 8] },
+                then: "Excellent",
+                else: {
+                  $cond: {
+                    if: { $gte: ["$attendanceCount", 4] },
+                    then: "Average",
+                    else: "Poor"
+                  }
+                }
+              }
+            }
           }
         }
-      }
-    }
+      ])
+    ]);
 
-    // 7. Create Enhanced Members
-    const enhancedMembers: EnhancedMember[] = rawMembers.map(member => {
-      const stats = memberStats.get(member._id.toString())!;
-      return {
-        _id: member._id,
-        name: member.name,
-        email: member.email,
-        phone: member.phone,
-        attendanceCount: stats.count,
-        lastAttendanceDate: stats.lastDate,
-        rating: stats.count > 10 ? 'Excellent' : stats.count > 5 ? 'Average' : 'Poor'
-      };
-    });
+    // 6. Process Member Attendance - Use aggregated data
+    const processedMembers: EnhancedMember[] = memberStats.map(stat => ({
+      _id: stat.memberId,
+      name: stat.name,
+      email: stat.email,
+      phone: '', // Not available in aggregation
+      attendanceCount: stat.attendanceCount,
+      lastAttendanceDate: stat.lastAttendanceDate,
+      rating: stat.rating as 'Excellent' | 'Average' | 'Poor'
+    }));
 
-    // 8. Return Secure Response
-    return NextResponse.json({
+    // Add members with zero attendance
+    const memberIdsWithAttendance = new Set(processedMembers.map(m => m._id.toString()));
+    const membersWithoutAttendance = rawMembers
+      .filter(m => !memberIdsWithAttendance.has(m._id.toString()))
+      .map(m => ({
+        _id: m._id,
+        name: m.name,
+        email: m.email,
+        phone: m.phone || '',
+        attendanceCount: 0,
+        lastAttendanceDate: null,
+        rating: 'Poor' as const
+      }));
+
+    const enhancedMembers = [...processedMembers, ...membersWithoutAttendance];
+
+    const responseData = {
       group: {
         _id: (leader as any).group._id.toString(),
         name: (leader as any).group.name
@@ -115,7 +179,17 @@ export async function GET(request: Request) {
       events,
       members: enhancedMembers,
       attendanceRecords
+    };
+
+    // Cache the result
+    leaderCache.set(cacheKey, {
+      data: responseData,
+      timestamp: Date.now(),
+      ttl: CACHE_DURATION
     });
+
+    // 8. Return Secure Response
+    return NextResponse.json(responseData);
 
   } catch (error) {
     console.error('Leader API Error:', error);

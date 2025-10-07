@@ -35,14 +35,23 @@ async function dbConnect(): Promise<Mongoose> {
 
     if (!cached.promise) {
         // TypeScript now knows MONGODB_URI is defined because of the early throw
-        const connectionOptions: mongoose.ConnectOptions = {
-            bufferCommands: false,
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-            heartbeatFrequencyMS: 10000,
-            retryWrites: true,
-            retryReads: true,
-        };
+                const connectionOptions: mongoose.ConnectOptions = {
+                    bufferCommands: false,
+                    serverSelectionTimeoutMS: 1000, // Ultra-fast connection
+                    socketTimeoutMS: 10000, // Reduced for faster queries
+                    heartbeatFrequencyMS: 2000, // More frequent heartbeats
+                    retryWrites: true,
+                    retryReads: true,
+                    maxPoolSize: 30, // Increased for better concurrency
+                    minPoolSize: 10, // Keep more connections ready
+                    maxIdleTimeMS: 10000, // Close idle connections faster
+                    connectTimeoutMS: 1000, // Faster connection timeout
+                    maxConnecting: 15, // Limit concurrent connections
+                    // Additional performance optimizations
+                    readPreference: 'primaryPreferred',
+                    readConcern: { level: 'local' },
+                    writeConcern: { w: 1, j: false },
+                };
 
         // Explicit check to satisfy TypeScript
         if (MONGODB_URI) {

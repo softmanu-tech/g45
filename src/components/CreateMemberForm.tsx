@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { X, User, Mail, Phone, MapPin, Building, Lock } from "lucide-react"
-import { QuickLoading } from "@/components/ui/loading"
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
 import { useAlerts } from "@/components/ui/alert-system"
 
 interface CreateMemberFormProps {
@@ -247,7 +247,12 @@ export function CreateMemberForm({ groupId, onMemberCreated }: CreateMemberFormP
               disabled={loading}
               className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-800 disabled:opacity-50"
             >
-{loading ? <QuickLoading message="Creating member..." /> : "Add Member"}
+{loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Creating member...</span>
+                </div>
+              ) : "Add Member"}
             </button>
           </div>
         </form>

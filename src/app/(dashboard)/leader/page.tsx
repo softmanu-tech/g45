@@ -11,7 +11,7 @@ import { fadeIn } from '@/lib/motion';
 import { CreateMemberForm } from '@/components/CreateMemberForm';
 import { AddExistingMemberForm } from '@/components/AddExistingMemberForm';
 import { Users, Calendar, TrendingUp, Settings, LogOut, MessageSquare, UserPlus } from 'lucide-react';
-import { Loading } from '@/components/ui/loading';
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from '@/components/ui/skeleton';
 import { ProfileIcon } from '@/components/ProfileIcon';
 import { ProfessionalHeader } from '@/components/ProfessionalHeader';
 
@@ -201,7 +201,29 @@ export default function LeaderDashboard() {
   }, [data]);
 
   if (loading) {
-    return <Loading message="Loading dashboard data..." size="lg" />;
+    return (
+      <div className="min-h-screen bg-blue-300">
+        <ProfessionalHeader
+          title="Leader Dashboard"
+          subtitle="Manage your group members and events"
+        />
+        
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+          {/* Stats Cards Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
+
+          {/* Chart Skeleton */}
+          <ChartSkeleton />
+
+          {/* Table Skeleton */}
+          <TableSkeleton />
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -543,10 +565,7 @@ export default function LeaderDashboard() {
             </h3>
             
             {performanceLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-blue-700">Loading performance data...</span>
-              </div>
+              <ChartSkeleton />
             ) : performanceData ? (
               <div className="space-y-6">
                 {/* Performance Summary Cards */}

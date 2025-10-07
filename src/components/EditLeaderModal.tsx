@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { X, Save, User, Mail, Users } from "lucide-react"
-import { QuickLoading } from "@/components/ui/loading"
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
 import { useAlerts } from "@/components/ui/alert-system"
 
 interface Group {
@@ -224,7 +224,10 @@ export function EditLeaderModal({
               disabled={loading}
             >
               {loading ? (
-                <QuickLoading message="Updating..." />
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Updating...</span>
+                </div>
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />

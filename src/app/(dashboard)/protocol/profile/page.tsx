@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Loading } from "@/components/ui/loading"
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
 import { ProfileManager } from "@/components/ProfileManager"
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
@@ -68,7 +68,22 @@ export default function ProtocolProfilePage() {
   }, [])
 
   if (loading) {
-    return <Loading message="Loading your profile..." size="lg" />
+    return (
+      <div className="min-h-screen bg-blue-300">
+        <ProfessionalHeader
+          title="Profile Settings"
+          subtitle="Loading your profile..."
+        />
+        
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+          <div className="space-y-6">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (error) {

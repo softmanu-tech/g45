@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { Loading } from '@/components/ui/loading';
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from '@/components/ui/skeleton';
 import { 
   BarChart, 
   Bar, 
@@ -102,7 +102,34 @@ export default function LeaderAnalyticsDashboard() {
   };
 
   if (loading) {
-    return <Loading message="Analyzing member data..." size="lg" />;
+    return (
+      <div className="min-h-screen bg-blue-300">
+        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white p-4 sm:p-6">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-xl sm:text-2xl font-bold">Leader Analytics Dashboard</h1>
+            <p className="text-blue-100 text-sm sm:text-base">Analyzing member data...</p>
+          </div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+          {/* Stats Cards Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
+
+          {/* Charts Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <ChartSkeleton />
+            <ChartSkeleton />
+          </div>
+
+          {/* Table Skeleton */}
+          <TableSkeleton />
+        </div>
+      </div>
+    );
   }
 
   if (error) {

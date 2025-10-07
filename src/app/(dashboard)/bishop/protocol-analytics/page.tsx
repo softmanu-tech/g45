@@ -1,9 +1,11 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense } from "react"
+import dynamic from "next/dynamic"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loading } from "@/components/ui/loading"
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { FastCardSkeleton, FastChartSkeleton, FastTableSkeleton, PreloadCriticalComponents } from "@/components/ui/fast-skeleton"
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import Link from "next/link"
@@ -28,11 +30,27 @@ import {
   Settings,
   LogOut
 } from "lucide-react"
+// Lazy load heavy chart components
+const ResponsiveContainer = dynamic(() => import('recharts').then(mod => ({ default: mod.ResponsiveContainer })), {
+  ssr: false,
+  loading: () => <div className="h-64 bg-gray-200 animate-pulse rounded" />
+})
+
+const ComposedChart = dynamic(() => import('recharts').then(mod => ({ default: mod.ComposedChart })), {
+  ssr: false
+})
+
+const AreaChart = dynamic(() => import('recharts').then(mod => ({ default: mod.AreaChart })), {
+  ssr: false
+})
+
+const BarChart = dynamic(() => import('recharts').then(mod => ({ default: mod.BarChart })), {
+  ssr: false
+})
+
+// Import other chart components normally (they're lightweight)
 import {
-  ResponsiveContainer,
-  AreaChart,
   Area,
-  BarChart,
   Bar,
   XAxis,
   YAxis,
@@ -43,8 +61,7 @@ import {
   Line,
   PieChart as RechartsPieChart,
   Pie,
-  Cell,
-  ComposedChart
+  Cell
 } from 'recharts'
 
 interface TeamAnalytics {
@@ -176,12 +193,55 @@ export default function ProtocolAnalyticsPage() {
   }, [])
 
   if (loading) {
-    return <Loading message="Loading protocol team analytics..." size="lg" />
+    return (
+      <div className="min-h-screen bg-blue-300">
+        <ProfessionalHeader
+          title="Protocol Teams Performance Analytics"
+          subtitle="Loading analytics data..."
+          backHref="/bishop"
+          actions={[
+            {
+              label: "Dashboard",
+              href: "/bishop",
+              variant: "outline",
+              icon: <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
+            },
+            {
+              label: "Logout",
+              onClick: handleLogout,
+              variant: "outline",
+              className: "border-blue-300 text-blue-100 bg-blue-600/20 hover:bg-blue-600/30",
+              icon: <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
+            }
+          ]}
+        />
+
+                {/* Optimized Skeleton Loading */}
+                <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+                  <PreloadCriticalComponents />
+                  
+                  {/* Overview Cards Skeleton */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4 mb-6">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <FastCardSkeleton key={i} />
+                    ))}
+                  </div>
+
+                  {/* Chart Skeleton */}
+                  <div className="mb-6">
+                    <FastChartSkeleton />
+                  </div>
+
+                  {/* Table Skeleton */}
+                  <FastTableSkeleton />
+                </div>
+      </div>
+    )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-blue-300 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg max-w-md text-center">
           <strong>Error:</strong> {error}
           <button 
@@ -195,11 +255,62 @@ export default function ProtocolAnalyticsPage() {
     )
   }
 
-  if (!data) {
+  if (!data || data.churchStats.totalTeams === 0) {
     return (
-      <div className="min-h-screen bg-blue-300 flex items-center justify-center px-4">
-        <div className="bg-blue-200/90 backdrop-blur-md rounded-lg p-6 border border-blue-300 text-center">
-          <p className="text-blue-800">No analytics data available.</p>
+      <div className="min-h-screen bg-blue-300">
+        <ProfessionalHeader
+          title="Protocol Teams Performance Analytics"
+          subtitle="Analytics will appear once protocol teams are created"
+          backHref="/bishop"
+          actions={[
+            {
+              label: "Create Protocol Teams",
+              href: "/bishop/protocol-teams",
+              variant: "default",
+              icon: <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+            },
+            {
+              label: "Dashboard",
+              href: "/bishop",
+              variant: "outline",
+              icon: <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
+            },
+            {
+              label: "Logout",
+              onClick: handleLogout,
+              variant: "outline",
+              className: "border-blue-300 text-blue-100 bg-blue-600/20 hover:bg-blue-600/30",
+              icon: <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
+            }
+          ]}
+        />
+
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+          <div className="bg-blue-200/90 backdrop-blur-md border border-blue-300 rounded-lg shadow-sm p-6 sm:p-8">
+            <div className="text-center">
+              <div className="mb-6">
+                <Users className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-blue-900 mb-2">No Protocol Teams Yet</h2>
+                <p className="text-blue-700 mb-6">
+                  Protocol teams analytics will be available once you create your first protocol team and start managing visitors.
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                <Link href="/bishop/protocol-teams">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3">
+                    <Users className="h-5 w-5 mr-2" />
+                    Create Protocol Teams
+                  </Button>
+                </Link>
+                
+                <div className="text-sm text-blue-600">
+                  <p>Protocol teams help manage visitors and track their journey from first visit to membership.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -217,129 +328,189 @@ export default function ProtocolAnalyticsPage() {
   const getTrendColor = (direction: string) => {
     if (direction === 'growing') return 'text-green-600 bg-green-50 border-green-200'
     if (direction === 'declining') return 'text-red-600 bg-red-50 border-red-200'
-    return 'text-gray-600 bg-gray-50 border-gray-200'
+    return 'text-blue-600 bg-gray-50 border-gray-200'
   }
 
   return (
     <div className="min-h-screen bg-blue-300">
-      {/* Header */}
-      <div className="bg-blue-200/90 backdrop-blur-md border-b border-blue-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3 sm:gap-4">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800 truncate">
-                Protocol Teams Performance Analytics
-              </h1>
-              <p className="text-xs sm:text-sm text-blue-700 mt-1">
-                Comprehensive analysis of {data.churchStats.totalTeams} protocol teams managing {data.churchStats.totalVisitors} visitors
-              </p>
+      <ProfessionalHeader
+        title="Protocol Teams Performance Analytics"
+        subtitle={`Comprehensive analysis of ${data.churchStats.totalTeams} protocol teams managing ${data.churchStats.totalVisitors} visitors`}
+        backHref="/bishop"
+        actions={[
+          {
+            label: "Dashboard",
+            href: "/bishop",
+            variant: "outline",
+            icon: <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
+          },
+          {
+            label: "Logout",
+            onClick: handleLogout,
+            variant: "outline",
+            className: "border-blue-300 text-blue-100 bg-blue-600/20 hover:bg-blue-600/30",
+            icon: <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
+          }
+        ]}
+      />
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 overflow-x-hidden">
+        
+        {/* Church-wide Overview */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4 mb-6">
+          <div className="bg-blue-200/90 backdrop-blur-md border border-blue-300 rounded-lg shadow-sm p-2 sm:p-3 md:p-4 lg:p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-8 lg:w-8 text-blue-600" />
             </div>
-            <div className="flex items-center gap-3">
-              <Link href="/bishop">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-300 text-blue-800 bg-white/80 hover:bg-white/90"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Dashboard
-                </Button>
-              </Link>
-              <Button 
-                onClick={handleLogout}
-                variant="outline"
-                size="sm"
-                className="border-blue-300 text-blue-800 bg-white/80 hover:bg-white/90"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
+              <div className="ml-1 sm:ml-2 md:ml-3 lg:ml-4">
+                <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Protocol Teams</p>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-blue-800">{data.churchStats.totalTeams}</p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-6">
-        
-        {/* Church-wide Overview */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-          <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
-            <CardContent className="p-3 sm:p-4 text-center">
-              <div className="text-lg sm:text-xl font-bold text-blue-800">{data.churchStats.totalTeams}</div>
-              <div className="text-xs sm:text-sm text-blue-600">Protocol Teams</div>
-            </CardContent>
-          </Card>
+          <div className="bg-blue-200/90 backdrop-blur-md border border-blue-300 rounded-lg shadow-sm p-2 sm:p-3 md:p-4 lg:p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-8 lg:w-8 text-blue-600" />
+              </div>
+              <div className="ml-1 sm:ml-2 md:ml-3 lg:ml-4">
+                <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Total Visitors</p>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-blue-800">{data.churchStats.totalVisitors}</p>
+              </div>
+            </div>
+          </div>
           
-          <Card className="bg-green-100 border border-green-300">
-            <CardContent className="p-3 sm:p-4 text-center">
-              <div className="text-lg sm:text-xl font-bold text-green-800">{data.churchStats.totalVisitors}</div>
-              <div className="text-xs sm:text-sm text-green-600">Total Visitors</div>
-            </CardContent>
-          </Card>
+          <div className="bg-blue-200/90 backdrop-blur-md border border-blue-300 rounded-lg shadow-sm p-2 sm:p-3 md:p-4 lg:p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-8 lg:w-8 text-blue-600" />
+              </div>
+              <div className="ml-1 sm:ml-2 md:ml-3 lg:ml-4">
+                <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">Conversions</p>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-blue-900">{data.churchStats.totalConversions}</p>
+              </div>
+            </div>
+          </div>
           
-          <Card className="bg-purple-100 border border-purple-300">
-            <CardContent className="p-3 sm:p-4 text-center">
-              <div className="text-lg sm:text-xl font-bold text-purple-800">{data.churchStats.totalConversions}</div>
-              <div className="text-xs sm:text-sm text-purple-600">Conversions</div>
-            </CardContent>
-          </Card>
+          <div className="bg-blue-200/90 backdrop-blur-md border border-blue-300 rounded-lg shadow-sm p-2 sm:p-3 md:p-4 lg:p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <Target className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-8 lg:w-8 text-blue-600" />
+              </div>
+              <div className="ml-1 sm:ml-2 md:ml-3 lg:ml-4">
+                <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">Avg Conversion</p>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-blue-900">{data.churchStats.averageConversionRate}%</p>
+              </div>
+            </div>
+          </div>
           
-          <Card className="bg-orange-100 border border-orange-300">
-            <CardContent className="p-3 sm:p-4 text-center">
-              <div className="text-lg sm:text-xl font-bold text-orange-800">{data.churchStats.averageConversionRate}%</div>
-              <div className="text-xs sm:text-sm text-orange-600">Avg Conversion</div>
-            </CardContent>
-          </Card>
+          <div className="bg-blue-200/90 backdrop-blur-md border border-blue-300 rounded-lg shadow-sm p-2 sm:p-3 md:p-4 lg:p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-8 lg:w-8 text-blue-600" />
+              </div>
+              <div className="ml-1 sm:ml-2 md:ml-3 lg:ml-4">
+                <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">Need Attention</p>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-blue-900">{data.insights.teamsNeedingAttention}</p>
+              </div>
+            </div>
+          </div>
           
-          <Card className="bg-red-100 border border-red-300">
-            <CardContent className="p-3 sm:p-4 text-center">
-              <div className="text-lg sm:text-xl font-bold text-red-800">{data.insights.teamsNeedingAttention}</div>
-              <div className="text-xs sm:text-sm text-red-600">Need Attention</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-teal-100 border border-teal-300">
-            <CardContent className="p-3 sm:p-4 text-center">
-              <div className="text-lg sm:text-xl font-bold text-teal-800">{data.insights.totalActiveVisitors}</div>
-              <div className="text-xs sm:text-sm text-teal-600">Active Visitors</div>
-            </CardContent>
-          </Card>
+          <div className="bg-blue-200/90 backdrop-blur-md border border-blue-300 rounded-lg shadow-sm p-2 sm:p-3 md:p-4 lg:p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <Activity className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-8 lg:w-8 text-blue-600" />
+              </div>
+              <div className="ml-1 sm:ml-2 md:ml-3 lg:ml-4">
+                <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">Active Visitors</p>
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-blue-900">{data.insights.totalActiveVisitors}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Church-wide Growth Chart */}
-        <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
-          <CardHeader>
-            <CardTitle className="text-blue-800 flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
+                {/* Church-wide Growth Chart - Mobile Optimized */}
+                <div className="bg-blue-200/90 backdrop-blur-md border border-blue-300 rounded-lg shadow-sm p-3 sm:p-4 md:p-6 mb-6">
+                  <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-900 mb-3 sm:mb-4 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               Church-wide Visitor Growth Trend
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
-              <ComposedChart data={data.churchGrowth}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Area type="monotone" dataKey="totalVisitors" fill="#3B82F6" fillOpacity={0.3} stroke="#3B82F6" strokeWidth={2} name="Total Visitors" />
-                <Bar dataKey="joining" fill="#10B981" name="Joining Visitors" />
-                <Bar dataKey="visiting" fill="#F59E0B" name="Visiting Only" />
-                <Line type="monotone" dataKey="conversions" stroke="#8B5CF6" strokeWidth={3} name="Conversions" />
+                  </h3>
+                  <div className="overflow-hidden">
+                    <Suspense fallback={<div className="h-48 sm:h-56 md:h-64 bg-gray-200 animate-pulse rounded" />}>
+                      <div className="h-48 sm:h-56 md:h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <ComposedChart 
+                            data={data.churchGrowth}
+                            margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                          >
+                            <CartesianGrid strokeDasharray="2 2" stroke="#e5e7eb" />
+                            <XAxis 
+                              dataKey="month" 
+                              fontSize={10}
+                              tick={{ fontSize: 10 }}
+                              className="sm:text-xs md:text-sm"
+                            />
+                            <YAxis 
+                              fontSize={10}
+                              tick={{ fontSize: 10 }}
+                              className="sm:text-xs md:text-sm"
+                            />
+                            <Tooltip 
+                              contentStyle={{
+                                fontSize: 12,
+                                padding: 8,
+                                backgroundColor: 'white',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '6px'
+                              }}
+                            />
+                            <Legend 
+                              wrapperStyle={{
+                                fontSize: 10,
+                                paddingTop: 8
+                              }}
+                              className="text-xs sm:text-sm"
+                            />
+                            {/* Simplified chart - only show most important metrics */}
+                            <Area 
+                              type="monotone" 
+                              dataKey="totalVisitors" 
+                              fill="#3B82F6" 
+                              fillOpacity={0.2} 
+                              stroke="#3B82F6" 
+                              strokeWidth={1.5} 
+                              name="Total Visitors" 
+                            />
+                            <Bar 
+                              dataKey="joining" 
+                              fill="#10B981" 
+                              name="Joining" 
+                              radius={[2, 2, 0, 0]}
+                            />
+                            <Line 
+                              type="monotone" 
+                              dataKey="conversions" 
+                              stroke="#8B5CF6" 
+                              strokeWidth={2} 
+                              name="Conversions"
+                              dot={{ r: 3 }}
+                            />
               </ComposedChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+                      </div>
+                    </Suspense>
+                  </div>
+                </div>
 
         {/* Team Rankings */}
-        <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
-          <CardHeader>
-            <CardTitle className="text-blue-800 flex items-center gap-2">
-              <Award className="h-5 w-5" />
+        <div className="bg-blue-200/90 backdrop-blur-md border border-blue-300 rounded-lg shadow-sm p-4 sm:p-6 mb-6">
+          <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-900 mb-4 flex items-center gap-2">
+            <Award className="h-5 w-5 text-blue-600" />
               Protocol Team Performance Rankings
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+          </h3>
             <div className="space-y-3">
               {data.teamRankings.map((team, index) => (
                 <motion.div
@@ -347,29 +518,30 @@ export default function ProtocolAnalyticsPage() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
+                className={`p-3 sm:p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
                     selectedTeam === team.teamId 
-                      ? 'bg-blue-100 border-blue-400 shadow-md' 
-                      : 'bg-white/80 border-blue-200 hover:bg-blue-50'
+                    ? 'bg-gray-50 border-gray-300 shadow-md' 
+                    : 'bg-white border-gray-200 hover:bg-gray-50'
                   }`}
                   onClick={() => setSelectedTeam(team.teamId)}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
-                        team.rank === 1 ? 'bg-yellow-100 text-yellow-800' :
-                        team.rank === 2 ? 'bg-gray-100 text-gray-800' :
-                        team.rank === 3 ? 'bg-orange-100 text-orange-800' :
-                        'bg-blue-100 text-blue-800'
-                      }`}>
-                        {team.rank === 1 && <Crown className="h-4 w-4" />}
+                <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 xs:gap-3">
+                  <div className="flex items-center gap-2 xs:gap-3">
+                    <div className={`flex items-center justify-center w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full font-bold text-xs sm:text-sm ${
+                      team.rank === 1 ? 'bg-gray-100 text-blue-800' :
+                      team.rank === 2 ? 'bg-gray-100 text-blue-800' :
+                      team.rank === 3 ? 'bg-gray-100 text-blue-800' :
+                      'bg-gray-100 text-blue-800'
+                    }`}>
+                      {team.rank === 1 && <Crown className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />}
                         {team.rank !== 1 && team.rank}
                       </div>
-                      <div>
-                        <h4 className="font-medium text-blue-800">{team.teamName}</h4>
-                        <div className="flex items-center gap-4 text-sm">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-blue-900 text-sm sm:text-base truncate">{team.teamName}</h4>
+                      <div className="flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-2 text-xs sm:text-sm">
                           <span className="text-blue-600">{team.totalVisitors} visitors</span>
-                          <span className="text-green-600">{team.conversionRate}% conversion</span>
+                        <span className="hidden xs:inline text-gray-400">•</span>
+                        <span className="text-blue-600">{team.conversionRate}% conversion</span>
                           <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${getTrendColor(team.trendDirection)}`}>
                             {getTrendIcon(team.trendDirection, team.growthTrend)}
                             {team.growthTrend.toFixed(1)}%
@@ -377,97 +549,173 @@ export default function ProtocolAnalyticsPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-blue-800">{team.performanceScore}</div>
+                  <div className="text-left xs:text-right">
+                    <div className="text-sm xs:text-base sm:text-lg font-bold text-blue-900">{team.performanceScore}</div>
                       <div className="text-xs text-blue-600">Performance Score</div>
                     </div>
                   </div>
                 </motion.div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+        </div>
 
         {/* Selected Team Detailed Analysis */}
         {selectedTeamData && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Team Growth Chart */}
-            <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
-              <CardHeader>
-                <CardTitle className="text-blue-800 flex items-center gap-2">
-                  <LineChart className="h-5 w-5" />
-                  {selectedTeamData.teamName} - Growth Analysis
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={selectedTeamData.growth.monthlyGrowth}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Area type="monotone" dataKey="cumulativeTotal" fill="#3B82F6" fillOpacity={0.3} stroke="#3B82F6" strokeWidth={2} name="Cumulative Visitors" />
-                    <Area type="monotone" dataKey="totalVisitors" fill="#10B981" fillOpacity={0.5} stroke="#10B981" strokeWidth={2} name="Monthly New Visitors" />
-                    <Area type="monotone" dataKey="conversions" fill="#8B5CF6" fillOpacity={0.7} stroke="#8B5CF6" strokeWidth={2} name="Monthly Conversions" />
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+                    {/* Team Growth Chart - Mobile Optimized */}
+                    <div className="bg-blue-200/90 backdrop-blur-md border border-blue-300 rounded-lg shadow-sm p-3 sm:p-4 md:p-6">
+                      <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-900 mb-3 sm:mb-4 flex items-center gap-2">
+                        <LineChart className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                        <span className="truncate">{selectedTeamData.teamName} - Growth</span>
+                      </h3>
+                      <div className="overflow-hidden">
+                        <Suspense fallback={<div className="h-48 sm:h-56 md:h-64 bg-gray-200 animate-pulse rounded" />}>
+                          <div className="h-48 sm:h-56 md:h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart 
+                                data={selectedTeamData.growth.monthlyGrowth}
+                                margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                              >
+                                <CartesianGrid strokeDasharray="2 2" stroke="#e5e7eb" />
+                                <XAxis 
+                                  dataKey="month" 
+                                  fontSize={10}
+                                  tick={{ fontSize: 10 }}
+                                />
+                                <YAxis 
+                                  fontSize={10}
+                                  tick={{ fontSize: 10 }}
+                                />
+                                <Tooltip 
+                                  contentStyle={{
+                                    fontSize: 12,
+                                    padding: 8,
+                                    backgroundColor: 'white',
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: '6px'
+                                  }}
+                                />
+                                <Legend 
+                                  wrapperStyle={{
+                                    fontSize: 10,
+                                    paddingTop: 8
+                                  }}
+                                />
+                                {/* Simplified - only show key metrics */}
+                                <Area 
+                                  type="monotone" 
+                                  dataKey="totalVisitors" 
+                                  fill="#3B82F6" 
+                                  fillOpacity={0.3} 
+                                  stroke="#3B82F6" 
+                                  strokeWidth={1.5} 
+                                  name="New Visitors" 
+                                />
+                                <Area 
+                                  type="monotone" 
+                                  dataKey="conversions" 
+                                  fill="#8B5CF6" 
+                                  fillOpacity={0.5} 
+                                  stroke="#8B5CF6" 
+                                  strokeWidth={1.5} 
+                                  name="Conversions" 
+                                />
                   </AreaChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </Card>
+                          </div>
+                        </Suspense>
+                      </div>
+                    </div>
 
-            {/* Team Member Performance */}
-            <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
-              <CardHeader>
-                <CardTitle className="text-blue-800 flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Team Member Performance
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={selectedTeamData.memberPerformance}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="assignedVisitors" fill="#3B82F6" name="Assigned Visitors" />
-                    <Bar dataKey="conversions" fill="#10B981" name="Conversions" />
+            {/* Team Member Performance - Mobile Optimized */}
+            <div className="bg-blue-200/90 backdrop-blur-md border border-blue-300 rounded-lg shadow-sm p-3 sm:p-4 md:p-6">
+              <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-900 mb-3 sm:mb-4 flex items-center gap-2">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                Team Performance
+              </h3>
+              <div>
+                <Suspense fallback={<div className="h-48 sm:h-56 md:h-64 bg-gray-200 animate-pulse rounded" />}>
+                  <div className="h-48 sm:h-56 md:h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart 
+                        data={selectedTeamData.memberPerformance}
+                        margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                      >
+                        <CartesianGrid strokeDasharray="2 2" stroke="#e5e7eb" />
+                        <XAxis 
+                          dataKey="name" 
+                          fontSize={10}
+                          tick={{ fontSize: 10 }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={60}
+                        />
+                        <YAxis 
+                          fontSize={10}
+                          tick={{ fontSize: 10 }}
+                        />
+                        <Tooltip 
+                          contentStyle={{
+                            fontSize: 12,
+                            padding: 8,
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '6px'
+                          }}
+                        />
+                        <Legend 
+                          wrapperStyle={{
+                            fontSize: 10,
+                            paddingTop: 8
+                          }}
+                        />
+                        <Bar 
+                          dataKey="assignedVisitors" 
+                          fill="#3B82F6" 
+                          name="Assigned" 
+                          radius={[2, 2, 0, 0]}
+                        />
+                        <Bar 
+                          dataKey="conversions" 
+                          fill="#10B981" 
+                          name="Conversions" 
+                          radius={[2, 2, 0, 0]}
+                        />
                   </BarChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </Card>
+                  </div>
+                </Suspense>
+              </div>
+            </div>
           </div>
         )}
 
         {/* Performance Insights */}
-        <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
-          <CardHeader>
-            <CardTitle className="text-blue-800 flex items-center gap-2">
-              <Target className="h-5 w-5" />
+        <div className="bg-blue-200/90 backdrop-blur-md border border-blue-300 rounded-lg shadow-sm p-4 sm:p-6">
+          <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-900 mb-4 flex items-center gap-2">
+            <Target className="h-5 w-5 text-blue-600" />
               Performance Insights & Recommendations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          </h3>
+          <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
               {data.insights.fastestGrowingTeam && (
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                   <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
-                    <h4 className="font-medium text-green-800">Fastest Growing Team</h4>
+                    <TrendingUp className="h-5 w-5 text-blue-600" />
+                    <h4 className="font-medium text-blue-900">Fastest Growing Team</h4>
                   </div>
-                  <p className="text-green-700 font-medium">{data.insights.fastestGrowingTeam.teamName}</p>
-                  <p className="text-sm text-green-600">Growth: +{data.insights.fastestGrowingTeam.growthTrend.toFixed(1)}%</p>
+                  <p className="text-blue-700 font-medium">{data.insights.fastestGrowingTeam.teamName}</p>
+                  <p className="text-sm text-blue-600">Growth: +{data.insights.fastestGrowingTeam.growthTrend.toFixed(1)}%</p>
                 </div>
               )}
               
-              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <div className="flex items-center gap-2 mb-2">
-                  <Award className="h-5 w-5 text-purple-600" />
-                  <h4 className="font-medium text-purple-800">Highest Conversion Rate</h4>
+                  <Award className="h-5 w-5 text-blue-600" />
+                  <h4 className="font-medium text-blue-900">Highest Conversion Rate</h4>
                 </div>
-                <p className="text-purple-700 font-medium">{data.insights.highestConversionTeam.teamName}</p>
-                <p className="text-sm text-purple-600">Conversion: {data.insights.highestConversionTeam.conversionRate}%</p>
+                <p className="text-blue-700 font-medium">{data.insights.highestConversionTeam.teamName}</p>
+                <p className="text-sm text-blue-600">Conversion: {data.insights.highestConversionTeam.conversionRate}%</p>
               </div>
               
               {data.insights.teamsNeedingAttention > 0 && (
@@ -482,8 +730,8 @@ export default function ProtocolAnalyticsPage() {
               )}
             </div>
             
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 className="font-medium text-blue-800 mb-2">Key Recommendations:</h4>
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h4 className="font-medium text-blue-900 mb-2">Key Recommendations:</h4>
               <ul className="space-y-1 text-sm text-blue-700">
                 <li>• Focus on teams with declining growth trends for additional support</li>
                 <li>• Share best practices from high-performing teams across all protocol teams</li>
@@ -492,8 +740,8 @@ export default function ProtocolAnalyticsPage() {
                 <li>• Celebrate and recognize top-performing teams to maintain motivation</li>
               </ul>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )

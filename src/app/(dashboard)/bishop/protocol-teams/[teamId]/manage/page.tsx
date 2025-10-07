@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loading } from "@/components/ui/loading"
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import Link from "next/link"
@@ -213,7 +213,29 @@ export default function ProtocolTeamManagePage() {
   }, [teamId])
 
   if (loading) {
-    return <Loading message="Loading team management..." size="lg" />
+    return (
+      <div className="min-h-screen bg-blue-300">
+        <ProfessionalHeader
+          title="Team Management"
+          subtitle="Loading team management..."
+        />
+        
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+          {/* Tabs Skeleton */}
+          <div className="flex flex-col sm:flex-row gap-2 bg-blue-200/90 backdrop-blur-md rounded-lg p-2 border border-blue-300 mb-6">
+            <div className="flex-1 h-10 bg-gray-200 animate-pulse rounded"></div>
+            <div className="flex-1 h-10 bg-gray-200 animate-pulse rounded"></div>
+            <div className="flex-1 h-10 bg-gray-200 animate-pulse rounded"></div>
+          </div>
+
+          {/* Content Skeleton */}
+          <div className="space-y-6">
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (error) {

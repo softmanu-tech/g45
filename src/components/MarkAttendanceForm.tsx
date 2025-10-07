@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import { Calendar, Users, CheckCircle, XCircle, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loading, QuickLoading } from "@/components/ui/loading"
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import { format } from "date-fns"
@@ -199,7 +199,26 @@ export default function MarkAttendanceForm() {
   }
 
   if (loading) {
-    return <Loading message="Loading attendance system..." size="lg" />
+    return (
+      <div className="min-h-screen bg-blue-300">
+        <ProfessionalHeader
+          title="Mark Attendance"
+          subtitle="Loading attendance system..."
+        />
+        
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+          {/* Form Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+            <div className="lg:col-span-2">
+              <CardSkeleton />
+            </div>
+            <div>
+              <CardSkeleton />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (error) {
@@ -360,7 +379,10 @@ export default function MarkAttendanceForm() {
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 md:px-8 py-2 text-sm sm:text-base w-full sm:w-auto"
                   >
                     {submitting ? (
-                      <QuickLoading message="Recording..." />
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Recording...</span>
+                      </div>
                     ) : (
                       `Record Attendance (${presentMembers.size} present)`
                     )}

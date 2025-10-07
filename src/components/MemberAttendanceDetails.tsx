@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { QuickLoading } from '@/components/ui/loading';
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { 
   BarChart, 
@@ -116,7 +116,14 @@ export default function MemberAttendanceDetails({ memberId }: { memberId: string
   };
 
   if (loading) {
-    return <QuickLoading message="Analyzing member attendance..." />;
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="flex items-center gap-2 text-blue-600">
+          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <span>Analyzing member attendance...</span>
+        </div>
+      </div>
+    );
   }
 
   if (error) {

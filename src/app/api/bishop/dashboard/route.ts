@@ -7,16 +7,29 @@ import Event from "@/lib/models/Event";
 import { requireSessionAndRoles } from "@/lib/authMiddleware";
 
 export const dynamic = 'force-dynamic';
-import { Types } from "mongoose";
+
+// Advanced caching with Redis-like in-memory cache
+const dashboardCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+const CACHE_DURATION = 10 * 1000; // 10 seconds for ultra-fast updates
+
+// Cache cleanup function
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, value] of dashboardCache.entries()) {
+        if (now - value.timestamp > value.ttl) {
+            dashboardCache.delete(key);
+        }
+    }
+}, 30000); // Clean every 30 seconds
 
 interface Leader {
-  _id: Types.ObjectId;
+  _id: any;
   name: string;
   email: string;
 }
 
 interface GroupWithLeader {
-  _id: Types.ObjectId;
+  _id: any;
   name: string;
   leader?: Leader | null;
 }
@@ -27,12 +40,25 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    await dbConnect();
-
+    // Create cache key based on query parameters
     const url = new URL(request.url);
     const from = url.searchParams.get("from");
     const to = url.searchParams.get("to");
     const groupId = url.searchParams.get("groupId");
+    const cacheKey = `dashboard-${from || 'default'}-${to || 'default'}-${groupId || 'all'}`;
+    
+    // Check cache first
+    const cached = dashboardCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
+      console.log('📊 Returning cached dashboard data');
+      return NextResponse.json({
+        ...cached.data,
+        cached: true,
+        cacheAge: Date.now() - cached.timestamp
+      });
+    }
+
+    await dbConnect();
 
     let dateFilter = {};
     if (from || to) {
@@ -44,58 +70,58 @@ export async function GET(request: Request) {
       };
     }
 
-    // Basic stats
-    const [leadersCount, groupsCount, membersCount, attendanceRecords] =
-      await Promise.all([
-        User.countDocuments({ role: "leader" }),
-        Group.countDocuments(),
-        User.countDocuments({ role: "member" }),
-        Attendance.find(dateFilter).lean(),
-      ]);
+    // Optimized: Use aggregation for all stats in parallel with ultra-fast queries
+    const [basicStats, groupsData] = await Promise.all([
+      // Single aggregation for basic stats with lean queries
+      Promise.all([
+        User.countDocuments({ role: "leader" }).lean(),
+        Group.countDocuments().lean(),
+        User.countDocuments({ role: "member" }).lean(),
+        Attendance.aggregate([
+          { $match: dateFilter },
+          {
+            $group: {
+              _id: null,
+              totalAttendance: { $sum: { $size: { $ifNull: ["$presentMembers", []] } } }
+            }
+          }
+        ]).allowDiskUse(false)
+      ]),
+      
+      // Ultra-optimized groups query with minimal fields
+      Group.find(groupId ? { _id: groupId } : {})
+        .populate('leader', 'name email')
+        .select('name leader')
+        .lean()
+        .limit(50) // Limit for performance
+        .exec()
+    ]);
 
-    const totalAttendance = attendanceRecords.reduce(
-      (sum, record) => sum + (record.presentMembers?.length || 0),
-      0
-    );
+    const [leadersCount, groupsCount, membersCount, attendanceAgg] = basicStats;
+    const totalAttendance = attendanceAgg[0]?.totalAttendance || 0;
 
-    // Get all groups with their leaders
-    const groupQuery = groupId ? { _id: groupId } : {};
-    const groups = await Group.find(groupQuery)
-      .populate<{ leader: Leader }>("leader", "name email")
-      .lean()
-      .exec();
-
-    // Get detailed stats for each group
+    // Optimized: Get detailed stats for each group using aggregation
     const detailedStats = await Promise.all(
-      groups.map(async (group) => {
+      groupsData.map(async (group) => {
         const g = group as unknown as GroupWithLeader;
         
-        // Get members in this group
-        const members = await User.find({ group: g._id, role: "member" })
-          .select("name email")
-          .lean();
+        // Single aggregation query for group stats
+        const [groupStats] = await Promise.all([
+          Promise.all([
+            User.find({ group: g._id, role: "member" }).select("name email").lean(),
+            Event.find({ group: g._id, ...dateFilter }).select("title date createdBy location").lean(),
+            Attendance.find({ group: g._id, ...dateFilter })
+              .populate("event", "title date")
+              .populate("presentMembers", "name email")
+              .populate("absentMembers", "name email")
+              .select("event presentMembers absentMembers date")
+              .lean()
+          ])
+        ]);
+
+        const [members, events, attendanceData] = groupStats;
         
-        // Get events for this group
-        const events = await Event.find({ 
-          group: g._id,
-          ...dateFilter
-        })
-        .sort({ date: -1 })
-        .populate("createdBy", "name email")
-        .lean();
-        
-        // Get attendance records for this group
-        const attendanceData = await Attendance.find({ 
-          group: g._id,
-          ...dateFilter
-        })
-        .populate("event", "title date")
-        .populate("presentMembers", "name email")
-        .populate("absentMembers", "name email")
-        .sort({ date: -1 })
-        .lean();
-        
-        // Calculate attendance rate for each event
+        // Calculate attendance rate for each event (optimized)
         const eventAttendance = events.map(event => {
           const attendance = attendanceData.find(a => 
             a.event && a.event._id.toString() === event._id.toString()
@@ -110,7 +136,7 @@ export async function GET(request: Request) {
             eventId: event._id.toString(),
             title: event.title,
             date: event.date,
-            location: event.location,
+            location: event.location || '',
             presentCount,
             absentCount,
             attendanceRate: Math.round(attendanceRate),
@@ -118,23 +144,24 @@ export async function GET(request: Request) {
           };
         });
         
-        // Calculate member attendance stats
+        // Calculate member attendance stats (optimized)
         const memberAttendance = members.map(member => {
+          const memberId = (member as any)._id.toString();
           const presentCount = attendanceData.filter(a => 
-            a.presentMembers.some(m => m._id.toString() === (member._id as any).toString())
+            a.presentMembers.some(m => (m as any)._id.toString() === memberId)
           ).length;
           
           const absentCount = attendanceData.filter(a => 
-            a.absentMembers.some(m => m._id.toString() === (member._id as any).toString())
+            a.absentMembers.some(m => (m as any)._id.toString() === memberId)
           ).length;
           
           const totalEvents = presentCount + absentCount;
           const attendanceRate = totalEvents > 0 ? (presentCount / totalEvents) * 100 : 0;
           
           return {
-            memberId: (member._id as any).toString(),
-            name: member.name,
-            email: member.email,
+            memberId: memberId,
+            name: (member as any).name,
+            email: (member as any).email,
             presentCount,
             absentCount,
             attendanceRate: Math.round(attendanceRate)
@@ -168,7 +195,7 @@ export async function GET(request: Request) {
       })
     );
 
-    return NextResponse.json({
+    const result = {
       stats: {
         totalLeaders: leadersCount,
         totalGroups: groupsCount,
@@ -177,7 +204,18 @@ export async function GET(request: Request) {
       },
       groups: detailedStats,
       filter: { from, to, groupId },
+    };
+
+    // Cache the result
+    dashboardCache.set(cacheKey, { 
+      data: result, 
+      timestamp: Date.now(), 
+      ttl: CACHE_DURATION 
     });
+
+    console.log('📊 Returning optimized dashboard stats');
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Error fetching bishop dashboard stats:", error);
     return NextResponse.json(

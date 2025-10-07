@@ -5,7 +5,21 @@ import { ProtocolTeam } from '@/lib/models/ProtocolTeam';
 import { requireSessionAndRoles } from '@/lib/authMiddleware';
 import bcrypt from 'bcryptjs';
 
-// GET all protocol teams
+// Ultra-fast caching for protocol teams
+const teamsCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+const CACHE_DURATION = 5 * 1000; // 5 seconds for ultra-fast updates
+
+// Aggressive cache cleanup
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, value] of teamsCache.entries()) {
+        if (now - value.timestamp > value.ttl) {
+            teamsCache.delete(key);
+        }
+    }
+}, 10000); // Clean every 10 seconds
+
+// GET all protocol teams - Ultra-optimized version
 export async function GET(request: Request) {
   try {
     const { user } = await requireSessionAndRoles(request, ['bishop']);
@@ -13,47 +27,82 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Check cache first
+    const cacheKey = 'protocol-teams';
+    const cached = teamsCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
+      return NextResponse.json({
+        success: true,
+        data: cached.data,
+        cached: true
+      });
+    }
+
     await dbConnect();
 
-    const protocolTeams = await ProtocolTeam.find({ isActive: true })
-      .populate('leader', 'name email phone')
-      .populate('members', 'name email phone')
-      .populate('createdBy', 'name email')
-      .sort({ createdAt: -1 });
-
-    // Get team statistics
-    const teamsWithStats = await Promise.all(protocolTeams.map(async (team) => {
-      const { Visitor } = await import('@/lib/models/Visitor');
+    // Ultra-optimized: Get teams and visitor stats in parallel with aggregation
+    const [protocolTeams, visitorStats] = await Promise.all([
+      ProtocolTeam.find({ isActive: true })
+        .populate('leader', 'name email phone')
+        .populate('members', 'name email phone')
+        .select('name description leader members responsibilities createdAt')
+        .lean()
+        .sort({ createdAt: -1 }),
       
-      const totalVisitors = await Visitor.countDocuments({ protocolTeam: team._id });
-      const joiningVisitors = await Visitor.countDocuments({ 
-        protocolTeam: team._id, 
-        status: 'joining' 
-      });
-      const activeMonitoring = await Visitor.countDocuments({ 
-        protocolTeam: team._id, 
-        monitoringStatus: 'active' 
-      });
-      const convertedMembers = await Visitor.countDocuments({ 
-        protocolTeam: team._id, 
-        monitoringStatus: 'converted-to-member' 
-      });
+      // Single aggregation query for all visitor statistics
+      (async () => {
+        const { Visitor } = await import('@/lib/models/Visitor');
+        return Visitor.aggregate([
+          {
+            $group: {
+              _id: '$protocolTeam',
+              totalVisitors: { $sum: 1 },
+              joiningVisitors: { $sum: { $cond: [{ $eq: ['$status', 'joining'] }, 1, 0] } },
+              activeMonitoring: { $sum: { $cond: [{ $eq: ['$monitoringStatus', 'active'] }, 1, 0] } },
+              convertedMembers: { $sum: { $cond: [{ $eq: ['$monitoringStatus', 'converted-to-member'] }, 1, 0] } }
+            }
+          }
+        ]);
+      })()
+    ]);
+
+    // Create stats lookup map for O(1) access
+    const statsMap = new Map();
+    visitorStats.forEach(stat => {
+      statsMap.set(stat._id.toString(), stat);
+    });
+
+    // Combine teams with their stats
+    const teamsWithStats = protocolTeams.map(team => {
+      const teamId = (team as any)._id.toString();
+      const stats = statsMap.get(teamId) || {
+        totalVisitors: 0,
+        joiningVisitors: 0,
+        activeMonitoring: 0,
+        convertedMembers: 0
+      };
 
       return {
-        ...team.toObject(),
+        ...team,
         stats: {
-          totalVisitors,
-          joiningVisitors,
-          activeMonitoring,
-          convertedMembers,
-          conversionRate: joiningVisitors > 0 ? Math.round((convertedMembers / joiningVisitors) * 100) : 0
+          ...stats,
+          conversionRate: stats.joiningVisitors > 0 ? Math.round((stats.convertedMembers / stats.joiningVisitors) * 100) : 0
         }
       };
-    }));
+    });
+
+    const responseData = teamsWithStats;
+
+    // Cache the result
+    teamsCache.set(cacheKey, {
+      data: responseData,
+      timestamp: Date.now(),
+      ttl: CACHE_DURATION
+    });
 
     return NextResponse.json({
       success: true,
-      data: teamsWithStats
+      data: responseData
     });
   } catch (error: unknown) {
     console.error('Protocol teams fetch error:', error);

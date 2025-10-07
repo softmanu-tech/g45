@@ -18,63 +18,65 @@ export async function POST(req: Request) {
 
     await dbConnect();
     
-    // First check regular users
-    let user = await User.findOne({ email }).select('+password');
-    let isVisitor = false;
+    // Ultra-optimized: Parallel user and visitor lookup
+    const [user, visitor] = await Promise.all([
+      User.findOne({ email }).select('+password').lean(),
+      (async () => {
+        const { Visitor } = await import('@/lib/models/Visitor');
+        return Visitor.findOne({ email, canLogin: true }).select('+password').lean();
+      })()
+    ]);
     
-    // If not found in users, check visitors
-    if (!user) {
-      const { Visitor } = await import('@/lib/models/Visitor');
-      const visitor = await Visitor.findOne({ email, canLogin: true }).select('+password');
-      if (visitor) {
-        user = {
-          _id: visitor._id,
-          email: visitor.email,
-          name: visitor.name,
-          password: visitor.password,
-          role: 'visitor'
-        };
-        isVisitor = true;
-      }
+    // Determine which user to authenticate
+    let authUser: any = user;
+    if (!user && visitor) {
+      const visitorData = visitor as any;
+      authUser = {
+        _id: visitorData._id,
+        email: visitorData.email,
+        name: visitorData.name,
+        password: visitorData.password,
+        role: 'visitor'
+      };
     }
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!authUser || !(await bcrypt.compare(password, (authUser as any).password))) {
       return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
     }
 
+    // Ultra-fast JWT creation
     const token = await new SignJWT({
-      id: user._id.toString(),
-      email: user.email,
-      role: user.role,
+      id: (authUser as any)._id.toString(),
+      email: (authUser as any).email,
+      role: (authUser as any).role,
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('2h')
       .sign(secret);
 
-      const cookieStore = await cookies(); 
-      console.log("Setting cookie with token:", token);
-      cookieStore.set('auth_token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        path: '/',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 2,
-      });
+    // Ultra-fast cookie setting
+    const cookieStore = await cookies(); 
+    cookieStore.set('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 2,
+    });
 
-    
     return NextResponse.json({
       message: 'Login successful',
       user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
+        id: (authUser as any)._id,
+        email: (authUser as any).email,
+        name: (authUser as any).name,
+        role: (authUser as any).role,
       },
-      redirectTo: user.role === 'bishop' ? '/bishop' : 
-                  user.role === 'leader' ? '/leader' : 
-                  user.role === 'protocol' ? '/protocol' :
-                  user.role === 'visitor' ? '/visitor' : '/member',
+      redirectTo: (authUser as any).role === 'bishop' ? '/bishop' : 
+                  (authUser as any).role === 'leader' ? '/leader' : 
+                  (authUser as any).role === 'protocol' ? '/protocol' :
+                  (authUser as any).role === 'visitor' ? '/visitor' : '/member',
     });
   } catch (error) {
     console.error('Login error:', error);

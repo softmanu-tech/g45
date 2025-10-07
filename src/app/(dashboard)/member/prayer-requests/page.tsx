@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loading } from "@/components/ui/loading"
+import { CardSkeleton, TableSkeleton } from "@/components/ui/skeleton"
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import { motion } from "framer-motion"
@@ -252,7 +252,27 @@ export default function MemberPrayerRequestsPage() {
   }
 
   if (loading) {
-    return <Loading message="Loading prayer requests..." size="lg" />
+    return (
+      <div className="min-h-screen bg-blue-300">
+        <ProfessionalHeader
+          title="Prayer Requests & Thanksgiving"
+          subtitle="Submit and track your prayer requests"
+          backHref="/member"
+        />
+        
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+          {/* Stats Cards Skeleton */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
+
+          {/* Content Skeleton */}
+          <TableSkeleton />
+        </div>
+      </div>
+    )
   }
 
   return (

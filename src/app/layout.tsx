@@ -4,7 +4,6 @@ import "./globals.css";
 import Providers from "@/app/providers";
 import { AlertProvider } from "@/components/ui/alert-system";
 
-import { initBishop } from '@/lib/initBishop'
 import React from "react";
 
 // Load Rowdies and Cinzel fonts
@@ -52,11 +51,7 @@ export const metadata: Metadata = {
     },
 };
 
-export default async function RootLayout({children,}: Readonly<{ children: React.ReactNode;}>) {
-
-    await initBishop()
-
-
+export default function RootLayout({children,}: Readonly<{ children: React.ReactNode;}>) {
     return (
         <html lang="en">
         <head>

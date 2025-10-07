@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import { Calendar, MapPin, FileText, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { QuickLoading } from "@/components/ui/loading"
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
 import { useAlerts } from "@/components/ui/alert-system"
 
 interface Event {
@@ -272,7 +272,10 @@ export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
                 disabled={loading}
               >
                 {loading ? (
-                  <QuickLoading message="Creating event..." />
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Creating event...</span>
+                  </div>
                 ) : (
                   "Create Event"
                 )}

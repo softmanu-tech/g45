@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 import { Calendar, Plus, MapPin, Users, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loading } from "@/components/ui/loading"
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 
 interface Event {
@@ -84,7 +84,23 @@ export default function LeaderEventsPage() {
   }
 
   if (loading) {
-    return <Loading message="Loading events..." size="lg" />
+    return (
+      <div className="min-h-screen bg-blue-300">
+        <ProfessionalHeader
+          title="Events Management"
+          subtitle="Loading events..."
+        />
+        
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+          {/* Events Grid Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

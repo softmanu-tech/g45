@@ -7,22 +7,40 @@ import { CalendarIcon, Layers, RefreshCw, Users, Wifi, Settings, TrendingUp, Awa
 import { format } from "date-fns"
 import { motion } from "framer-motion"
 import { fadeIn, staggerContainer } from "@/lib/motion"
-import { Loading } from "@/components/ui/loading"
 import { ResponsiveDashboard } from "@/components/ResponsiveDashboard"
 import { ProfileIcon } from "@/components/ProfileIcon"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import dynamic from "next/dynamic"
+import { Suspense } from "react"
+
+// Lazy load heavy chart components
+const ResponsiveContainer = dynamic(() => import('recharts').then(mod => ({ default: mod.ResponsiveContainer })), {
+  ssr: false,
+  loading: () => <div className="h-64 bg-gray-200 animate-pulse rounded" />
+})
+
+const BarChart = dynamic(() => import('recharts').then(mod => ({ default: mod.BarChart })), {
+  ssr: false
+})
+
+const LineChart = dynamic(() => import('recharts').then(mod => ({ default: mod.LineChart })), {
+  ssr: false
+})
+
+const PieChart = dynamic(() => import('recharts').then(mod => ({ default: mod.PieChart })), {
+  ssr: false
+})
+
+// Import lightweight chart components normally
 import {
-  ResponsiveContainer,
-  BarChart,
   Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
-  LineChart,
   Line,
-  PieChart,
   Pie,
   Cell
 } from 'recharts'
@@ -233,11 +251,11 @@ export default function BishopDashboard() {
             const statsData = await parseJsonSafely(statsRes)
             if (!statsData) throw new Error("Invalid stats data")
 
-            // Ensure all values are numbers
+            // Ensure all values are numbers - Fixed property names
             setStats({
-                leaders: Number(statsData.stats?.leaders || statsData.leaders) || 0,
-                groups: Number(statsData.stats?.groups || statsData.groups) || 0,
-                members: Number(statsData.stats?.members || statsData.members) || 0,
+                leaders: Number(statsData.stats?.totalLeaders || statsData.stats?.leaders || statsData.leaders) || 0,
+                groups: Number(statsData.stats?.totalGroups || statsData.stats?.groups || statsData.groups) || 0,
+                members: Number(statsData.stats?.totalMembers || statsData.stats?.members || statsData.members) || 0,
                 totalAttendance: Number(statsData.stats?.totalAttendance || statsData.totalAttendance) || 0,
             })
 
@@ -454,7 +472,20 @@ export default function BishopDashboard() {
 
                     {/* Loading State */}
                     {loading ? (
-                        <Loading message="Loading bishop dashboard..." size="lg" fullScreen={false} />
+                        <div className="space-y-4 sm:space-y-6 md:space-y-8">
+                            {/* Stats Cards Skeleton */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+                                {Array.from({ length: 4 }).map((_, i) => (
+                                    <CardSkeleton key={i} />
+                                ))}
+                            </div>
+
+                            {/* Chart Skeleton */}
+                            <ChartSkeleton />
+
+                            {/* Table Skeleton */}
+                            <TableSkeleton />
+                        </div>
                     ) : (
                         <div className="space-y-4 sm:space-y-6 md:space-y-8">
                             {/* Stats Cards */}
@@ -516,10 +547,7 @@ export default function BishopDashboard() {
                             </h3>
                             
                             {performanceLoading ? (
-                                <div className="flex items-center justify-center py-8">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                    <span className="ml-3 text-blue-700">Loading groups performance...</span>
-                                </div>
+                                <ChartSkeleton />
                             ) : groupsPerformance ? (
                                 <div className="space-y-6">
                                     {/* Performance Summary Cards */}
@@ -687,10 +715,7 @@ export default function BishopDashboard() {
                             </h3>
                             
                             {responsesLoading ? (
-                                <div className="flex items-center justify-center py-8">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                    <span className="ml-3 text-blue-700">Loading member responses...</span>
-                                </div>
+                                <TableSkeleton />
                             ) : allResponses ? (
                                 <div className="space-y-6">
                                     {/* Response Summary Cards */}

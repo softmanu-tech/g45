@@ -4,7 +4,7 @@ import { verifyToken } from '@/lib/shared/jwt';
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get('auth_token')?.value;
   const { pathname } = request.nextUrl;
-  const loginUrl = new URL('/login', request.url);
+  const loginUrl = new URL('/', request.url);
 
   // 1. Handle missing token
   if (!token) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Loading, QuickLoading } from './ui/loading';
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from './ui/skeleton';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
@@ -150,7 +150,34 @@ export default function GroupPerformanceAnalytics() {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
   if (loading) {
-    return <Loading message="Analyzing group performance..." size="lg" />;
+    return (
+      <div className="min-h-screen bg-blue-300">
+        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white p-4 sm:p-6">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-xl sm:text-2xl font-bold">Group Performance Analytics</h1>
+            <p className="text-blue-100 text-sm sm:text-base">Analyzing group performance...</p>
+          </div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+          {/* Stats Cards Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
+
+          {/* Charts Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <ChartSkeleton />
+            <ChartSkeleton />
+          </div>
+
+          {/* Table Skeleton */}
+          <TableSkeleton />
+        </div>
+      </div>
+    );
   }
 
   const selectedGroupData = getSelectedGroupData();
@@ -434,7 +461,10 @@ export default function GroupPerformanceAnalytics() {
 
             <TabsContent value="comparison" className="space-y-4">
               {loadingComparison ? (
-                <QuickLoading message="Processing comparison data..." />
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Processing comparison data...</span>
+                </div>
               ) : comparisonData ? (
                 <>
                   <Card>

@@ -3,12 +3,21 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['mongoose'],
   },
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.externals.push('_http_common');
-    }
-    return config;
+  
+  // Basic compiler optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
   },
+  
+  // Image optimization
+  images: {
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
+  },
+  
+  // Basic performance optimizations
+  poweredByHeader: false,
+  compress: true,
 };
 
 module.exports = nextConfig;

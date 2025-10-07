@@ -38,7 +38,7 @@ export function ProfessionalHeader({
   className = ""
 }: ProfessionalHeaderProps) {
   return (
-    <div className={`sticky top-0 z-50 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 border-b border-blue-500 shadow-lg ${className}`}>
+    <div className={`sticky top-0 z-[100] bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 border-b border-blue-500 shadow-lg ${className}`} style={{ position: 'sticky', top: 0, zIndex: 100 }}>
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         <div className="py-3 sm:py-4 md:py-6">
           {/* Main Header Row */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Loading, QuickLoading } from './ui/loading';
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from './ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, LineChart, Line } from 'recharts';
 import { Loader2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -396,7 +396,12 @@ export default function MemberAttendanceAnalytics() {
         {selectedMember && (
           <TabsContent value="details" className="space-y-4">
             {loadingDetails ? (
-              <QuickLoading message="Loading member analytics..." />
+              <div className="flex items-center justify-center py-8">
+                <div className="flex items-center gap-2 text-blue-600">
+                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Loading member analytics...</span>
+                </div>
+              </div>
             ) : detailsError ? (
               <div className="flex flex-col items-center justify-center h-64 text-red-500">
                 <AlertCircle className="h-8 w-8 mb-2" />

@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardSkeleton, TableSkeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
@@ -331,12 +332,7 @@ export default function Inbox() {
         {/* Messages List */}
         <div className="space-y-4">
           {loading ? (
-            <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
-              <CardContent className="p-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2 text-blue-600">Loading messages...</p>
-              </CardContent>
-            </Card>
+            <TableSkeleton />
           ) : communications.length === 0 ? (
             <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
               <CardContent className="p-8 text-center">

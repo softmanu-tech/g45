@@ -1,10 +1,9 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loading } from "@/components/ui/loading"
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import { format } from "date-fns"
@@ -153,7 +152,30 @@ export default function ProtocolTeamsPage() {
   }, [])
 
   if (loading) {
-    return <Loading message="Loading protocol teams..." size="lg" />
+    return (
+      <div className="min-h-screen bg-blue-300">
+        <ProfessionalHeader
+          title="Protocol Teams Management"
+          subtitle="Loading protocol teams..."
+        />
+        
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+          {/* Stats Cards Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
+
+          {/* Teams Grid Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (error) {
@@ -182,7 +204,7 @@ export default function ProtocolTeamsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-300 overflow-x-hidden">
+    <div className="min-h-screen bg-blue-300">
       <ProfessionalHeader
         title="Protocol Teams Management"
         subtitle="Manage visitor protocol teams and their performance"
@@ -206,7 +228,7 @@ export default function ProtocolTeamsPage() {
       />
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-4 sm:space-y-6">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-4 sm:space-y-6 overflow-x-hidden">
         
         {/* Teams Overview */}
         {teams.length === 0 ? (
@@ -225,10 +247,9 @@ export default function ProtocolTeamsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {teams.map((team) => (
-              <motion.div
+              <div
                 key={team._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                className="animate-fade-in"
               >
                 <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300 h-full overflow-hidden">
                   <CardHeader>
@@ -318,7 +339,7 @@ export default function ProtocolTeamsPage() {
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
@@ -327,9 +348,10 @@ export default function ProtocolTeamsPage() {
       {/* Create Team Modal */}
       {showCreateTeam && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-blue-200/95 backdrop-blur-md rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-blue-300">
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-blue-800 mb-4">
+              <h3 className="text-lg font-semibold text-blue-800 mb-4 flex items-center gap-2">
+                <Shield className="h-5 w-5" />
                 Create New Protocol Team
               </h3>
               <div className="space-y-4">
@@ -341,7 +363,7 @@ export default function ProtocolTeamsPage() {
                       value={newTeam.name}
                       onChange={(e) => setNewTeam({...newTeam, name: e.target.value})}
                       placeholder="e.g., Main Protocol Team"
-                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/80 text-blue-800 placeholder-blue-500"
                     />
                   </div>
                   <div>
@@ -351,7 +373,7 @@ export default function ProtocolTeamsPage() {
                       value={newTeam.leaderName}
                       onChange={(e) => setNewTeam({...newTeam, leaderName: e.target.value})}
                       placeholder="Protocol team leader name"
-                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-3 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/80 text-blue-800 placeholder-blue-500"
                     />
                   </div>
                 </div>
@@ -363,7 +385,7 @@ export default function ProtocolTeamsPage() {
                     value={newTeam.leaderEmail}
                     onChange={(e) => setNewTeam({...newTeam, leaderEmail: e.target.value})}
                     placeholder="leader@church.com"
-                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/80 text-blue-800 placeholder-blue-500"
                   />
                 </div>
                 
@@ -373,20 +395,22 @@ export default function ProtocolTeamsPage() {
                     value={newTeam.description}
                     onChange={(e) => setNewTeam({...newTeam, description: e.target.value})}
                     placeholder="Brief description of the team's focus..."
-                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/80 text-blue-800 placeholder-blue-500"
                     rows={3}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-blue-800 mb-2">Responsibilities</label>
-                  <div className="space-y-2">
-                    {newTeam.responsibilities.map((responsibility, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-sm text-blue-700">{responsibility}</span>
-                      </div>
-                    ))}
+                  <div className="bg-white/80 p-4 rounded-lg border border-blue-300">
+                    <div className="space-y-2">
+                      {newTeam.responsibilities.map((responsibility, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                          <span className="text-sm text-blue-700">{responsibility}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -395,14 +419,14 @@ export default function ProtocolTeamsPage() {
                 <Button
                   onClick={() => setShowCreateTeam(false)}
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 border-blue-300 text-blue-800 hover:bg-blue-50"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={createTeam}
                   disabled={!newTeam.name.trim() || !newTeam.leaderName.trim() || !newTeam.leaderEmail.trim()}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Create Team
                 </Button>
@@ -415,9 +439,10 @@ export default function ProtocolTeamsPage() {
       {/* Credentials Modal */}
       {showCredentials && newLeaderCredentials && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div className="bg-blue-200/95 backdrop-blur-md rounded-lg shadow-xl max-w-md w-full border border-blue-300">
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-blue-800 mb-4 text-center">
+              <h3 className="text-lg font-semibold text-blue-800 mb-4 text-center flex items-center justify-center gap-2">
+                <Shield className="h-5 w-5" />
                 🎉 Protocol Team Created Successfully!
               </h3>
               
@@ -425,7 +450,7 @@ export default function ProtocolTeamsPage() {
                 <h4 className="font-medium text-green-800 mb-3">Protocol Leader Login Credentials:</h4>
                 
                 <div className="space-y-3">
-                  <div className="bg-white p-3 rounded border">
+                  <div className="bg-white p-3 rounded border border-blue-200">
                     <div className="text-xs text-blue-800 font-medium mb-1">Email:</div>
                     <div className="flex items-center justify-between">
                       <code className="text-sm font-mono text-green-800">{newLeaderCredentials.email}</code>
@@ -436,14 +461,14 @@ export default function ProtocolTeamsPage() {
                           navigator.clipboard.writeText(newLeaderCredentials.email)
                           alerts.success("Copied!", "Email copied to clipboard")
                         }}
-                        className="text-xs px-2 py-1"
+                        className="text-xs px-2 py-1 border-blue-300 text-blue-800 hover:bg-blue-50"
                       >
                         Copy
                       </Button>
                     </div>
                   </div>
                   
-                  <div className="bg-white p-3 rounded border">
+                  <div className="bg-white p-3 rounded border border-blue-200">
                     <div className="text-xs text-blue-800 font-medium mb-1">Password:</div>
                     <div className="flex items-center justify-between">
                       <code className="text-sm font-mono text-green-800">{newLeaderCredentials.password}</code>
@@ -454,7 +479,7 @@ export default function ProtocolTeamsPage() {
                           navigator.clipboard.writeText(newLeaderCredentials.password)
                           alerts.success("Copied!", "Password copied to clipboard")
                         }}
-                        className="text-xs px-2 py-1"
+                        className="text-xs px-2 py-1 border-blue-300 text-blue-800 hover:bg-blue-50"
                       >
                         Copy
                       </Button>
@@ -503,7 +528,7 @@ export default function ProtocolTeamsPage() {
       {/* Team Details Modal */}
       {showTeamDetails && selectedTeam && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-blue-200/95 backdrop-blur-md rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-blue-300">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-blue-800 flex items-center gap-2">
@@ -638,7 +663,7 @@ export default function ProtocolTeamsPage() {
                     setSelectedTeam(null)
                   }}
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 border-blue-300 text-blue-800 hover:bg-blue-50"
                 >
                   Close
                 </Button>

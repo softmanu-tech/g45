@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { QuickLoading } from "@/components/ui/loading"
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
 import { useAlerts } from "@/components/ui/alert-system"
 import { 
   User, 
@@ -469,7 +469,10 @@ export function ProfileManager({
                   title="Upload profile picture"
                 >
                   {uploadingImage ? (
-                    <QuickLoading />
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Updating...</span>
+                    </div>
                   ) : (
                     <Camera className="h-5 w-5" />
                   )}
@@ -621,7 +624,10 @@ export function ProfileManager({
                   >
                     {saving ? (
                       <>
-                        <QuickLoading />
+                        <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Updating...</span>
+                    </div>
                         Saving...
                       </>
                     ) : (
@@ -754,7 +760,10 @@ export function ProfileManager({
                 >
                   {changingPassword ? (
                     <>
-                      <QuickLoading />
+                      <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Updating...</span>
+                    </div>
                       Changing...
                     </>
                   ) : (

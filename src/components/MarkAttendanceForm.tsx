@@ -1,11 +1,11 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+
 import { Calendar, Users, CheckCircle, XCircle, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import { format } from "date-fns"
@@ -46,7 +46,7 @@ export default function MarkAttendanceForm() {
   const [error, setError] = useState("")
   
   // Form state
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<string>("")
   const [presentMembers, setPresentMembers] = useState<Set<string>>(new Set())
   const [submitting, setSubmitting] = useState(false)
@@ -92,6 +92,7 @@ export default function MarkAttendanceForm() {
   }
 
   useEffect(() => {
+    setSelectedDate(new Date())
     fetchData()
   }, [])
 
@@ -138,6 +139,11 @@ export default function MarkAttendanceForm() {
         .filter(m => !presentMembers.has(m._id))
         .map(m => m._id)
 
+      if (!selectedDate) {
+        alerts.error("Please select a date", "You must choose a date before recording attendance")
+        return
+      }
+
       const payload = {
         date: selectedDate.toISOString(),
         presentMemberIds: presentIds,
@@ -159,7 +165,7 @@ export default function MarkAttendanceForm() {
 
       alerts.success(
         "Attendance Recorded Successfully!",
-        `Recorded attendance for ${presentIds.length} members on ${selectedDate.toLocaleDateString()}`,
+        `Recorded attendance for ${presentIds.length} members on ${selectedDate?.toLocaleDateString()}`,
         [
           {
             label: "View Analytics",
@@ -210,10 +216,10 @@ export default function MarkAttendanceForm() {
           {/* Form Skeleton */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             <div className="lg:col-span-2">
-              <CardSkeleton />
+              <UltraFastCardSkeleton />
             </div>
             <div>
-              <CardSkeleton />
+              <UltraFastCardSkeleton />
             </div>
           </div>
         </div>
@@ -278,7 +284,7 @@ export default function MarkAttendanceForm() {
                     </label>
                     <input
                       type="date"
-                      value={format(selectedDate, "yyyy-MM-dd")}
+                      value={selectedDate ? format(selectedDate, "yyyy-MM-dd") : ""}
                       onChange={(e) => setSelectedDate(new Date(e.target.value))}
                       max={format(new Date(), "yyyy-MM-dd")}
                       className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-800 focus:border-blue-800 bg-white/90 text-blue-800 text-sm"
@@ -341,11 +347,9 @@ export default function MarkAttendanceForm() {
                   ) : (
                     <div className="grid grid-cols-1 gap-2 sm:gap-3 max-h-80 overflow-y-auto">
                       {members.map((member) => (
-                        <motion.div
+                        <div 
                           key={member._id}
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className={`p-3 sm:p-4 rounded-lg border cursor-pointer transition-all ${
+                          className={`animate-fade-in p-3 sm:p-4 rounded-lg border cursor-pointer transition-all ${
                             presentMembers.has(member._id)
                               ? "bg-blue-100 border-blue-300 shadow-sm"
                               : "bg-white/80 border-blue-200 hover:bg-white/90"
@@ -365,7 +369,7 @@ export default function MarkAttendanceForm() {
                               )}
                             </div>
                           </div>
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
                   )}

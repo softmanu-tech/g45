@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { ProfileManager } from "@/components/ProfileManager"
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
@@ -84,9 +84,9 @@ export default function LeaderProfilePage() {
         
         <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <div className="space-y-6">
-            <CardSkeleton />
-            <CardSkeleton />
-            <CardSkeleton />
+            <UltraFastCardSkeleton />
+            <UltraFastCardSkeleton />
+            <UltraFastCardSkeleton />
           </div>
         </div>
       </div>

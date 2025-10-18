@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { motion } from "framer-motion"
+
 import { format } from "date-fns"
 import {
   ArrowLeft,
@@ -144,18 +144,18 @@ export default function VisitorDetailPage() {
           {/* Stats Cards Skeleton */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <CardSkeleton key={i} />
+              <UltraFastCardSkeleton key={i} />
             ))}
           </div>
 
           {/* Content Skeleton */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <CardSkeleton />
-            <CardSkeleton />
+            <UltraFastCardSkeleton />
+            <UltraFastCardSkeleton />
           </div>
 
           {/* Table Skeleton */}
-          <TableSkeleton />
+          <UltraFastTableSkeleton />
         </div>
       </div>
     )

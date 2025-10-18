@@ -1,16 +1,14 @@
-"use client"
+﻿"use client"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CalendarIcon, Layers, RefreshCw, Users, Wifi, Settings, TrendingUp, Award, AlertTriangle, BarChart3, MessageSquare, Heart, LogOut } from "lucide-react"
 import { format } from "date-fns"
-import { motion } from "framer-motion"
-import { fadeIn, staggerContainer } from "@/lib/motion"
 import { ResponsiveDashboard } from "@/components/ResponsiveDashboard"
 import { ProfileIcon } from "@/components/ProfileIcon"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from "@/components/ui/ultra-fast-skeleton"
 import dynamic from "next/dynamic"
 import { Suspense } from "react"
 
@@ -111,7 +109,7 @@ interface Member {
 
 function StatCard({ title, value, delay = 0 }: StatCardProps) {
     return (
-        <motion.div variants={fadeIn("up", "spring", delay, 1)}>
+        <div className="animate-fade-in">
             <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardHeader className="pb-2">
                     <CardTitle className="text-xs sm:text-sm font-medium text-blue-700 uppercase tracking-wide">{title}</CardTitle>
@@ -120,7 +118,7 @@ function StatCard({ title, value, delay = 0 }: StatCardProps) {
                     <p className="text-2xl sm:text-3xl font-bold text-blue-800">{value}</p>
                 </CardContent>
             </Card>
-        </motion.div>
+        </div>
     )
 }
 
@@ -138,11 +136,7 @@ function TableCard<T>({
     emptyMessage: string
 }) {
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-        >
+        <div className="animate-fade-in">
             <Card>
                 <CardHeader>
                     <CardTitle>{title}</CardTitle>
@@ -162,18 +156,15 @@ function TableCard<T>({
                             <tbody className="bg-white divide-y divide-gray-200">
                             {data.length > 0 ? (
                                 data.map((item, index) => (
-                                    <motion.tr
+                                    <tr className="animate-fade-in"
                                         key={index}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ duration: 0.3, delay: index * 0.05 }}
                                     >
                                         {renderRow(item).map((cell, i) => (
                                             <td key={i} className="px-6 py-4 whitespace-nowrap text-sm">
                                                 {cell}
                                             </td>
                                         ))}
-                                    </motion.tr>
+                                    </tr>
                                 ))
                             ) : (
                                 <tr>
@@ -187,7 +178,7 @@ function TableCard<T>({
                     </div>
                 </CardContent>
             </Card>
-        </motion.div>
+        </div>
     )
 }
 
@@ -239,14 +230,51 @@ export default function BishopDashboard() {
             setRefreshing(true)
             setError("")
 
+            // Create AbortController for timeout handling
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
             const [statsRes, eventsRes, profileRes, membersRes] = await Promise.all([
-                fetch("/api/bishop/dashboard"),
-                fetch("/api/events"),
-                fetch("/api/bishop/profile"),
-                fetch("/api/bishop/members"),
+                fetch("/api/bishop/dashboard", { 
+                    signal: controller.signal,
+                    credentials: "include",
+                    headers: { 
+                        'Cache-Control': 'no-cache',
+                        'Content-Type': 'application/json'
+                    }
+                }),
+                fetch("/api/events", { 
+                    signal: controller.signal,
+                    credentials: "include",
+                    headers: { 
+                        'Cache-Control': 'no-cache',
+                        'Content-Type': 'application/json'
+                    }
+                }),
+                fetch("/api/bishop/profile", { 
+                    signal: controller.signal,
+                    credentials: "include",
+                    headers: { 
+                        'Cache-Control': 'no-cache',
+                        'Content-Type': 'application/json'
+                    }
+                }),
+                fetch("/api/bishop/members", { 
+                    signal: controller.signal,
+                    credentials: "include",
+                    headers: { 
+                        'Cache-Control': 'no-cache',
+                        'Content-Type': 'application/json'
+                    }
+                }),
             ])
 
-            if (!statsRes.ok) throw new Error("Failed to fetch dashboard stats")
+            clearTimeout(timeoutId)
+
+            if (!statsRes.ok) {
+                const errorText = await statsRes.text()
+                throw new Error(`Dashboard API error: ${statsRes.status} - ${errorText}`)
+            }
 
             const statsData = await parseJsonSafely(statsRes)
             if (!statsData) throw new Error("Invalid stats data")
@@ -289,7 +317,17 @@ export default function BishopDashboard() {
             setLastRefreshed(new Date())
         } catch (err) {
             console.error("Error fetching dashboard data:", err)
-            setError("Failed to load dashboard data. Please try refreshing the page.")
+            if (err instanceof Error) {
+                if (err.name === 'AbortError') {
+                    setError("Request timed out. Please check your connection and try again.")
+                } else if (err.message.includes('Failed to fetch')) {
+                    setError("Unable to connect to server. Please check if the server is running.")
+                } else {
+                    setError(`Failed to load dashboard data: ${err.message}`)
+                }
+            } else {
+                setError("Failed to load dashboard data. Please try refreshing the page.")
+            }
         } finally {
             setLoading(false)
             setRefreshing(false)
@@ -450,12 +488,7 @@ export default function BishopDashboard() {
 
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="space-y-4 sm:space-y-6 md:space-y-8"
-                >
+                <div className="animate-fade-in space-y-4 sm:space-y-6 md:space-y-8">
 
                     {/* Error State */}
                     {error && (
@@ -470,22 +503,9 @@ export default function BishopDashboard() {
                         </div>
                     )}
 
-                    {/* Loading State */}
+                    {/* Ultra-Fast Loading State */}
                     {loading ? (
-                        <div className="space-y-4 sm:space-y-6 md:space-y-8">
-                            {/* Stats Cards Skeleton */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-                                {Array.from({ length: 4 }).map((_, i) => (
-                                    <CardSkeleton key={i} />
-                                ))}
-                            </div>
-
-                            {/* Chart Skeleton */}
-                            <ChartSkeleton />
-
-                            {/* Table Skeleton */}
-                            <TableSkeleton />
-                        </div>
+                        <UltraFastPageSkeleton />
                     ) : (
                         <div className="space-y-4 sm:space-y-6 md:space-y-8">
                             {/* Stats Cards */}
@@ -547,7 +567,7 @@ export default function BishopDashboard() {
                             </h3>
                             
                             {performanceLoading ? (
-                                <ChartSkeleton />
+                                <UltraFastChartSkeleton />
                             ) : groupsPerformance ? (
                                 <div className="space-y-6">
                                     {/* Performance Summary Cards */}
@@ -715,7 +735,7 @@ export default function BishopDashboard() {
                             </h3>
                             
                             {responsesLoading ? (
-                                <TableSkeleton />
+                                <UltraFastTableSkeleton />
                             ) : allResponses ? (
                                 <div className="space-y-6">
                                     {/* Response Summary Cards */}
@@ -759,11 +779,9 @@ export default function BishopDashboard() {
                                         ) : (
                                             <div className="space-y-3 max-h-96 overflow-y-auto scrollbar-thin">
                                                 {allResponses.responses.notAttending.map((response: any) => (
-                                                    <motion.div
+                                                    <div 
                                                         key={response._id}
-                                                        initial={{ opacity: 0, y: 20 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        className="p-4 bg-red-50 rounded-lg border border-red-200"
+                                                        className="animate-fade-in p-4 bg-red-50 rounded-lg border border-red-200"
                                                     >
                                                         <div className="space-y-3">
                                                             <div className="flex items-start justify-between">
@@ -796,7 +814,7 @@ export default function BishopDashboard() {
                                                                 </div>
                                                             )}
                                                         </div>
-                                                    </motion.div>
+                                                    </div>
                                                 ))}
                                             </div>
                                         )}
@@ -831,232 +849,6 @@ export default function BishopDashboard() {
                             )}
                         </div>
 
-                        {/* All Members Overview */}
-                        <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-4 sm:p-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6">
-                                <h3 className="text-sm sm:text-base md:text-lg font-medium text-blue-800 flex items-center gap-2">
-                                    <Users className="h-5 w-5" />
-                                    All Members Overview ({members.length})
-                                </h3>
-                                <Link 
-                                    href="/bishop/members"
-                                    className="inline-flex items-center px-3 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-800 bg-white/80 backdrop-blur-sm hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                >
-                                    <Users className="h-4 w-4 mr-2" />
-                                    View All Members
-                                </Link>
-                            </div>
-
-                            {members.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <Users className="mx-auto h-12 w-12 text-blue-400 mb-4" />
-                                    <p className="text-blue-600">No members found</p>
-                                    <p className="text-sm text-blue-500 mt-2">Members will appear here once they are added to groups</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {/* Performance Summary */}
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
-                                        <div className="bg-green-50 p-2 sm:p-3 md:p-4 rounded-lg border border-green-200 text-center">
-                                            <div className="text-xl sm:text-2xl font-bold text-green-800">
-                                                {members.filter(m => m.attendanceRate && m.attendanceRate >= 80).length}
-                                            </div>
-                                            <div className="text-xs sm:text-sm text-green-600">Excellent (80%+)</div>
-                                        </div>
-                                        
-                                        <div className="bg-blue-50 p-2 sm:p-3 md:p-4 rounded-lg border border-blue-200 text-center">
-                                            <div className="text-xl sm:text-2xl font-bold text-blue-800">
-                                                {members.filter(m => m.attendanceRate && m.attendanceRate >= 60 && m.attendanceRate < 80).length}
-                                            </div>
-                                            <div className="text-xs sm:text-sm text-blue-600">Good (60-79%)</div>
-                                        </div>
-                                        
-                                        <div className="bg-yellow-50 p-2 sm:p-3 md:p-4 rounded-lg border border-yellow-200 text-center">
-                                            <div className="text-xl sm:text-2xl font-bold text-yellow-800">
-                                                {members.filter(m => m.attendanceRate && m.attendanceRate >= 40 && m.attendanceRate < 60).length}
-                                            </div>
-                                            <div className="text-xs sm:text-sm text-yellow-600">Average (40-59%)</div>
-                                        </div>
-                                        
-                                        <div className="bg-red-50 p-2 sm:p-3 md:p-4 rounded-lg border border-red-200 text-center">
-                                            <div className="text-xl sm:text-2xl font-bold text-red-800">
-                                                {members.filter(m => !m.attendanceRate || m.attendanceRate < 40).length}
-                                            </div>
-                                            <div className="text-xs sm:text-sm text-red-600">Needs Attention</div>
-                                        </div>
-                                    </div>
-
-                                    {/* Members List - Mobile Cards */}
-                                    <div className="block lg:hidden space-y-3">
-                                        {members.slice(0, 10).map((member) => (
-                                            <motion.div
-                                                key={member._id}
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                className="bg-white/80 rounded-lg border border-blue-200 p-3 sm:p-4"
-                                            >
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <div className="flex-1">
-                                                        <h4 className="font-semibold text-blue-800 text-sm sm:text-base">{member.name}</h4>
-                                                        <p className="text-xs sm:text-sm text-blue-600">{member.email}</p>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                                {member.group?.name || 'No Group'}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {member.attendanceRate !== undefined && (
-                                                        <div className={`px-2 py-1 rounded text-center text-xs font-medium ${ 
-                                                            member.attendanceRate >= 80 ? 'bg-green-100 text-green-800' :
-                                                            member.attendanceRate >= 60 ? 'bg-blue-100 text-blue-800' :
-                                                            member.attendanceRate >= 40 ? 'bg-yellow-100 text-yellow-800' :
-                                                            'bg-red-100 text-red-800'
-                                                        }`}>
-                                                            <div className="text-sm font-bold">{member.attendanceRate}%</div>
-                                                            <div className="text-xs">{member.rating || 'N/A'}</div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                
-                                                <div className="grid grid-cols-2 gap-2 text-xs">
-                                                    <div className="text-blue-600">
-                                                        <span className="font-medium">Events:</span> {member.attendanceCount || 0}/{member.totalEvents || 0}
-                                                    </div>
-                                                    <div className="text-blue-600">
-                                                        <span className="font-medium">Last:</span> {
-                                                            member.lastAttendanceDate 
-                                                                ? format(new Date(member.lastAttendanceDate), "MMM dd")
-                                                                : 'Never'
-                                                        }
-                                                    </div>
-                                                    {member.phone && (
-                                                        <div className="text-blue-600 col-span-2">
-                                                            <span className="font-medium">Phone:</span> {member.phone}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </motion.div>
-                                        ))}
-                                        
-                                        {members.length > 10 && (
-                                            <div className="text-center py-4">
-                                                <Link 
-                                                    href="/bishop/members"
-                                                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                                >
-                                                    View all {members.length} members →
-                                                </Link>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Members List - Desktop Table */}
-                                    <div className="hidden lg:block overflow-x-auto scrollbar-thin">
-                                        <table className="w-full">
-                                            <thead>
-                                                <tr className="border-b border-blue-300">
-                                                    <th className="text-left p-3 text-sm font-medium text-blue-800">Member</th>
-                                                    <th className="text-left p-3 text-sm font-medium text-blue-800">Contact</th>
-                                                    <th className="text-left p-3 text-sm font-medium text-blue-800">Group</th>
-                                                    <th className="text-left p-3 text-sm font-medium text-blue-800">Attendance</th>
-                                                    <th className="text-left p-3 text-sm font-medium text-blue-800">Performance</th>
-                                                    <th className="text-left p-3 text-sm font-medium text-blue-800">Last Seen</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {members.slice(0, 15).map((member) => (
-                                                    <motion.tr
-                                                        key={member._id}
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        className="border-b border-blue-200 hover:bg-white/50 transition-colors"
-                                                    >
-                                                        <td className="p-3">
-                                                            <div>
-                                                                <div className="font-medium text-blue-800 text-sm">{member.name}</div>
-                                                                <div className="text-xs text-blue-600">{member.email}</div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-3">
-                                                            <div className="text-xs text-blue-600">
-                                                                {member.phone && (
-                                                                    <div className="flex items-center gap-1">
-                                                                        <span>{member.phone}</span>
-                                                                    </div>
-                                                                )}
-                                                                {member.residence && (
-                                                                    <div className="mt-1 text-blue-500">{member.residence}</div>
-                                                                )}
-                                                                {!member.phone && !member.residence && (
-                                                                    <span className="text-blue-400">No contact info</span>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-3">
-                                                            <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                                {member.group?.name || 'No Group'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-3">
-                                                            <div className="text-sm">
-                                                                <div className="font-medium text-blue-800">
-                                                                    {member.attendanceCount || 0}/{member.totalEvents || 0}
-                                                                </div>
-                                                                <div className="text-xs text-blue-600">events attended</div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-3">
-                                                            {member.attendanceRate !== undefined ? (
-                                                                <div className="space-y-1">
-                                                                    <div className={`inline-block px-2 py-1 rounded text-xs font-medium ${ 
-                                                                        member.attendanceRate >= 80 ? 'bg-green-100 text-green-800' :
-                                                                        member.attendanceRate >= 60 ? 'bg-blue-100 text-blue-800' :
-                                                                        member.attendanceRate >= 40 ? 'bg-yellow-100 text-yellow-800' :
-                                                                        'bg-red-100 text-red-800'
-                                                                    }`}>
-                                                                        {member.attendanceRate}%
-                                                                    </div>
-                                                                    <div className="text-xs text-blue-600">
-                                                                        {member.rating || 'Not Rated'}
-                                                                    </div>
-                                                                </div>
-                                                            ) : (
-                                                                <span className="text-blue-400 text-xs">No data</span>
-                                                            )}
-                                                        </td>
-                                                        <td className="p-3">
-                                                            <div className="text-xs text-blue-600">
-                                                                {member.lastAttendanceDate ? (
-                                                                    <div>
-                                                                        <div>{format(new Date(member.lastAttendanceDate), "MMM dd, yyyy")}</div>
-                                                                        <div className="text-blue-500">{format(new Date(member.lastAttendanceDate), "h:mm a")}</div>
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-blue-400">Never attended</span>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                    </motion.tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                        
-                                        {members.length > 15 && (
-                                            <div className="text-center py-4 border-t border-blue-200 mt-4">
-                                                <Link 
-                                                    href="/bishop/members"
-                                                    className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-800 bg-white/80 backdrop-blur-sm hover:bg-white/90"
-                                                >
-                                                    <Users className="h-4 w-4 mr-2" />
-                                                    View all {members.length} members
-                                                </Link>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
 
                         {/* Dashboard Content */}
                         <ResponsiveDashboard
@@ -1065,9 +857,9 @@ export default function BishopDashboard() {
                             members={members}
                             formatDate={formatDate}
                         />
-                        </div>
+                    </div>
                     )}
-                </motion.div>
+                </div>
             </div>
         </div>
     )

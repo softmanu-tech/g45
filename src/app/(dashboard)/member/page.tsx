@@ -1,10 +1,9 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfileIcon } from "@/components/ProfileIcon"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
@@ -212,18 +211,18 @@ export default function MemberDashboard() {
           {/* Stats Cards Skeleton */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <CardSkeleton key={i} />
+              <UltraFastCardSkeleton key={i} />
             ))}
           </div>
 
           {/* Charts Skeleton */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <ChartSkeleton />
-            <ChartSkeleton />
+            <UltraFastChartSkeleton />
+            <UltraFastChartSkeleton />
           </div>
 
           {/* Content Skeleton */}
-          <TableSkeleton />
+          <UltraFastTableSkeleton />
         </div>
       </div>
     )

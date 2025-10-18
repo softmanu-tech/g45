@@ -108,9 +108,13 @@ export async function GET(request: Request) {
 
     // Create visitor counts map for fast lookup
     const visitorCountsMap = new Map();
-    visitorCounts.forEach(count => {
-      visitorCountsMap.set(count._id?.toString(), count);
-    });
+    if (visitorCounts && Array.isArray(visitorCounts)) {
+      visitorCounts.forEach(count => {
+        if (count && count._id) {
+          visitorCountsMap.set(count._id.toString(), count);
+        }
+      });
+    }
 
     // Process team analytics with cached visitor data
     const teamAnalytics = teams.map(team => {
@@ -147,16 +151,16 @@ export async function GET(request: Request) {
       const trendDirection = growthTrend > 5 ? 'growing' : growthTrend < -5 ? 'declining' : 'stable';
 
       // Generate mock member performance data
-      const teamMembers = (team as any).members;
+      const teamMembers = (team as any).members || [];
       const teamLeader = (team as any).leader;
       const memberPerformance = teamMembers.map((member: any, index: number) => ({
-        memberId: member._id,
-        name: member.name,
-        email: member.email,
-        assignedVisitors: Math.floor(counts.totalVisitors / teamMembers.length) + Math.floor(Math.random() * 5),
-        conversions: Math.floor(counts.convertedMembers / teamMembers.length) + Math.floor(Math.random() * 3),
+        memberId: member._id || member.id || `member-${index}`,
+        name: member.name || 'Unknown Member',
+        email: member.email || 'no-email@example.com',
+        assignedVisitors: Math.floor(counts.totalVisitors / Math.max(teamMembers.length, 1)) + Math.floor(Math.random() * 5),
+        conversions: Math.floor(counts.convertedMembers / Math.max(teamMembers.length, 1)) + Math.floor(Math.random() * 3),
         conversionRate: Math.floor(Math.random() * 30) + 10,
-        isLeader: member._id.toString() === teamLeader._id.toString()
+        isLeader: teamLeader && member._id && teamLeader._id && member._id.toString() === teamLeader._id.toString()
       }));
 
       return {

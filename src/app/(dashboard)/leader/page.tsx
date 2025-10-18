@@ -1,17 +1,15 @@
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 
-import { motion } from 'framer-motion';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell,
   LineChart, Line, CartesianGrid, Area, AreaChart
 } from 'recharts';
 import Link from 'next/link';
-import { fadeIn } from '@/lib/motion';
 import { CreateMemberForm } from '@/components/CreateMemberForm';
 import { AddExistingMemberForm } from '@/components/AddExistingMemberForm';
 import { Users, Calendar, TrendingUp, Settings, LogOut, MessageSquare, UserPlus } from 'lucide-react';
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from '@/components/ui/skeleton';
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { ProfileIcon } from '@/components/ProfileIcon';
 import { ProfessionalHeader } from '@/components/ProfessionalHeader';
 
@@ -212,15 +210,15 @@ export default function LeaderDashboard() {
           {/* Stats Cards Skeleton */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <CardSkeleton key={i} />
+              <UltraFastCardSkeleton key={i} />
             ))}
           </div>
 
           {/* Chart Skeleton */}
-          <ChartSkeleton />
+          <UltraFastChartSkeleton />
 
           {/* Table Skeleton */}
-          <TableSkeleton />
+          <UltraFastTableSkeleton />
         </div>
       </div>
     );
@@ -324,12 +322,7 @@ export default function LeaderDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="space-y-4 sm:space-y-6 md:space-y-8"
-        >
+        <div className="animate-fade-in space-y-4 sm:space-y-6 md:space-y-8">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-3 sm:p-4 md:p-6">
@@ -449,12 +442,9 @@ export default function LeaderDashboard() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                   {paginatedMembers.map((member) => (
-                    <motion.div
+                    <div 
                       key={member._id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.2 }}
-                      className="bg-white/80 backdrop-blur-sm rounded-lg border border-blue-200 p-3 sm:p-4 md:p-6 hover:shadow-md transition-shadow"
+                      className="animate-fade-in bg-white/80 backdrop-blur-sm rounded-lg border border-blue-200 p-3 sm:p-4 md:p-6 hover:shadow-md transition-shadow"
                     >
                       <div className="flex items-center justify-between mb-3 sm:mb-4">
                         <h4 className="text-base sm:text-lg font-semibold text-blue-800">{member.name}</h4>
@@ -487,7 +477,7 @@ export default function LeaderDashboard() {
                           }
                         </p>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -565,7 +555,7 @@ export default function LeaderDashboard() {
             </h3>
             
             {performanceLoading ? (
-              <ChartSkeleton />
+              <UltraFastChartSkeleton />
             ) : performanceData ? (
               <div className="space-y-6">
                 {/* Performance Summary Cards */}
@@ -722,11 +712,11 @@ export default function LeaderDashboard() {
             )}
           </div>
 
-        </motion.div>
+        </div>
       </div>
 
       {/* Add Member Modals */}
-      {openAddMember && (
+      {openAddMember && data && (
         <CreateMemberForm
           groupId={data.group._id}
           onMemberCreated={() => {
@@ -736,7 +726,7 @@ export default function LeaderDashboard() {
         />
       )}
 
-      {openAddExistingMember && (
+      {openAddExistingMember && data && (
         <AddExistingMemberForm
           groupId={data.group._id}
           onMemberAdded={() => {

@@ -6,6 +6,8 @@ import { User } from '@/lib/models/User';
 import { Notification } from '@/lib/models/Notification';
 import { requireSessionAndRoles } from '@/lib/authMiddleware';
 
+export const dynamic = 'force-dynamic';
+
 // GET support recommendations and actions for protocol teams
 export async function GET(request: Request) {
   try {
@@ -16,12 +18,25 @@ export async function GET(request: Request) {
 
     await dbConnect();
 
-    // Get all teams with their performance data
-    const teams = await ProtocolTeam.find({ isActive: true })
-      .populate('leader', 'name email')
-      .populate('members', 'name email');
+    // Get all teams with their performance data - handle gracefully if collections are empty
+    let teams: any[] = [];
+    try {
+      teams = await ProtocolTeam.find({ isActive: true })
+        .populate('leader', 'name email')
+        .populate('members', 'name email')
+        .lean();
+    } catch (error) {
+      console.log('ProtocolTeam collection not found or empty');
+      teams = [];
+    }
 
-    const allVisitors = await Visitor.find({}).exec();
+    let allVisitors: any[] = [];
+    try {
+      allVisitors = await Visitor.find({}).lean();
+    } catch (error) {
+      console.log('Visitor collection not found or empty');
+      allVisitors = [];
+    }
 
     // Analyze each team's performance
     const teamAnalysis = await Promise.all(teams.map(async (team) => {

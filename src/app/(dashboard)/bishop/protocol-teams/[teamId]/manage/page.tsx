@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { motion } from "framer-motion"
+
 import { format } from "date-fns"
 import {
   Users,
@@ -217,7 +217,7 @@ export default function ProtocolTeamManagePage() {
       <div className="min-h-screen bg-blue-300">
         <ProfessionalHeader
           title="Team Management"
-          subtitle="Loading team management..."
+          subtitle="Team Management"
         />
         
         <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
@@ -230,8 +230,8 @@ export default function ProtocolTeamManagePage() {
 
           {/* Content Skeleton */}
           <div className="space-y-6">
-            <CardSkeleton />
-            <CardSkeleton />
+            <UltraFastCardSkeleton />
+            <UltraFastCardSkeleton />
           </div>
         </div>
       </div>
@@ -326,12 +326,7 @@ export default function ProtocolTeamManagePage() {
 
       <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-8 space-y-4 sm:space-y-6">
         {activeTab === 'members' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <div className="animate-fade-in space-y-6">
             <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center justify-between">
@@ -434,16 +429,11 @@ export default function ProtocolTeamManagePage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {activeTab === 'settings' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <div className="animate-fade-in space-y-6">
             <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center justify-between">
@@ -589,16 +579,11 @@ export default function ProtocolTeamManagePage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {activeTab === 'performance' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <div className="animate-fade-in space-y-6">
             <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center gap-2">
@@ -630,7 +615,7 @@ export default function ProtocolTeamManagePage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
       </div>
     </div>

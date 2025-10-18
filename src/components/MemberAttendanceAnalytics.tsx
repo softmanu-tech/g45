@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from './ui/skeleton';
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, LineChart, Line } from 'recharts';
 import { Loader2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -76,13 +76,18 @@ export default function MemberAttendanceAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<AnalyticsData | null>(null);
-  const [startDate, setStartDate] = useState<Date>(new Date(new Date().setDate(new Date().getDate() - 30)));
-  const [endDate, setEndDate] = useState<Date>(new Date());
+  const [startDate, setStartDate] = useState<Date | null>(null)
+  const [endDate, setEndDate] = useState<Date | null>(null)
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [memberDetails, setMemberDetails] = useState<MemberDetailsData | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("table");
+
+  useEffect(() => {
+    setStartDate(new Date(new Date().setDate(new Date().getDate() - 30)))
+    setEndDate(new Date())
+  }, [])
 
   useEffect(() => {
     if (startDate && endDate) {
@@ -209,17 +214,17 @@ export default function MemberAttendanceAnalytics() {
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => setStartDate(prev => addDays(prev, -7))}
+                onClick={() => setStartDate(prev => prev ? addDays(prev, -7) : new Date())}
                 className="mr-2"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Calendar
                 mode="single"
-                selected={startDate}
+                selected={startDate || undefined}
                 onSelect={(date: Date | undefined) => date && setStartDate(date)}
                 className="rounded-md border"
-                disabled={(date: Date): boolean => date > endDate}
+                disabled={(date: Date): boolean => !endDate ? false : date > endDate}
               />
             </div>
           </div>
@@ -228,17 +233,17 @@ export default function MemberAttendanceAnalytics() {
             <div className="flex items-center">
               <Calendar
                 mode="single"
-                selected={endDate}
+                selected={endDate || undefined}
                 onSelect={(date: Date | undefined) => date && setEndDate(date)}
                 className="rounded-md border"
-                disabled={(date: Date) => date < startDate || date > new Date()}
+                disabled={(date: Date) => !startDate || date < startDate || date > new Date()}
               />
               <Button 
                 variant="outline" 
                 size="icon" 
-                onClick={() => setEndDate(prev => addDays(prev, 7))}
+                onClick={() => setEndDate(prev => prev ? addDays(prev, 7) : new Date())}
                 className="ml-2"
-                disabled={endDate >= new Date()}
+                disabled={!endDate || endDate >= new Date()}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

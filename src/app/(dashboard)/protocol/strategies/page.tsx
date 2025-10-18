@@ -3,11 +3,10 @@
 import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import Link from "next/link"
-import { motion } from "framer-motion"
 import { format } from "date-fns"
 import {
   BookOpen,
@@ -305,14 +304,14 @@ export default function ProtocolStrategiesPage() {
           {/* Stats Cards Skeleton */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <CardSkeleton key={i} />
+              <UltraFastCardSkeleton key={i} />
             ))}
           </div>
 
           {/* Strategies Grid Skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
-              <CardSkeleton key={i} />
+              <UltraFastCardSkeleton key={i} />
             ))}
           </div>
         </div>
@@ -347,11 +346,7 @@ export default function ProtocolStrategiesPage() {
         
         {/* Analytics Section */}
         {showAnalytics && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
+          <div className="animate-fade-in">
             <Card className="bg-blue-50 border border-blue-200">
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center justify-between">
@@ -489,7 +484,7 @@ export default function ProtocolStrategiesPage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
         
         {/* Create Strategy Form */}

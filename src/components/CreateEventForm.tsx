@@ -1,11 +1,11 @@
 "use client"
 
 import React, { useState } from "react"
-import { motion } from "framer-motion"
+
 import { Calendar, MapPin, FileText, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 
 interface Event {
@@ -124,12 +124,7 @@ export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
   const minTime = isToday ? now.toTimeString().slice(0, 5) : "00:00"
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="max-w-2xl mx-auto"
-    >
+    <div className="animate-fade-in max-w-2xl mx-auto">
       <Card className="bg-blue-200/90 backdrop-blur-md shadow-lg border border-blue-300">
         <CardHeader className="bg-blue-200/90 backdrop-blur-md text-blue-800 rounded-t-lg border-b border-blue-300 p-4 sm:p-6">
           <CardTitle className="text-lg sm:text-xl font-bold flex items-center gap-2">
@@ -141,13 +136,9 @@ export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
         <CardContent className="p-4 sm:p-6 bg-blue-200/90 backdrop-blur-md">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-red-200/90 backdrop-blur-md border border-red-300 text-red-800 px-4 py-3 rounded-lg"
-              >
+              <div className="animate-fade-in bg-red-200/90 backdrop-blur-md border border-red-300 text-red-800 px-4 py-3 rounded-lg">
                 {error}
-              </motion.div>
+              </div>
             )}
 
             {/* Event Title */}
@@ -284,6 +275,6 @@ export function CreateEventForm({ onEventCreated }: CreateEventFormProps) {
           </form>
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   )
 }

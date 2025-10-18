@@ -5,27 +5,46 @@ import Member from '@/lib/models/Member';
 import { Group } from '@/lib/models/Group';
 import { Attendance } from '@/lib/models/Attendance';
 import { requireSessionAndRoles } from '@/lib/authMiddleware';
+import { getCachedData, setCachedData, ultraFastResponse, ultraFastError } from '@/lib/ultra-fast-api';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    // Ultra-fast caching check
+    const cacheKey = 'bishop-members';
+    const cachedData = getCachedData(cacheKey);
+    if (cachedData) {
+      return ultraFastResponse(cachedData, cacheKey);
+    }
+
     // Strict Authentication
     const { user } = await requireSessionAndRoles(request, ['bishop']);
     if (!user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return ultraFastError('Unauthorized', 401);
     }
 
     await dbConnect();
 
-    // Get all members across all groups
-    const members = await Member.find()
-      .populate('group', 'name')
-      .populate('leader', 'name email')
-      .sort({ name: 1 });
+    // Get all members across all groups - handle gracefully if Member collection is empty
+    let members: any[] = [];
+    try {
+      members = await Member.find()
+        .populate('group', 'name')
+        .populate('leader', 'name email')
+        .sort({ name: 1 })
+        .lean()
+        .limit(200); // Ultra-fast limit for maximum speed
+    } catch (error) {
+      console.log('Member collection not found or empty, using User collection');
+      members = [];
+    }
 
     // Also get User-based members (in case some are stored as Users)
     const userMembers = await User.find({ role: 'member' })
       .populate('group', 'name')
-      .sort({ name: 1 });
+      .sort({ name: 1 })
+      .lean();
 
     // Get attendance data for each member
     const membersWithAttendance = await Promise.all([
@@ -38,14 +57,14 @@ export async function GET(request: Request) {
         }).populate('event', 'title date');
 
         const presentCount = attendanceRecords.filter(record => 
-          record.presentMembers.includes(member._id)
+          record.presentMembers.includes((member as any)._id)
         ).length;
         
         const totalRecords = attendanceRecords.length;
         const attendanceRate = totalRecords > 0 ? (presentCount / totalRecords) * 100 : 0;
         
         const lastAttendance = attendanceRecords
-          .filter(record => record.presentMembers.includes(member._id))
+          .filter(record => record.presentMembers.includes((member as any)._id))
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
 
         return {
@@ -76,14 +95,14 @@ export async function GET(request: Request) {
         }).populate('event', 'title date');
 
         const presentCount = attendanceRecords.filter(record => 
-          record.presentMembers.includes(member._id)
+          record.presentMembers.includes((member as any)._id)
         ).length;
         
         const totalRecords = attendanceRecords.length;
         const attendanceRate = totalRecords > 0 ? (presentCount / totalRecords) * 100 : 0;
         
         const lastAttendance = attendanceRecords
-          .filter(record => record.presentMembers.includes(member._id))
+          .filter(record => record.presentMembers.includes((member as any)._id))
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
 
         return {
@@ -125,31 +144,27 @@ export async function GET(request: Request) {
       ? Math.round(uniqueMembers.reduce((sum, member) => sum + member.attendanceRate, 0) / uniqueMembers.length)
       : 0;
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        members: uniqueMembers,
-        summary: {
-          totalMembers,
-          overallAttendanceRate,
-          excellentMembers,
-          goodMembers,
-          averageMembers,
-          poorMembers,
-          activeMembers: uniqueMembers.filter(m => m.totalEvents > 0).length,
-          inactiveMembers: uniqueMembers.filter(m => m.totalEvents === 0).length
-        }
+    const responseData = {
+      members: uniqueMembers,
+      summary: {
+        totalMembers,
+        overallAttendanceRate,
+        excellentMembers,
+        goodMembers,
+        averageMembers,
+        poorMembers,
+        activeMembers: uniqueMembers.filter(m => m.totalEvents > 0).length,
+        inactiveMembers: uniqueMembers.filter(m => m.totalEvents === 0).length
       }
-    });
+    };
+
+    return ultraFastResponse(responseData, cacheKey);
   } catch (error: unknown) {
     let errorMsg = 'Unknown error';
     if (error instanceof Error) {
       errorMsg = error.message;
     }
     console.error('Bishop members fetch error:', error);
-    return NextResponse.json(
-      { error: `Failed to fetch members data: ${errorMsg}` },
-      { status: 500 }
-    );
+    return ultraFastError(`Failed to fetch members data: ${errorMsg}`, 500);
   }
 }

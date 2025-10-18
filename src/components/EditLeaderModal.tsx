@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { X, Save, User, Mail, Users } from "lucide-react"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 
 interface Group {

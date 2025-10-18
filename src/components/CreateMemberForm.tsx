@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { X, User, Mail, Phone, MapPin, Building, Lock } from "lucide-react"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 
 interface CreateMemberFormProps {

@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import Link from "next/link"
-import { motion } from "framer-motion"
+
 import { format } from "date-fns"
 import {
   TrendingDown,
@@ -198,18 +198,18 @@ export default function ProtocolSupportPage() {
           {/* Stats Cards Skeleton */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <CardSkeleton key={i} />
+              <UltraFastCardSkeleton key={i} />
             ))}
           </div>
 
           {/* Support Content Skeleton */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <CardSkeleton />
-            <CardSkeleton />
+            <UltraFastCardSkeleton />
+            <UltraFastCardSkeleton />
           </div>
 
           {/* Support Table Skeleton */}
-          <TableSkeleton />
+          <UltraFastTableSkeleton />
         </div>
       </div>
     )
@@ -363,11 +363,7 @@ export default function ProtocolSupportPage() {
           
           {/* 1. TEAMS NEEDING SUPPORT (Declining Growth) */}
           {activeTab === 'support' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
+            <div className="animate-fade-in">
               <Card className="bg-red-50 border border-red-200">
                 <CardHeader>
                   <CardTitle className="text-red-800 flex items-center gap-2">
@@ -433,16 +429,12 @@ export default function ProtocolSupportPage() {
                   )}
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           )}
 
           {/* 2. BEST PRACTICES FROM HIGH-PERFORMING TEAMS */}
           {activeTab === 'practices' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
+            <div className="animate-fade-in">
               <Card className="bg-green-50 border border-green-200">
                 <CardHeader>
                   <CardTitle className="text-green-800 flex items-center gap-2">
@@ -531,16 +523,12 @@ export default function ProtocolSupportPage() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           )}
 
           {/* 3. TRAINING NEEDS (Low Conversion Rates) */}
           {activeTab === 'training' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
+            <div className="animate-fade-in">
               <Card className="bg-orange-50 border border-orange-200">
                 <CardHeader>
                   <CardTitle className="text-orange-800 flex items-center gap-2">
@@ -602,16 +590,12 @@ export default function ProtocolSupportPage() {
                   )}
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           )}
 
           {/* 4. VISITOR MONITORING ALERTS */}
           {activeTab === 'monitoring' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
+            <div className="animate-fade-in">
               <Card className="bg-purple-50 border border-purple-200">
                 <CardHeader>
                   <CardTitle className="text-purple-800 flex items-center gap-2">
@@ -670,16 +654,12 @@ export default function ProtocolSupportPage() {
                   )}
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           )}
 
           {/* 5. RECOGNITION FOR TOP PERFORMERS */}
           {activeTab === 'recognition' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
+            <div className="animate-fade-in">
               <Card className="bg-blue-50 border border-blue-200">
                 <CardHeader>
                   <CardTitle className="text-blue-800 flex items-center gap-2">
@@ -778,7 +758,7 @@ export default function ProtocolSupportPage() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           )}
         </div>
       </div>

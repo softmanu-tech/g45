@@ -1,10 +1,10 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import { format } from "date-fns"
@@ -123,12 +123,12 @@ export default function EventDetailsPage() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           {/* Event Details Skeleton */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <CardSkeleton />
-            <CardSkeleton />
+            <UltraFastCardSkeleton />
+            <UltraFastCardSkeleton />
           </div>
 
           {/* Responses Table Skeleton */}
-          <TableSkeleton />
+          <UltraFastTableSkeleton />
         </div>
       </div>
     )
@@ -278,11 +278,9 @@ export default function EventDetailsPage() {
               ) : (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {data.responses.attending.map((response) => (
-                    <motion.div
+                    <div 
                       key={response._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="p-3 bg-green-50 rounded-lg border border-green-200"
+                      className="animate-fade-in p-3 bg-green-50 rounded-lg border border-green-200"
                     >
                       <div className="flex items-center justify-between">
                         <div>
@@ -299,7 +297,7 @@ export default function EventDetailsPage() {
                           </div>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -323,11 +321,9 @@ export default function EventDetailsPage() {
               ) : (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {data.responses.notAttending.map((response) => (
-                    <motion.div
+                    <div 
                       key={response._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="p-3 bg-red-50 rounded-lg border border-red-200"
+                      className="animate-fade-in p-3 bg-red-50 rounded-lg border border-red-200"
                     >
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
@@ -354,7 +350,7 @@ export default function EventDetailsPage() {
                           </div>
                         )}
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}

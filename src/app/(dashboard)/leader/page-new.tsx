@@ -1,12 +1,11 @@
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 
-import { motion } from 'framer-motion';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
 import Link from 'next/link';
-import { fadeIn } from '@/lib/motion';
+
 import { CreateMemberForm } from '@/components/CreateMemberForm';
 import { Users, Calendar, TrendingUp } from 'lucide-react';
 
@@ -225,12 +224,7 @@ export default function LeaderDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="space-y-6"
-        >
+        <div className="animate-fade-in space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-blue-200/90 backdrop-blur-md rounded-lg shadow-sm border border-blue-300 p-6">
@@ -338,12 +332,9 @@ export default function LeaderDashboard() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {paginatedMembers.map((member) => (
-                    <motion.div
+                    <div 
                       key={member._id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.2 }}
-                      className="bg-white/80 backdrop-blur-sm rounded-lg border border-blue-200 p-6 hover:shadow-md transition-shadow"
+                      className="animate-fade-in bg-white/80 backdrop-blur-sm rounded-lg border border-blue-200 p-6 hover:shadow-md transition-shadow"
                     >
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="text-lg font-semibold text-blue-800">{member.name}</h4>
@@ -376,7 +367,7 @@ export default function LeaderDashboard() {
                           }
                         </p>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -446,11 +437,11 @@ export default function LeaderDashboard() {
             </div>
           </div>
 
-        </motion.div>
+        </div>
       </div>
 
       {/* Add Member Modal */}
-      {openAddMember && (
+      {openAddMember && data && (
         <CreateMemberForm
           groupId={data.group._id}
           onMemberCreated={() => {

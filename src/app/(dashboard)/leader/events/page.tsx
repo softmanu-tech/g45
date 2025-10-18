@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState } from "react"
 import Link from "next/link"
-import { motion } from "framer-motion"
+
 import { Calendar, Plus, MapPin, Users, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 
 interface Event {
@@ -95,7 +95,7 @@ export default function LeaderEventsPage() {
           {/* Events Grid Skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
-              <CardSkeleton key={i} />
+              <UltraFastCardSkeleton key={i} />
             ))}
           </div>
         </div>
@@ -123,12 +123,7 @@ export default function LeaderEventsPage() {
           </Link>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-4 sm:space-y-6"
-        >
+        <div className="animate-fade-in space-y-4 sm:space-y-6">
 
           {/* Error State */}
           {error && (
@@ -159,11 +154,9 @@ export default function LeaderEventsPage() {
           ) : (
             <div className="grid gap-3 sm:gap-4 md:gap-6">
               {events.map((event) => (
-                <motion.div
+                <div 
                   key={event._id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
+                  className="animate-fade-in"
                 >
                   <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300 shadow-sm hover:shadow-md transition-shadow">
                     <CardHeader className="pb-3 p-4 sm:p-6">
@@ -253,11 +246,11 @@ export default function LeaderEventsPage() {
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
           )}
-        </motion.div>
+        </div>
       </div>
     </div>
   )

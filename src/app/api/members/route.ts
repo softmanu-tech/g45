@@ -6,6 +6,49 @@ import { Group } from '@/lib/models/Group';
 import { requireSessionAndRoles } from '@/lib/authMiddleware';
 import bcrypt from 'bcrypt';
 
+export async function GET(request: Request) {
+  try {
+    await dbConnect();
+
+    // Authentication check
+    const { user } = await requireSessionAndRoles(request, ['bishop', 'leader', 'member', 'protocol']);
+    if (!user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page')) || 1;
+    const limit = Number(url.searchParams.get('limit')) || 10;
+    const groupId = url.searchParams.get('groupId') || undefined;
+
+    const filter: any = {};
+    if (groupId) filter.group = groupId;
+
+    const skip = (page - 1) * limit;
+
+    const members = await Member.find(filter)
+      .populate('group', 'name')
+      .populate('leader', 'name email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const total = await Member.countDocuments(filter);
+
+    return NextResponse.json({
+      success: true,
+      members,
+      total,
+      page,
+      limit,
+    });
+  } catch (error) {
+    console.error('Error fetching members:', error);
+    return NextResponse.json({ error: 'Failed to fetch members' }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     await dbConnect();

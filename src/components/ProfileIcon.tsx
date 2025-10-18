@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import Image from "next/image"
 import { User } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -35,6 +36,14 @@ export function ProfileIcon({
     xl: 'h-8 w-8'
   }
 
+  const sizeMap = {
+    xs: 24,
+    sm: 32,
+    md: 40,
+    lg: 48,
+    xl: 64
+  }
+
   return (
     <div 
       className={cn(
@@ -46,10 +55,13 @@ export function ProfileIcon({
       title={name ? `${name}'s profile` : 'Profile'}
     >
       {profilePicture ? (
-        <img 
+        <Image 
           src={profilePicture} 
           alt={name ? `${name}'s profile` : 'Profile'} 
+          width={sizeMap[size]}
+          height={sizeMap[size]}
           className="w-full h-full object-cover"
+          unoptimized
         />
       ) : (
         <User className={cn("text-blue-600", iconSizes[size])} />

@@ -1,10 +1,9 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfileIcon } from "@/components/ProfileIcon"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
@@ -204,18 +203,18 @@ export default function ProtocolDashboard() {
           {/* Stats Cards Skeleton */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
             {Array.from({ length: 6 }).map((_, i) => (
-              <CardSkeleton key={i} />
+              <UltraFastCardSkeleton key={i} />
             ))}
           </div>
 
           {/* Charts Skeleton */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <ChartSkeleton />
-            <ChartSkeleton />
+            <UltraFastChartSkeleton />
+            <UltraFastChartSkeleton />
           </div>
 
           {/* Visitors Table Skeleton */}
-          <TableSkeleton />
+          <UltraFastTableSkeleton />
         </div>
       </div>
     )
@@ -442,11 +441,9 @@ export default function ProtocolDashboard() {
                 {/* Mobile Card Layout */}
                 <div className="block lg:hidden space-y-4">
                   {data.visitors.map((visitor) => (
-                    <motion.div
+                    <div 
                       key={visitor._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-white/80 rounded-lg border border-blue-200 p-4"
+                      className="animate-fade-in bg-white/80 rounded-lg border border-blue-200 p-4"
                     >
                       <div className="space-y-3">
                         <div className="flex justify-between items-start">
@@ -492,7 +489,7 @@ export default function ProtocolDashboard() {
                           </div>
                         )}
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
 

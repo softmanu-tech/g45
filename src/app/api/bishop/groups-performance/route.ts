@@ -7,6 +7,8 @@ import Event from '@/lib/models/Event';
 import Member from '@/lib/models/Member';
 import { requireSessionAndRoles } from '@/lib/authMiddleware';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   try {
     // Strict Authentication
@@ -23,30 +25,56 @@ export async function GET(request: Request) {
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - months);
 
-    // Get all groups with their leaders
-    const groups = await Group.find()
-      .populate('leader', 'name email')
-      .lean();
+    // Get all groups with their leaders - handle gracefully if collections are empty
+    let groups: any[] = [];
+    try {
+      groups = await Group.find()
+        .populate('leader', 'name email')
+        .lean();
+    } catch (error) {
+      console.log('Group collection not found or empty');
+      groups = [];
+    }
 
     // Get all attendance records within date range
-    const attendanceRecords = await Attendance.find({
-      date: { $gte: startDate }
-    })
-    .populate('group', 'name')
-    .populate('event', 'title date')
-    .populate('presentMembers', 'name email')
-    .populate('absentMembers', 'name email')
-    .sort({ date: 1 });
+    let attendanceRecords: any[] = [];
+    try {
+      attendanceRecords = await Attendance.find({
+        date: { $gte: startDate }
+      })
+      .populate('group', 'name')
+      .populate('event', 'title date')
+      .populate('presentMembers', 'name email')
+      .populate('absentMembers', 'name email')
+      .sort({ date: 1 })
+      .lean();
+    } catch (error) {
+      console.log('Attendance collection not found or empty');
+      attendanceRecords = [];
+    }
 
     // Get all events within date range
-    const events = await Event.find({
-      date: { $gte: startDate }
-    })
-    .populate('group', 'name')
-    .sort({ date: 1 });
+    let events: any[] = [];
+    try {
+      events = await Event.find({
+        date: { $gte: startDate }
+      })
+      .populate('group', 'name')
+      .sort({ date: 1 })
+      .lean();
+    } catch (error) {
+      console.log('Event collection not found or empty');
+      events = [];
+    }
 
     // Get all members
-    const allMembers = await Member.find().populate('group', 'name');
+    let allMembers: any[] = [];
+    try {
+      allMembers = await Member.find().populate('group', 'name').lean();
+    } catch (error) {
+      console.log('Member collection not found or empty');
+      allMembers = [];
+    }
 
     // Group performance analysis
     const groupPerformance = await Promise.all(groups.map(async (group) => {

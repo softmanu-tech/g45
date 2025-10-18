@@ -4,12 +4,11 @@ import React, { useState, useEffect, Suspense } from "react"
 import dynamic from "next/dynamic"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
-import { FastCardSkeleton, FastChartSkeleton, FastTableSkeleton, PreloadCriticalComponents } from "@/components/ui/fast-skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import Link from "next/link"
-import { motion } from "framer-motion"
+
 import { format } from "date-fns"
 import {
   TrendingUp,
@@ -218,22 +217,20 @@ export default function ProtocolAnalyticsPage() {
 
                 {/* Optimized Skeleton Loading */}
                 <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-                  <PreloadCriticalComponents />
-                  
                   {/* Overview Cards Skeleton */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4 mb-6">
                     {Array.from({ length: 6 }).map((_, i) => (
-                      <FastCardSkeleton key={i} />
+                      <UltraFastCardSkeleton key={i} />
                     ))}
                   </div>
 
                   {/* Chart Skeleton */}
                   <div className="mb-6">
-                    <FastChartSkeleton />
+                    <UltraFastChartSkeleton />
                   </div>
 
                   {/* Table Skeleton */}
-                  <FastTableSkeleton />
+                  <UltraFastTableSkeleton />
                 </div>
       </div>
     )
@@ -363,13 +360,13 @@ export default function ProtocolAnalyticsPage() {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <Users className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-8 lg:w-8 text-blue-600" />
-            </div>
+              </div>
               <div className="ml-1 sm:ml-2 md:ml-3 lg:ml-4">
                 <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Protocol Teams</p>
                 <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-blue-800">{data.churchStats.totalTeams}</p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
           <div className="bg-blue-200/90 backdrop-blur-md border border-blue-300 rounded-lg shadow-sm p-2 sm:p-3 md:p-4 lg:p-6">
             <div className="flex items-center">
@@ -513,12 +510,9 @@ export default function ProtocolAnalyticsPage() {
           </h3>
             <div className="space-y-3">
               {data.teamRankings.map((team, index) => (
-                <motion.div
+                <div 
                   key={team.teamId}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                className={`p-3 sm:p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
+                  className={`animate-fade-in p-3 sm:p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
                     selectedTeam === team.teamId 
                     ? 'bg-gray-50 border-gray-300 shadow-md' 
                     : 'bg-white border-gray-200 hover:bg-gray-50'
@@ -554,7 +548,7 @@ export default function ProtocolAnalyticsPage() {
                       <div className="text-xs text-blue-600">Performance Score</div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
         </div>

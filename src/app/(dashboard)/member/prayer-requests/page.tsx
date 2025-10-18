@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
-import { motion } from "framer-motion"
+
 import { format } from "date-fns"
 import {
   Heart,
@@ -264,12 +264,12 @@ export default function MemberPrayerRequestsPage() {
           {/* Stats Cards Skeleton */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <CardSkeleton key={i} />
+              <UltraFastCardSkeleton key={i} />
             ))}
           </div>
 
           {/* Content Skeleton */}
-          <TableSkeleton />
+          <UltraFastTableSkeleton />
         </div>
       </div>
     )
@@ -396,11 +396,7 @@ export default function MemberPrayerRequestsPage() {
 
         {/* Prayer Request Form */}
         {showForm && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
+          <div className="animate-fade-in">
             <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center gap-2">
@@ -518,16 +514,12 @@ export default function MemberPrayerRequestsPage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* Thanksgiving Form */}
         {showThanksgivingForm && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
+          <div className="animate-fade-in">
             <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center gap-2">
@@ -645,7 +637,7 @@ export default function MemberPrayerRequestsPage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* Content List */}
@@ -672,11 +664,9 @@ export default function MemberPrayerRequestsPage() {
               ) : (
                 <div className="space-y-4">
                   {prayerRequests?.map((request) => (
-                    <motion.div
+                    <div 
                       key={request._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-white/80 p-3 sm:p-4 rounded-lg border border-blue-200"
+                      className="animate-fade-in bg-white/80 p-3 sm:p-4 rounded-lg border border-blue-200"
                     >
                       <div className="space-y-3">
                         <div className="flex-1">
@@ -729,7 +719,7 @@ export default function MemberPrayerRequestsPage() {
                           )}
                         </div>
                       )}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )
@@ -745,11 +735,9 @@ export default function MemberPrayerRequestsPage() {
               ) : (
                 <div className="space-y-4">
                   {thanksgivingMessages?.map((message) => (
-                    <motion.div
+                    <div 
                       key={message._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-white/80 p-3 sm:p-4 rounded-lg border border-blue-200"
+                      className="animate-fade-in bg-white/80 p-3 sm:p-4 rounded-lg border border-blue-200"
                     >
                       <div className="space-y-3">
                         <div className="flex-1">
@@ -802,7 +790,7 @@ export default function MemberPrayerRequestsPage() {
                           )}
                         </div>
                       )}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )

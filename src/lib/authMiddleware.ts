@@ -14,9 +14,10 @@ export async function requireSessionAndRoles(
       .find((cookie) => cookie.trim().startsWith("auth_token="))
       ?.split("=")[1];
 
-    console.log("🔑 Token from cookie:", token?.slice(0, 10) + "..."); // Log partial token for security
+    console.log("🔑 Token from cookie:", token ? token.slice(0, 10) + "..." : "undefined"); // Log partial token for security
 
     if (!token) {
+      console.log("❌ No authentication token found in cookies");
       throw new Error("Unauthorized: No token provided");
     }
 

@@ -3,11 +3,10 @@
 import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import Link from "next/link"
-import { motion } from "framer-motion"
 import { format } from "date-fns"
 import {
   UserPlus,
@@ -157,7 +156,7 @@ export default function ProtocolResponsibilitiesPage() {
   const [updatingIntegration, setUpdatingIntegration] = useState(false)
 
   // Attendance tracking states
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [selectedDate, setSelectedDate] = useState<string>("")
   const [attendanceData, setAttendanceData] = useState<{[key: string]: 'present' | 'absent'}>({})
   const [markingAttendance, setMarkingAttendance] = useState(false)
 
@@ -397,6 +396,7 @@ export default function ProtocolResponsibilitiesPage() {
   }
 
   useEffect(() => {
+    setSelectedDate(new Date().toISOString().split('T')[0])
     fetchResponsibilityData()
   }, [])
 
@@ -412,18 +412,18 @@ export default function ProtocolResponsibilitiesPage() {
           {/* Stats Cards Skeleton */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <CardSkeleton key={i} />
+              <UltraFastCardSkeleton key={i} />
             ))}
           </div>
 
           {/* Responsibilities Content Skeleton */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <CardSkeleton />
-            <CardSkeleton />
+            <UltraFastCardSkeleton />
+            <UltraFastCardSkeleton />
           </div>
 
           {/* Responsibilities Table Skeleton */}
-          <TableSkeleton />
+          <UltraFastTableSkeleton />
         </div>
       </div>
     )
@@ -604,12 +604,7 @@ export default function ProtocolResponsibilitiesPage() {
         
         {/* 1. WELCOME AND REGISTER VISITORS */}
         {activeTab === 'register' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <div className="animate-fade-in space-y-6">
             {/* Registration Form */}
             <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
               <CardHeader>
@@ -823,17 +818,12 @@ export default function ProtocolResponsibilitiesPage() {
                 )}
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* 2. MONITOR JOINING VISITORS PROGRESS */}
         {activeTab === 'monitor' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <div className="animate-fade-in space-y-6">
             <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center gap-2">
@@ -932,17 +922,12 @@ export default function ProtocolResponsibilitiesPage() {
                 )}
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* 3. COLLECT VISITOR FEEDBACK AND EXPERIENCES */}
         {activeTab === 'feedback' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <div className="animate-fade-in space-y-6">
             <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center gap-2">
@@ -1069,17 +1054,12 @@ export default function ProtocolResponsibilitiesPage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* 4. REPORT TO BISHOP ON VISITOR ENGAGEMENT */}
         {activeTab === 'report' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <div className="animate-fade-in space-y-6">
             <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
               <CardHeader>
                 <CardTitle className="text-blue-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1152,17 +1132,12 @@ export default function ProtocolResponsibilitiesPage() {
                 )}
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* 5. ASSIST VISITORS WITH CHURCH INTEGRATION */}
         {activeTab === 'assist' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <div className="animate-fade-in space-y-6">
             <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center gap-2">
@@ -1338,17 +1313,12 @@ export default function ProtocolResponsibilitiesPage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* 6. MARK VISITOR ATTENDANCE FOR SUNDAY SERVICES */}
         {activeTab === 'attendance' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+          <div className="animate-fade-in space-y-6">
             <Card className="bg-blue-200/90 backdrop-blur-md border border-blue-300">
               <CardHeader>
                 <CardTitle className="text-blue-800 flex items-center gap-2">
@@ -1505,7 +1475,7 @@ export default function ProtocolResponsibilitiesPage() {
                 )}
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
       </div>
 

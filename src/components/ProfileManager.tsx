@@ -1,10 +1,10 @@
 "use client"
 
 import React, { useState, useRef } from "react"
-import { motion } from "framer-motion"
+import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 import { 
   User, 
@@ -451,10 +451,13 @@ export function ProfileManager({
               <div className="relative group">
                 <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-blue-200 to-blue-400 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center transition-all duration-300 group-hover:shadow-2xl">
                   {user.profilePicture ? (
-                    <img 
+                    <Image 
                       src={user.profilePicture} 
                       alt="Profile" 
+                      width={160}
+                      height={160}
                       className="w-full h-full object-cover"
+                      unoptimized
                     />
                   ) : (
                     <User className="h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20 text-blue-600" />

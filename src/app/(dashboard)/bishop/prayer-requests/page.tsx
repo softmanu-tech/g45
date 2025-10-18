@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
-import { motion } from "framer-motion"
+
 import { format } from "date-fns"
 import {
   Heart,
@@ -404,12 +404,12 @@ export default function BishopPrayerRequestsPage() {
           {/* Stats Cards Skeleton */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <CardSkeleton key={i} />
+              <UltraFastCardSkeleton key={i} />
             ))}
           </div>
 
           {/* Prayer Requests Table Skeleton */}
-          <TableSkeleton />
+          <UltraFastTableSkeleton />
         </div>
       </div>
     )
@@ -619,11 +619,9 @@ export default function BishopPrayerRequestsPage() {
               ) : (
                 <div className="space-y-4">
                   {filteredRequests?.map((request) => (
-                    <motion.div
+                    <div 
                       key={request._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-white/80 p-3 sm:p-4 rounded-lg border border-blue-200"
+                      className="animate-fade-in bg-white/80 p-3 sm:p-4 rounded-lg border border-blue-200"
                     >
                       <div className="space-y-4">
                       <div className="flex-1">
@@ -736,7 +734,7 @@ export default function BishopPrayerRequestsPage() {
                         )}
                       </div>
                     )}
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             )
@@ -755,11 +753,9 @@ export default function BishopPrayerRequestsPage() {
               ) : (
                 <div className="space-y-4">
                   {filteredThanksgiving?.map((message) => (
-                    <motion.div
+                    <div 
                       key={message._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-white/80 p-3 sm:p-4 rounded-lg border border-blue-200"
+                      className="animate-fade-in bg-white/80 p-3 sm:p-4 rounded-lg border border-blue-200"
                     >
                       <div className="space-y-4">
                         <div className="flex-1">
@@ -870,7 +866,7 @@ export default function BishopPrayerRequestsPage() {
                           )}
                         </div>
                       )}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )

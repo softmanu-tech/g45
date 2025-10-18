@@ -5,7 +5,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ProfileIcon } from "@/components/ProfileIcon"
-import { motion } from "framer-motion"
 
 interface HeaderAction {
   label: string
@@ -47,12 +46,7 @@ export function ProfessionalHeader({
             {/* Left Section - Logo, Title, Subtitle */}
             <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
               {/* Logo */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className="flex-shrink-0"
-              >
+              <div className="animate-fade-in flex-shrink-0">
                 <div className="bg-white/20 backdrop-blur-md rounded-full p-2 shadow-lg border border-white/30">
                   <Image
                     src="/logo.jpg"
@@ -63,7 +57,7 @@ export function ProfessionalHeader({
                     priority
                   />
                 </div>
-              </motion.div>
+              </div>
 
               {/* Title and Subtitle */}
               <div className="min-w-0 flex-1">

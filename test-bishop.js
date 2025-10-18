@@ -98,7 +98,6 @@ async function testBishopAccount() {
 
     console.log('');
     console.log('🎉 Bishop account is ready for login!');
-    console.log(`🌐 Try logging in at: http://localhost:3000`);
     console.log(`📧 Email: ${bishopEmail}`);
     console.log(`🔑 Password: ${bishopPassword}`);
 

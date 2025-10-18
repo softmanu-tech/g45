@@ -1,10 +1,9 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { useAlerts } from "@/components/ui/alert-system"
 import { ProfessionalHeader } from "@/components/ProfessionalHeader"
 import { Input } from "@/components/ui/input"
@@ -309,15 +308,15 @@ export default function BishopMembersPage() {
           {/* Summary Stats Skeleton */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
             {Array.from({ length: 6 }).map((_, i) => (
-              <CardSkeleton key={i} />
+              <UltraFastCardSkeleton key={i} />
             ))}
           </div>
 
           {/* Search and Filters Skeleton */}
-          <CardSkeleton />
+          <UltraFastCardSkeleton />
 
           {/* Members Table Skeleton */}
-          <TableSkeleton />
+          <UltraFastTableSkeleton />
         </div>
       </div>
     )
@@ -538,11 +537,9 @@ export default function BishopMembersPage() {
                 {/* Mobile Card Layout */}
                 <div className="block lg:hidden space-y-4">
                   {filteredMembers.map((member) => (
-                    <motion.div
+                    <div
                       key={member._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-white/80 rounded-lg border border-blue-200 p-4"
+                      className="bg-white/80 rounded-lg border border-blue-200 p-4 animate-fade-in"
                     >
                       <div className="space-y-3">
                         {/* Header */}
@@ -603,7 +600,7 @@ export default function BishopMembersPage() {
                           </div>
                         )}
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
 
@@ -621,11 +618,9 @@ export default function BishopMembersPage() {
                     </thead>
                     <tbody>
                       {filteredMembers.map((member) => (
-                        <motion.tr
+                        <tr
                           key={member._id}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="border-b border-blue-200 hover:bg-white/50 transition-colors"
+                          className="border-b border-blue-200 hover:bg-white/50 transition-colors animate-fade-in"
                         >
                           <td className="p-3">
                             <div>
@@ -699,7 +694,7 @@ export default function BishopMembersPage() {
                               </div>
                             )}
                           </td>
-                        </motion.tr>
+                        </tr>
                       ))}
                     </tbody>
                   </table>

@@ -8,9 +8,9 @@ import { requireSessionAndRoles } from "@/lib/authMiddleware";
 
 export const dynamic = 'force-dynamic';
 
-// Advanced caching with Redis-like in-memory cache
+// Ultra-fast caching with minimal TTL for maximum speed
 const dashboardCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
-const CACHE_DURATION = 10 * 1000; // 10 seconds for ultra-fast updates
+const CACHE_DURATION = 2000; // 2 seconds for ultra-fast updates
 
 // Cache cleanup function
 setInterval(() => {
@@ -88,12 +88,12 @@ export async function GET(request: Request) {
         ]).allowDiskUse(false)
       ]),
       
-      // Ultra-optimized groups query with minimal fields
+      // Ultra-optimized groups query with minimal fields and ultra-fast limits
       Group.find(groupId ? { _id: groupId } : {})
         .populate('leader', 'name email')
         .select('name leader')
         .lean()
-        .limit(50) // Limit for performance
+        .limit(20) // Ultra-fast limit for maximum speed
         .exec()
     ]);
 
@@ -106,17 +106,16 @@ export async function GET(request: Request) {
         const g = group as unknown as GroupWithLeader;
         
         // Single aggregation query for group stats
-        const [groupStats] = await Promise.all([
-          Promise.all([
-            User.find({ group: g._id, role: "member" }).select("name email").lean(),
-            Event.find({ group: g._id, ...dateFilter }).select("title date createdBy location").lean(),
-            Attendance.find({ group: g._id, ...dateFilter })
-              .populate("event", "title date")
-              .populate("presentMembers", "name email")
-              .populate("absentMembers", "name email")
-              .select("event presentMembers absentMembers date")
-              .lean()
-          ])
+        const groupStats = await Promise.all([
+          User.find({ group: g._id, role: "member" }).select("name email").lean().limit(50),
+          Event.find({ group: g._id, ...dateFilter }).select("title date createdBy location").lean().limit(20),
+          Attendance.find({ group: g._id, ...dateFilter })
+            .populate("event", "title date")
+            .populate("presentMembers", "name email")
+            .populate("absentMembers", "name email")
+            .select("event presentMembers absentMembers date")
+            .lean()
+            .limit(30)
         ]);
 
         const [members, events, attendanceData] = groupStats;

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { format, subMonths } from "date-fns"
 import { CalendarIcon, Download, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/ui/skeleton"
+import { UltraFastCardSkeleton, UltraFastChartSkeleton, UltraFastTableSkeleton, UltraFastStatsSkeleton, UltraFastPageSkeleton } from '@/components/ui/ultra-fast-skeleton';
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -34,14 +34,18 @@ interface AttendanceHistoryProps {
 }
 
 export function AttendanceHistory({ groupId }: AttendanceHistoryProps) {
-  const [startDate, setStartDate] = useState<Date>(subMonths(new Date(), 3))
-  const [endDate, setEndDate] = useState<Date>(new Date())
+  const [startDate, setStartDate] = useState<Date | null>(null)
+  const [endDate, setEndDate] = useState<Date | null>(null)
   const [records, setRecords] = useState<AttendanceRecord[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchAttendanceRecords = async () => {
     if (!groupId) return
+    if (!startDate || !endDate) {
+      setError("Start and end dates are required")
+      return
+    }
 
     setLoading(true)
     setError(null)
@@ -65,6 +69,11 @@ export function AttendanceHistory({ groupId }: AttendanceHistoryProps) {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    setStartDate(subMonths(new Date(), 3))
+    setEndDate(new Date())
+  }, [])
 
   useEffect(() => {
     fetchAttendanceRecords()
@@ -132,9 +141,9 @@ export function AttendanceHistory({ groupId }: AttendanceHistoryProps) {
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={startDate}
+                  selected={startDate || undefined}
                   onSelect={(date: any) => date && setStartDate(date)}
-                  disabled={(date: any) => date > endDate}
+                  disabled={(date: any) => endDate ? date > endDate : false}
                   initialFocus
                 />
               </PopoverContent>
@@ -156,9 +165,9 @@ export function AttendanceHistory({ groupId }: AttendanceHistoryProps) {
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={endDate}
+                  selected={endDate || undefined}
                   onSelect={(date: any) => date && setEndDate(date)}
-                  disabled={(date: any) => date < startDate || date > new Date()}
+                  disabled={(date: any) => !startDate || date < startDate || date > new Date()}
                   initialFocus
                 />
               </PopoverContent>
@@ -191,7 +200,7 @@ export function AttendanceHistory({ groupId }: AttendanceHistoryProps) {
                 <div>
                   <div className="text-sm text-blue-600">Date Range</div>
                   <div className="text-sm font-medium">
-                    {format(startDate, "MMM d, yyyy")} - {format(endDate, "MMM d, yyyy")}
+                    {startDate && endDate ? `${format(startDate, "MMM d, yyyy")} - ${format(endDate, "MMM d, yyyy")}` : "Select date range"}
                   </div>
                 </div>
               </div>

@@ -4,6 +4,8 @@ import { Group } from '@/lib/models/Group';
 import { User } from '@/lib/models/User';
 import { requireSessionAndRoles } from '@/lib/authMiddleware';
 
+export const dynamic = 'force-dynamic';
+
 // ➕ CREATE a group
 export async function POST(request: Request) {
     try {

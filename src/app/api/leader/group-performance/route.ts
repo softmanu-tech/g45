@@ -18,13 +18,13 @@ export async function GET(request: Request) {
     await dbConnect()
 
     // Determine leader's group
-    const leader = await User.findById(user.id).populate('group', 'name').lean()
-    if (!leader?.group) {
+    const leader = await User.findById(user.id).populate('group', 'name') as any
+    if (!leader || !leader.group) {
       return NextResponse.json({ success: false, error: 'Leader group not found' }, { status: 404 })
     }
 
-    const groupId = (leader as any).group._id
-    const groupName = (leader as any).group.name
+    const groupId = leader.group._id
+    const groupName = leader.group.name
 
     // Parse months window
     const url = new URL(request.url)

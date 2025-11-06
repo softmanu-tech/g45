@@ -1,197 +1,141 @@
-import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/dbConnect';
-import { User } from '@/lib/models/User';
-import { Attendance } from '@/lib/models/Attendance';
-import Event from '@/lib/models/Event';
-import Member from '@/lib/models/Member';
-import { requireSessionAndRoles } from '@/lib/authMiddleware';
+import { NextResponse } from 'next/server'
+import dbConnect from '@/lib/dbConnect'
+import { requireSessionAndRoles } from '@/lib/authMiddleware'
+import { Attendance } from '@/lib/models/Attendance'
+import Event from '@/lib/models/Event'
+import { User } from '@/lib/models/User'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {
-    // Strict Authentication
-    const { user } = await requireSessionAndRoles(request, ['leader']);
+    // Strict Authentication for leaders
+    const { user } = await requireSessionAndRoles(request, ['leader'])
     if (!user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    await dbConnect();
+    await dbConnect()
 
-    // Get the leader's group
-    const leader = await User.findById(user.id).populate('group');
-    if (!leader || !leader.group) {
-      return NextResponse.json({ 
-        error: 'Leader does not have an assigned group' 
-      }, { status: 400 });
+    // Determine leader's group
+    const leader = await User.findById(user.id).populate('group', 'name').lean()
+    if (!leader?.group) {
+      return NextResponse.json({ success: false, error: 'Leader group not found' }, { status: 404 })
     }
 
-    const groupId = leader.group._id;
+    const groupId = (leader as any).group._id
+    const groupName = (leader as any).group.name
 
-    // Get date range (default to last 6 months)
-    const url = new URL(request.url);
-    const months = parseInt(url.searchParams.get('months') || '6');
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - months);
+    // Parse months window
+    const url = new URL(request.url)
+    const months = Math.max(1, Math.min(24, parseInt(url.searchParams.get('months') || '6')))
+    const startDate = new Date()
+    startDate.setMonth(startDate.getMonth() - months)
 
-    // Get all attendance records for the group
-    const attendanceRecords = await Attendance.find({
-      group: groupId,
-      date: { $gte: startDate }
+    // Fetch data scoped to the leader's group
+    const [events, attendanceRecords, members] = await Promise.all([
+      Event.find({ group: groupId, date: { $gte: startDate } }).sort({ date: 1 }).lean(),
+      Attendance.find({ group: groupId, date: { $gte: startDate } }).sort({ date: 1 }).lean(),
+      User.find({ role: 'member', group: groupId }).select('name email').lean()
+    ])
+
+    // Overall stats
+    const totalEvents = events.length
+    const totalAttendanceRecords = attendanceRecords.length
+    const totalPresent = attendanceRecords.reduce((acc: number, rec: any) => acc + (rec.presentMembers?.length || 0), 0)
+    const totalAbsent = attendanceRecords.reduce((acc: number, rec: any) => acc + (rec.absentMembers?.length || 0), 0)
+    const attendanceRate = totalAttendanceRecords > 0
+      ? Math.round(((totalPresent) / (totalAttendanceRecords * Math.max(1, members.length))) * 1000) / 10
+      : 0
+    const averageAttendancePerEvent = totalAttendanceRecords > 0
+      ? Math.round((totalPresent / totalAttendanceRecords) * 10) / 10
+      : 0
+
+    // Monthly data (labelled like '2025-01')
+    const monthlyMap = new Map<string, { totalPresent: number; totalEvents: number }>()
+    attendanceRecords.forEach((rec: any) => {
+      const d = new Date(rec.date)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      const bucket = monthlyMap.get(key) || { totalPresent: 0, totalEvents: 0 }
+      bucket.totalPresent += (rec.presentMembers?.length || 0)
+      bucket.totalEvents += 1
+      monthlyMap.set(key, bucket)
     })
-    .populate('event', 'title date')
-    .populate('presentMembers', 'name email')
-    .populate('absentMembers', 'name email')
-    .sort({ date: 1 });
 
-    // Get all events for the group
-    const events = await Event.find({
-      group: groupId,
-      date: { $gte: startDate }
-    }).sort({ date: 1 });
+    const monthlyKeysSorted = Array.from(monthlyMap.keys()).sort()
+    const monthlyData = monthlyKeysSorted.map((month) => {
+      const { totalPresent, totalEvents } = monthlyMap.get(month) as { totalPresent: number; totalEvents: number }
+      const rate = totalEvents > 0
+        ? Math.round(((totalPresent) / (totalEvents * Math.max(1, members.length))) * 1000) / 10
+        : 0
+      return { month, attendanceRate: rate, totalPresent, totalEvents }
+    })
 
-    // Get all group members
-    const groupMembers = await Member.find({ group: groupId });
-    const totalMembers = groupMembers.length;
-
-    // Monthly performance data
-    const monthlyData = [];
-    const currentDate = new Date();
-    
-    for (let i = months - 1; i >= 0; i--) {
-      const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-      const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() - i + 1, 0);
-      
-      const monthAttendance = attendanceRecords.filter(record => {
-        const recordDate = new Date(record.date);
-        return recordDate >= monthStart && recordDate <= monthEnd;
-      });
-      
-      const monthEvents = events.filter(event => {
-        const eventDate = new Date(event.date);
-        return eventDate >= monthStart && eventDate <= monthEnd;
-      });
-
-      const totalPresent = monthAttendance.reduce((sum, record) => 
-        sum + (record.presentMembers?.length || 0), 0
-      );
-      const totalAbsent = monthAttendance.reduce((sum, record) => 
-        sum + (record.absentMembers?.length || 0), 0
-      );
-      const totalAttendees = totalPresent + totalAbsent;
-      const attendanceRate = totalAttendees > 0 ? (totalPresent / totalAttendees) * 100 : 0;
-
-      monthlyData.push({
-        month: monthStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-        eventsCount: monthEvents.length,
-        attendanceRecords: monthAttendance.length,
-        presentCount: totalPresent,
-        absentCount: totalAbsent,
-        attendanceRate: Math.round(attendanceRate * 10) / 10,
-        averageAttendance: monthAttendance.length > 0 ? Math.round((totalPresent / monthAttendance.length) * 10) / 10 : 0
-      });
+    // Trend: compare recent half vs previous half
+    let trendDirection: 'improving' | 'declining' | 'stable' = 'stable'
+    let trendDescription = 'Stable performance'
+    if (monthlyData.length >= 2) {
+      const mid = Math.floor(monthlyData.length / 2)
+      const prevAvg = monthlyData.slice(0, mid).reduce((a, b) => a + b.attendanceRate, 0) / Math.max(1, mid)
+      const recentAvg = monthlyData.slice(mid).reduce((a, b) => a + b.attendanceRate, 0) / Math.max(1, monthlyData.length - mid)
+      const delta = Math.round((recentAvg - prevAvg) * 10) / 10
+      if (delta > 1) { trendDirection = 'improving'; trendDescription = `Improving (+${delta}%)` }
+      else if (delta < -1) { trendDirection = 'declining'; trendDescription = `Declining (${delta}%)` }
     }
 
-    // Member performance analysis
-    const memberPerformance = groupMembers.map(member => {
-      const memberAttendance = attendanceRecords.filter(record => 
-        record.presentMembers?.some(p => p._id.toString() === member._id.toString()) ||
-        record.absentMembers?.some(a => a._id.toString() === member._id.toString())
-      );
-      
-      const presentRecords = attendanceRecords.filter(record => 
-        record.presentMembers?.some(p => p._id.toString() === member._id.toString())
-      );
-      
-      const attendanceRate = memberAttendance.length > 0 
-        ? (presentRecords.length / memberAttendance.length) * 100 
-        : 0;
+    // Member performance (top members by attendance rate)
+    const memberIdToCounts = new Map<string, number>()
+    attendanceRecords.forEach((rec: any) => {
+      (rec.presentMembers || []).forEach((m: any) => {
+        const key = String(m)
+        memberIdToCounts.set(key, (memberIdToCounts.get(key) || 0) + 1)
+      })
+    })
+    const memberPerformance = members.map((m: any) => {
+      const present = memberIdToCounts.get(String(m._id)) || 0
+      const denom = Math.max(1, totalEvents) // avoid divide by zero
+      const rate = Math.round((present / denom) * 1000) / 10
+      return { memberId: String(m._id), memberName: m.name, attendanceRate: rate }
+    }).sort((a, b) => b.attendanceRate - a.attendanceRate)
 
-      return {
-        memberId: member._id,
-        memberName: member.name,
-        totalEvents: memberAttendance.length,
-        presentCount: presentRecords.length,
-        absentCount: memberAttendance.length - presentRecords.length,
-        attendanceRate: Math.round(attendanceRate * 10) / 10,
-        rating: attendanceRate >= 80 ? 'Excellent' : attendanceRate >= 60 ? 'Good' : attendanceRate >= 40 ? 'Average' : 'Poor'
-      };
-    }).sort((a, b) => b.attendanceRate - a.attendanceRate);
+    const excellentMembers = memberPerformance.filter(m => m.attendanceRate >= 80).length
+    const needsAttention = memberPerformance.filter(m => m.attendanceRate < 40).length
+    const bestMonth = monthlyData.length > 0
+      ? monthlyData.reduce((best, cur) => cur.attendanceRate > best.attendanceRate ? cur : best, monthlyData[0])
+      : { month: 'N/A', attendanceRate: 0, totalPresent: 0, totalEvents: 0 }
 
-    // Overall group statistics
-    const totalPresent = attendanceRecords.reduce((sum, record) => 
-      sum + (record.presentMembers?.length || 0), 0
-    );
-    const totalAbsent = attendanceRecords.reduce((sum, record) => 
-      sum + (record.absentMembers?.length || 0), 0
-    );
-    const totalAttendees = totalPresent + totalAbsent;
-    const overallAttendanceRate = totalAttendees > 0 ? (totalPresent / totalAttendees) * 100 : 0;
+    const data = {
+      groupInfo: {
+        groupId: String(groupId),
+        groupName,
+        totalEvents,
+        totalAttendanceRecords
+      },
+      overallStats: {
+        totalPresent,
+        totalAbsent,
+        attendanceRate,
+        averageAttendancePerEvent
+      },
+      trend: {
+        direction: trendDirection,
+        description: trendDescription
+      },
+      monthlyData,
+      insights: {
+        excellentMembers,
+        needsAttention,
+        bestMonth
+      },
+      memberPerformance
+    }
 
-    // Trend analysis
-    const recentMonths = monthlyData.slice(-3);
-    const previousMonths = monthlyData.slice(-6, -3);
-    const recentAvg = recentMonths.length > 0 
-      ? recentMonths.reduce((sum, month) => sum + month.attendanceRate, 0) / recentMonths.length 
-      : 0;
-    const previousAvg = previousMonths.length > 0 
-      ? previousMonths.reduce((sum, month) => sum + month.attendanceRate, 0) / previousMonths.length 
-      : 0;
-    
-    const trend = recentAvg > previousAvg ? 'improving' : recentAvg < previousAvg ? 'declining' : 'stable';
-    const trendPercentage = previousAvg > 0 ? Math.round(((recentAvg - previousAvg) / previousAvg) * 100 * 10) / 10 : 0;
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        groupInfo: {
-          groupId: leader.group._id,
-          groupName: leader.group.name,
-          leaderName: leader.name,
-          totalMembers,
-          totalEvents: events.length,
-          totalAttendanceRecords: attendanceRecords.length
-        },
-        overallStats: {
-          attendanceRate: Math.round(overallAttendanceRate * 10) / 10,
-          totalPresent,
-          totalAbsent,
-          averageAttendancePerEvent: attendanceRecords.length > 0 
-            ? Math.round((totalPresent / attendanceRecords.length) * 10) / 10 
-            : 0
-        },
-        trend: {
-          direction: trend,
-          percentage: trendPercentage,
-          description: trend === 'improving' 
-            ? `Attendance improved by ${Math.abs(trendPercentage)}% in recent months`
-            : trend === 'declining'
-            ? `Attendance declined by ${Math.abs(trendPercentage)}% in recent months`
-            : 'Attendance has remained stable'
-        },
-        monthlyData,
-        memberPerformance: memberPerformance.slice(0, 20), // Top 20 members
-        insights: {
-          bestMonth: monthlyData.reduce((best, month) => 
-            month.attendanceRate > best.attendanceRate ? month : best, 
-            monthlyData[0] || { month: 'N/A', attendanceRate: 0 }
-          ),
-          worstMonth: monthlyData.reduce((worst, month) => 
-            month.attendanceRate < worst.attendanceRate ? month : worst, 
-            monthlyData[0] || { month: 'N/A', attendanceRate: 100 }
-          ),
-          excellentMembers: memberPerformance.filter(m => m.rating === 'Excellent').length,
-          needsAttention: memberPerformance.filter(m => m.rating === 'Poor').length
-        }
-      }
-    });
+    return NextResponse.json({ success: true, data })
   } catch (error: unknown) {
-    let errorMsg = 'Unknown error';
-    if (error instanceof Error) {
-      errorMsg = error.message;
-    }
-    console.error('Group performance analytics error:', error);
-    return NextResponse.json(
-      { error: `Failed to fetch group performance data: ${errorMsg}` },
-      { status: 500 }
-    );
+    console.error('Leader Group Performance Error:', error)
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return NextResponse.json({ success: false, error: message }, { status: 500 })
   }
 }
+
+ 

@@ -102,7 +102,8 @@ export default function LeaderDashboard() {
         throw new Error('Failed to fetch dashboard data');
       }
       const result = await response.json();
-      setData(result);
+      // Normalize API shape: handle cached { success, data } and direct payload
+      setData(result && result.success && result.data ? result.data : result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

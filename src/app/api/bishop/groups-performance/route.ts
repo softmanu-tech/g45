@@ -78,16 +78,17 @@ export async function GET(request: Request) {
 
     // Group performance analysis
     const groupPerformance = await Promise.all(groups.map(async (group) => {
+      const groupIdStr = (group._id as any).toString();
       const groupAttendance = attendanceRecords.filter(record => 
-        record.group._id.toString() === (group._id as any).toString()
+        record.group && (record.group as any)._id && (record.group as any)._id.toString() === groupIdStr
       );
       
       const groupEvents = events.filter(event => 
-        event.group._id.toString() === (group._id as any).toString()
+        event.group && (event.group as any)._id && (event.group as any)._id.toString() === groupIdStr
       );
 
       const groupMembers = allMembers.filter(member => 
-        member.group && member.group._id.toString() === (group._id as any).toString()
+        member.group && (member.group as any)._id && (member.group as any)._id.toString() === groupIdStr
       );
 
       const totalPresent = groupAttendance.reduce((sum, record) => 
@@ -197,7 +198,10 @@ export async function GET(request: Request) {
         attendanceRate: Math.round(monthRate * 10) / 10,
         presentCount: monthPresent,
         totalEvents: monthAttendance.length,
-        activeGroups: new Set(monthAttendance.map(record => record.group._id.toString())).size
+        activeGroups: new Set(monthAttendance
+          .filter(record => record.group && (record.group as any)._id)
+          .map(record => (record.group as any)._id.toString())
+        ).size
       });
     }
 

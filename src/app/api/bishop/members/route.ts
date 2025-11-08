@@ -49,23 +49,28 @@ export async function GET(request: Request) {
     // Get attendance data for each member
     const membersWithAttendance = await Promise.all([
       ...members.map(async (member) => {
-        const attendanceRecords = await Attendance.find({
-          $or: [
-            { presentMembers: member._id },
-            { absentMembers: member._id }
-          ]
-        }).populate('event', 'title date');
-
-        const presentCount = attendanceRecords.filter(record => 
-          record.presentMembers.includes((member as any)._id)
-        ).length;
+        const memberId = (member._id as any);
+        // Get records where member is present
+        const presentRecords = await Attendance.find({
+          presentMembers: memberId
+        }).lean();
         
-        const totalRecords = attendanceRecords.length;
+        // Get all records where member is either present or absent
+        const allRecords = await Attendance.find({
+          $or: [
+            { presentMembers: memberId },
+            { absentMembers: memberId }
+          ]
+        }).lean();
+        
+        const presentCount = presentRecords.length;
+        const totalRecords = allRecords.length;
         const attendanceRate = totalRecords > 0 ? (presentCount / totalRecords) * 100 : 0;
         
-        const lastAttendance = attendanceRecords
-          .filter(record => record.presentMembers.includes((member as any)._id))
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+        // Get last attendance date from present records
+        const lastAttendance = presentRecords.length > 0
+          ? presentRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+          : null;
 
         return {
           _id: member._id,
@@ -79,7 +84,7 @@ export async function GET(request: Request) {
           attendanceCount: presentCount,
           totalEvents: totalRecords,
           attendanceRate: Math.round(attendanceRate),
-          lastAttendanceDate: lastAttendance ? lastAttendance.date : null,
+          lastAttendanceDate: lastAttendance?.date || null,
           rating: attendanceRate >= 80 ? 'Excellent' : 
                   attendanceRate >= 60 ? 'Good' : 
                   attendanceRate >= 40 ? 'Average' : 'Poor',
@@ -87,23 +92,28 @@ export async function GET(request: Request) {
         };
       }),
       ...userMembers.map(async (member) => {
-        const attendanceRecords = await Attendance.find({
-          $or: [
-            { presentMembers: member._id },
-            { absentMembers: member._id }
-          ]
-        }).populate('event', 'title date');
-
-        const presentCount = attendanceRecords.filter(record => 
-          record.presentMembers.includes((member as any)._id)
-        ).length;
+        const memberId = (member._id as any);
+        // Get records where member is present
+        const presentRecords = await Attendance.find({
+          presentMembers: memberId
+        }).lean();
         
-        const totalRecords = attendanceRecords.length;
+        // Get all records where member is either present or absent
+        const allRecords = await Attendance.find({
+          $or: [
+            { presentMembers: memberId },
+            { absentMembers: memberId }
+          ]
+        }).lean();
+        
+        const presentCount = presentRecords.length;
+        const totalRecords = allRecords.length;
         const attendanceRate = totalRecords > 0 ? (presentCount / totalRecords) * 100 : 0;
         
-        const lastAttendance = attendanceRecords
-          .filter(record => record.presentMembers.includes((member as any)._id))
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+        // Get last attendance date from present records
+        const lastAttendance = presentRecords.length > 0
+          ? presentRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+          : null;
 
         return {
           _id: member._id,
@@ -117,7 +127,7 @@ export async function GET(request: Request) {
           attendanceCount: presentCount,
           totalEvents: totalRecords,
           attendanceRate: Math.round(attendanceRate),
-          lastAttendanceDate: lastAttendance ? lastAttendance.date : null,
+          lastAttendanceDate: lastAttendance?.date || null,
           rating: attendanceRate >= 80 ? 'Excellent' : 
                   attendanceRate >= 60 ? 'Good' : 
                   attendanceRate >= 40 ? 'Average' : 'Poor',
